@@ -1,6 +1,5 @@
 ---
 title: "Data analysis of chemical data"
-output: html_notebook
 author: "Muhammad"
 date: "08/10/22"
 ---
