@@ -6,9 +6,18 @@ date: "08/10/22"
 
 
 
-
+# load required packages
 ```{r}
-plot(cars)
+
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(R2PPT)
+library(RDCOMClient)
+library(Rmisc)
+library(lme4)
+library(stats)
+
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
