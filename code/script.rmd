@@ -9,19 +9,22 @@ date: "08/10/22"
 # load required packages
 ```{r}
 
-library(tidyverse)
-library(ggplot2)
-library(readxl)
+library(tidyverse) # package collection namely: {dplyr-} for data wrangling, {tibble-} for dataframes
+library(ggplot2) # part of the {tidyverse} package collection
+
+# Packages for interactive visualisation.
+library(readxl) 
 library(R2PPT)
 library(RDCOMClient)
-library(Rmisc)
-library(lme4)
-library(stats)
+
+# Packages for data analysis
+library(Rmisc) # for data analysis.
+library(lmerTest) # for tests in linear mixed effect  model
+library(stats) # contains useful statistical functions.
 
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+```{r}
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+```
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
