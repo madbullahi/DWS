@@ -24,7 +24,10 @@ library(stats)
 
 ```
 
-```{r}
+```{r Diclofenac-single compound, fig.cap="Concentration of Diclofenac (single compound) after exposure to Daphnia genotypes.}
+
+# Import the data for Diclofenac (single)
+DiclofenacSingle <- read_excel(file.choose(), sheet = "raw-single") 
 
 ```
 
