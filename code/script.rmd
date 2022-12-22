@@ -32,6 +32,43 @@ DiclofenacSingle <- read_excel(file.choose(), sheet = "raw-single")
 ```
 
 ```{r}
-#summary statistics of the data: calculate the standard error using the summarySE() function
+# calculate the standard error
+DiclofenacSingle_SE <- summarySE(DiclofenacSingle, measurevar = "concentration", groupvars = c("Genotype", "Day"), na.rm = TRUE, .drop = TRUE)
+
+head(DiclofenacSingle_SE)
+
+# Make a plot of the concentration.
+pd = position_dodge(0.1)
+
+plot_DicloConc <- ggplot(
+  DiclofenacSingle_SE, aes(x = Day, y = concentration, 
+                        colour = Genotype, 
+                        group = interaction(Genotype))) +
+  geom_line(position = pd, 
+            size = 1, 
+            linetype = "twodash") +
+  geom_point(position = pd) +
+  geom_errorbar(aes(ymin = concentration-se, 
+                    ymax = concentration+se), 
+                width = .2,
+                position = pd) +
+  #ylim(10, 100) +
+  coord_cartesian(clip = "off") +
+  theme_set(theme_bw()) +
+  labs(x = "Time (Days)", 
+       y = "Diclofenac concentration (mg/L)",
+       tag = "a")+
+  scale_color_discrete(
+    name = "Genotype:",
+    labels = c("LR2-36-1", "LRV0-1", "LRV12_3", "LRV8.5-3", "CONTROL")
+  ) +
+  theme(axis.title.x = element_text(size = 15),
+        panel.grid = element_blank(),
+        plot.margin = margin(6,45, 6, 6),
+        #legend.position = "none",
+        axis.text = element_text(color = "black", size = 15),
+        axis.title.y = element_text(vjust = 2, size = 15))
+
+print(plot_DicloConc)
 ```
 
