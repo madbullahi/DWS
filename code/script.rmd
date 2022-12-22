@@ -31,3 +31,7 @@ DiclofenacSingle <- read_excel(file.choose(), sheet = "raw-single")
 
 ```
 
+```{r}
+#summary statistics of the data: calculate the standard error using the summarySE() function
+```
+
