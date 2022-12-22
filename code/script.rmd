@@ -18,9 +18,9 @@ library(R2PPT)
 library(RDCOMClient)
 
 # Packages for data analysis
-library(Rmisc) # for data analysis.
-library(lmerTest) # for tests in linear mixed effect  model
-library(stats) # contains useful statistical functions.
+library(Rmisc) 
+library(lmerTest)
+library(stats) 
 
 ```
 
