@@ -92,3 +92,156 @@ tidy_Dic_ww_reff <- tidy(Df_ww_rem_lme) # tidies the summary from the anova.
 write.csv(tidy_Dic_ww_reff,'Dic_reff_ww.csv') # export the anova summary as a csv file.
 ```
 
+```{r Analysis of PFOS(single compound:raw data}
+# Import the data
+Pfs <- read_excel(file.choose(), sheet = "Pfos_raw")
+
+head(Pfs)
+
+# Anova
+Genotype <- Pfs[, "Genotype"]
+Treatment <- Pfs[, "Treatment"]
+DAY <- Pfs[, "DAY"]
+
+Pfs_lme <- lmer(concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Pfs)
+
+anova(Pfs_lme) # it gives a summary of the model.
+
+tidy_Pfs_raw <- tidy(Pfs_lme) # tidies the summary from the anova.
+
+write.csv(tidy_Pfs_raw,'Pfos_sin_raw.csv') # export the anova summary as a csv file.
+```
+
+```{r Analysis of PFOS removal efficiency (single-compound)}
+# Import the data
+Pfos_reff <- read_excel(file.choose(), sheet = "Pfos_reff-sin")
+
+head(Pfos_reff)
+
+# Anova
+Genotype <- Pfos_reff[, "Genotype"]
+Day <- Pfos_reff[, "Day"]
+
+Pfos_sin_rem_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = Pfos_reff)
+
+anova(Pfos_sin_rem_lme) # it gives a summary of the model
+
+tidy_Pfos_sin_reff <- tidy(Pfos_sin_rem_lme) # tidies the summary from the anova.
+
+write.csv(tidy_Pfos_sin_reff,'Pfos_reff_sin.csv') # export the anova summary as a csv file.
+```
+
+```{r Analysis of PFOS(wastewater:raw data}
+# Import the data
+Pfos_ww <- read_excel(file.choose(), sheet = "Pfos_raw_ww")
+
+head(Pfos_ww)
+
+# Anova
+Genotype <- Pfos_ww[, "Genotype"]
+Treatment <- Pfos_ww[, "Treatment"]
+DAY <- Pfs[, "DAY"]
+
+Pfos_ww_lme <- lmer(Concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Pfos_ww)
+
+anova(Pfos_ww_lme) # it gives a summary of the model.
+
+tidy_Pfos_ww_raw <- tidy(Pfos_ww_lme) # tidies the summary from the anova.
+
+write.csv(tidy_Pfos_ww_raw,'Pfos_ww_raw.csv') # export the anova summary as a csv file.
+```
+
+```{r Analysis of PFOS removal efficiency (wastewater)}
+# Import the data
+Pfos_ww <- read_excel(file.choose(), sheet = "Pfos_ww_reff")
+
+head(Pfos_ww)
+
+# Anova
+Genotype <- Pfos_ww[, "Genotype"]
+Day <- Pfos_ww[, "Day"]
+
+Pfos_ww_reff_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = Pfos_ww)
+
+anova(Pfos_ww_reff_lme) # it gives a summary of the model
+
+tidy_Pfos_ww_reff <- tidy(Pfos_ww_rem_lme) # tidies the summary from the anova.
+
+write.csv(tidy_Pfos_ww_reff,'Pfos_reff_ww.csv') # export the anova summary as a csv file.
+```
+
+```{r Analysis of Arsenic (raw)}
+# Import the data
+Ars <- read_excel(file.choose(), sheet = "Arsenic-raw")
+
+head(Ars)
+
+# Anova
+Genotype <- Ars[, "Genotype"]
+Treatment <- Ars[, "Treatment"]
+DAY <- Ars[, "DAY"]
+
+Ars_lme <- lmer(Concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Ars)
+
+anova(Ars_lme) # it gives a summary of the model.
+
+tidy_Ars <- tidy(Ars_lme) # tidy the summary from the anova.
+
+write.csv(tidy_Ars,'Ars.csv') # export the anova summary as a csv file.
+```
+
+```{r Analysis of Arsenic uptake}
+Ars_upt <- read_excel(file.choose(), sheet = "Arsenic-uptake")
+
+head(Ars_upt)
+
+# Anova
+Genotype <- Ars_upt[, "Genotype"]
+Treatment <- Ars_upt[, "Treatment"]
+DAY <- Ars_upt[, "DAY"]
+Ars_upt_lme <- lmer(concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Ars_upt)
+
+anova(Ars_upt_lme) # it gives a summary of the model.
+
+tidy_Ars_upt <- tidy(Ars_upt_lme) # tidy the summary from the anova.
+
+write.csv(tidy_Ars_upt,'Ars_upt.csv') # export the anova summary as a csv file.
+```
+
+```{r Analysis of Arsenic removal efficiency}
+# Import the data
+Ars_rem <- read_excel(file.choose(), sheet = "Arsenic-reff")
+
+head(Ars_rem)
+
+# Anova
+Genotype <- Ars_rem[, "Genotype"]
+Day <- Ars_rem[, "Day"]
+
+Ars_reff_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = Ars_rem)
+
+anova(Ars_reff_lme) # it gives a summary of the model.
+
+tidy_Ars_reff <- tidy(Ars_reff_lme) # tidies the summary from the anova.
+
+write.csv(tidy_Ars_reff,'Ars_reff.csv') # export the anova summary as a csv file.
+```
+
+```{r Analysis of Atrazine raw data}
+Atr_raw <- read_excel(file.choose(), sheet = "Atrazine_raw")
+
+head(Atr_raw)
+
+# Anova
+Genotype <- Atr_raw[, "Genotype"]
+Treatment <- Atr_raw[, "Treatment"]
+DAY <- Atr_raw[, "DAY"]
+Atr_lme <- lmer(Concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Atr_raw)
+
+anova(Atr_lme) # it gives a summary of the model.
+
+tidy_Atr <- tidy(Atr_lme) # tidy the summary from the anova.
+
+write.csv(tidy_Atr,'Atrazine_raw.csv') # export the anova summary as a csv file.
+```
+
