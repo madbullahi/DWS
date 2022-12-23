@@ -20,17 +20,30 @@ Dfs <- read_excel(file.choose(), sheet = "Diclofenac-raw")
 
 head(Dfs)
 
-# Anova
+# Anova:
+# Subset the variables
 Genotype <- Dfs[, "Genotype"]
 Treatment <- Dfs[, "Treatment"]
 DAY <- Dfs[, "DAY"]
 
+# create the model
 Dfs_lme <- lmer(concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Dfs)
 
 anova(Dfs_lme) # it gives a summary of the model.
 
-tidy_DicSin_raw <- tidy(Dfs_lme) # tidies the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Dfs_lme)
+plotNormalHistogram(x)
 
+qqnorm(residuals(Dfs_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Dfs_lme),
+       col='red')
+plot(fitted(Dfs_lme),
+     residuals(Dfs_lme))
+
+# Tidy the anova summary
+tidy_DicSin_raw <- tidy(Dfs_lme) 
 write.csv(tidy_DicSin_raw,'Diclofenac_SIngle_raw.csv') # export the anova summary as a csv file.
 ```
 
