@@ -5,6 +5,7 @@ date: "08/10/22"
 ---
 # Load the required packages
 ```{r}
+library(rcompanion)
 library(readxl)# This package is useful for data import.
 library(tidyverse)# package collection namely: {dplyr-} for data wrangling, {tibble-} for dataframes
 
@@ -18,18 +19,19 @@ library(stats)
 # Import the raw data for Diclofenac.
 Dfs <- read_excel(file.choose(), sheet = "Diclofenac-raw")
 
+# List the first ten entries.
 head(Dfs)
 
-# Anova:
 # Subset the variables
 Genotype <- Dfs[, "Genotype"]
 Treatment <- Dfs[, "Treatment"]
 DAY <- Dfs[, "DAY"]
 
-# create the model
+# create the  linear model
 Dfs_lme <- lmer(concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Dfs)
 
-anova(Dfs_lme) # it gives a summary of the model.
+# Run Anova
+anova(Dfs_lme) 
 
 #check for homogeneity of variance and heteroscedacity:
 x=residuals(Dfs_lme)
@@ -44,251 +46,453 @@ plot(fitted(Dfs_lme),
 
 # Tidy the anova summary
 tidy_DicSin_raw <- tidy(Dfs_lme) 
-write.csv(tidy_DicSin_raw,'Diclofenac_SIngle_raw.csv') # export the anova summary as a csv file.
+
+# Export the tidied anova summary as a csv file.
+write.csv(tidy_DicSin_raw,'Diclofenac_SIngle_raw.csv') 
 ```
 
 ```{r Analysis of Diclofenac removal efficiency(single compound), Table \@ref(tab:Anova-table}
 # Import the data
 Df_reff_Single <- read_excel(file.choose(), sheet = "Dic_reff_single")
 
+# List the first ten entries.
 head(Df_reff_Single)
 
-# Anova
+# Subset the variables
 Genotype <- Df_reff_Single[, "Genotype"]
 Day <- Df_reff_Single[, "Day"]
 
+# Create the  linear model
 Dfrem_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = Df_reff_Single)
 
-anova(Dfrem_lme) # it gives a summary of the model
+# Anova
+anova(Dfrem_lme) 
 
-tidy_Dic_reff_Sin_raw <- tidy(Dfrem_lme) # tidies the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Dfrem_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Dic_reff_Sin_raw,'Dic_reff_SIngle_raw.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Dfrem_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Dfrem_lme),
+       col='red')
+plot(fitted(Dfrem_lme),
+     residuals(Dfrem_lme))
+
+# Tidy the anova summary
+tidy_Dic_reff_Sin_raw <- tidy(Dfrem_lme) 
+
+# Export the  tidied anova summary as a csv file.
+write.csv(tidy_Dic_reff_Sin_raw,'Dic_reff_SIngle_raw.csv') 
 ```
 
 ```{r Analysis of Diclofenac(wastewater:raw data), Table \@ref(tab:Anova-table}
 # Import the data
 Dfw_raw <- read_excel(file.choose(), sheet = "Dic_raw_ww")
 
+# List the first ten entries.
 head(Dfw_raw)
 
-# Anova
+# Subset the variables.
 GENOTYPE <- Dfw_raw[, "GENOTYPE"]
 TREATMENT <- Dfw_raw[, "TREATMENT"]
 DAY <- Dfw_raw[, "DAY"]
 
+# create the linear model.
 Dfw_lme <- lmer(concentration ~ TREATMENT*GENOTYPE*DAY +(1|GENOTYPE:Replicates), data = Dfw_raw)
 
-anova(Dfw_lme) # it gives a summary of the model.
+# Anova
+anova(Dfw_lme) 
 
-tidy_Dic_ww_raw <- tidy(Dfw_lme) # tidies the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Dfw_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Dic_ww_raw,'Diclofenac_ww_raw.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Dfw_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Dfw_lme),
+       col='red')
+plot(fitted(Dfw_lme),
+     residuals(Dfw_lme))
+
+# Tidy the anova summary.
+tidy_Dic_ww_raw <- tidy(Dfw_lme) 
+
+# Export the tidied anova summary as a csv file.
+write.csv(tidy_Dic_ww_raw,'Diclofenac_ww_raw.csv') 
 ```
 
 ```{r Analysis of Diclofenac removal efficiency (wastewater), Table \@ref(tab:Anova-table}
-# Import the data
+# Import the data.
 DfwW_reff <- read_excel(file.choose(), sheet = "Dic-ww-reff")
 
+# list the first ten entries.
 head(DfwW_reff)
 
-# Anova
+# Subset the variables.
 Genotype <- DfwW_reff[, "Genotype"]
 Day <- DfwW_reff[, "Day"]
 
+# create the linear model.
 Df_ww_rem_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = DfwW_reff)
 
-anova(Df_ww_rem_lme) # it gives a summary of the model
+# Anova 
+anova(Df_ww_rem_lme) 
 
-tidy_Dic_ww_reff <- tidy(Df_ww_rem_lme) # tidies the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Df_ww_rem_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Dic_ww_reff,'Dic_reff_ww.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Df_ww_rem_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Df_ww_rem_lme),
+       col='red')
+plot(fitted(Df_ww_rem_lme),
+     residuals(Df_ww_rem_lme))
+
+# Tidy the anova summary.
+tidy_Dic_ww_reff <- tidy(Df_ww_rem_lme) 
+
+# Export the tidied anova summary as a csv file.
+write.csv(tidy_Dic_ww_reff,'Dic_reff_ww.csv') 
 ```
 
 ```{r Analysis of PFOS(single compound:raw data, Table \@ref(tab:Anova-table}
-# Import the data
+# Import the data.
 Pfs <- read_excel(file.choose(), sheet = "Pfos_raw")
 
+# List the first ten entries.
 head(Pfs)
 
-# Anova
+# Subset the variables.
 Genotype <- Pfs[, "Genotype"]
 Treatment <- Pfs[, "Treatment"]
 DAY <- Pfs[, "DAY"]
 
+# Create the linear model
 Pfs_lme <- lmer(concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Pfs)
 
-anova(Pfs_lme) # it gives a summary of the model.
+# Anova
+anova(Pfs_lme) 
 
-tidy_Pfs_raw <- tidy(Pfs_lme) # tidies the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Pfs_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Pfs_raw,'Pfos_sin_raw.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Pfs_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Pfs_lme),
+       col='red')
+plot(fitted(Pfs_lme),
+     residuals(Pfs_lme))
+
+# Tidy the anova summary.
+tidy_Pfs_raw <- tidy(Pfs_lme) 
+
+# Export the tidied anova as a csv file.
+write.csv(tidy_Pfs_raw,'Pfos_sin_raw.csv') 
 ```
 
 ```{r Analysis of PFOS removal efficiency (single-compound), Table \@ref(tab:Anova-table}
 # Import the data
 Pfos_reff <- read_excel(file.choose(), sheet = "Pfos_reff-sin")
 
+# List the first ten entries.
 head(Pfos_reff)
 
-# Anova
+# Subset the variables
 Genotype <- Pfos_reff[, "Genotype"]
 Day <- Pfos_reff[, "Day"]
 
+# create the linear model.
 Pfos_sin_rem_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = Pfos_reff)
 
-anova(Pfos_sin_rem_lme) # it gives a summary of the model
+# anova
+anova(Pfos_sin_rem_lme) 
 
-tidy_Pfos_sin_reff <- tidy(Pfos_sin_rem_lme) # tidies the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Pfos_sin_rem_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Pfos_sin_reff,'Pfos_reff_sin.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Pfos_sin_rem_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Pfos_sin_rem_lme),
+       col='red')
+plot(fitted(Pfos_sin_rem_lme),
+     residuals(Pfos_sin_rem_lme))
+
+# Tidy the anova summary.
+tidy_Pfos_sin_reff <- tidy(Pfos_sin_rem_lme) 
+
+# Export the anova summary as a csv file.
+write.csv(tidy_Pfos_sin_reff,'Pfos_reff_sin.csv') 
 ```
 
 ```{r Analysis of PFOS(wastewater:raw data,Table \@ref(tab:Anova-table}
 # Import the data
 Pfos_ww <- read_excel(file.choose(), sheet = "Pfos_raw_ww")
 
+# List the first ten entries.
 head(Pfos_ww)
 
-# Anova
+# Subset the variables.
 Genotype <- Pfos_ww[, "Genotype"]
 Treatment <- Pfos_ww[, "Treatment"]
 DAY <- Pfs[, "DAY"]
 
+# Create the linear model.
 Pfos_ww_lme <- lmer(Concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Pfos_ww)
 
-anova(Pfos_ww_lme) # it gives a summary of the model.
+# Anova.
+anova(Pfos_ww_lme) 
 
-tidy_Pfos_ww_raw <- tidy(Pfos_ww_lme) # tidies the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Pfos_ww_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Pfos_ww_raw,'Pfos_ww_raw.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Pfos_ww_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Pfos_ww_lme),
+       col='red')
+plot(fitted(Pfos_ww_lme),
+     residuals(Pfos_ww_lme))
+
+# Tidy the anova summary.
+tidy_Pfos_ww_raw <- tidy(Pfos_ww_lme) 
+
+# Export the anova summary as a csv file.
+write.csv(tidy_Pfos_ww_raw,'Pfos_ww_raw.csv') 
 ```
 
 ```{r Analysis of PFOS removal efficiency (wastewater), Table \@ref(tab:Anova-table}
 # Import the data
 Pfos_ww <- read_excel(file.choose(), sheet = "Pfos_ww_reff")
 
+# List the first ten entries.
 head(Pfos_ww)
 
-# Anova
+# Subset the variables.
 Genotype <- Pfos_ww[, "Genotype"]
 Day <- Pfos_ww[, "Day"]
 
+# Create the linear model.
 Pfos_ww_reff_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = Pfos_ww)
 
-anova(Pfos_ww_reff_lme) # it gives a summary of the model
+# Anova.
+anova(Pfos_ww_reff_lme) 
 
-tidy_Pfos_ww_reff <- tidy(Pfos_ww_rem_lme) # tidies the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Pfos_ww_reff_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Pfos_ww_reff,'Pfos_reff_ww.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Pfos_ww_reff_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Pfos_ww_reff_lme),
+       col='red')
+plot(fitted(Pfos_ww_reff_lme),
+     residuals(Dfrem_lme))
+
+# tidy the anova summary.
+tidy_Pfos_ww_reff <- tidy(Pfos_ww_rem_lme) 
+
+# Export the anova summary as a csv file.
+write.csv(tidy_Pfos_ww_reff,'Pfos_reff_ww.csv') 
 ```
 
 ```{r Analysis of Arsenic (raw), Table \@ref(tab:Anova-table}
 # Import the data
 Ars <- read_excel(file.choose(), sheet = "Arsenic-raw")
 
+# List the first ten entries.
 head(Ars)
 
-# Anova
+# Subset the variables.
 Genotype <- Ars[, "Genotype"]
 Treatment <- Ars[, "Treatment"]
 DAY <- Ars[, "DAY"]
 
+# Create the linear model.
 Ars_lme <- lmer(Concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Ars)
 
-anova(Ars_lme) # it gives a summary of the model.
+# Anova
+anova(Ars_lme) 
 
-tidy_Ars <- tidy(Ars_lme) # tidy the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Ars_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Ars,'Ars.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Ars_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Ars_lme),
+       col='red')
+plot(fitted(Ars_lme),
+     residuals(Ars_lme))
+
+# tidy the anova summary.
+tidy_Ars <- tidy(Ars_lme)
+
+# Export the tidied anova summary as a csv file.
+write.csv(tidy_Ars,'Ars.csv') 
 ```
 
 ```{r Analysis of Arsenic uptake, Table \@ref(tab:Anova-table}
 Ars_upt <- read_excel(file.choose(), sheet = "Arsenic-uptake")
 
+# List the first ten entries.
 head(Ars_upt)
 
-# Anova
+# Subset the variables.
 Genotype <- Ars_upt[, "Genotype"]
 Treatment <- Ars_upt[, "Treatment"]
 DAY <- Ars_upt[, "DAY"]
+
+# create the linear model.
 Ars_upt_lme <- lmer(concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Ars_upt)
 
-anova(Ars_upt_lme) # it gives a summary of the model.
+# Anova.
+anova(Ars_upt_lme) 
 
-tidy_Ars_upt <- tidy(Ars_upt_lme) # tidy the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Ars_upt_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Ars_upt,'Ars_upt.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Ars_upt_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Ars_upt_lme),
+       col='red')
+plot(fitted(Ars_upt_lme),
+     residuals(Ars_upt_lme))
+
+# Tidy the anova summary.
+tidy_Ars_upt <- tidy(Ars_upt_lme) 
+
+# Export the tidied anova summary as a csv file.
+write.csv(tidy_Ars_upt,'Ars_upt.csv') 
 ```
 
 ```{r Analysis of Arsenic removal efficiency, Table \@ref(tab:Anova-table}
 # Import the data
 Ars_rem <- read_excel(file.choose(), sheet = "Arsenic-reff")
 
+# List the first ten entries.
 head(Ars_rem)
 
-# Anova
+# Subset the variables.
 Genotype <- Ars_rem[, "Genotype"]
 Day <- Ars_rem[, "Day"]
 
+# Create the linear model.
 Ars_reff_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = Ars_rem)
 
-anova(Ars_reff_lme) # it gives a summary of the model.
+# Anova.
+anova(Ars_reff_lme) 
 
-tidy_Ars_reff <- tidy(Ars_reff_lme) # tidies the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Ars_reff_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Ars_reff,'Ars_reff.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Ars_reff_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Ars_reff_lme),
+       col='red')
+plot(fitted(Ars_reff_lme),
+     residuals(Ars_reff_lme))
+
+# Tidy the anova summary.
+tidy_Ars_reff <- tidy(Ars_reff_lme) 
+
+# Export the tidied anova summary as a csv file.
+write.csv(tidy_Ars_reff,'Ars_reff.csv') 
 ```
 
 ```{r Analysis of Atrazine raw data, Table \@ref(tab:Anova-table}
+# Import the data.
 Atr_raw <- read_excel(file.choose(), sheet = "Atrazine_raw")
 
+# list the first ten entries.
 head(Atr_raw)
 
-# Anova
+# Subset the variables.
 Genotype <- Atr_raw[, "Genotype"]
 Treatment <- Atr_raw[, "Treatment"]
 DAY <- Atr_raw[, "DAY"]
+
+# Create the linear model.
 Atr_lme <- lmer(Concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Atr_raw)
 
-anova(Atr_lme) # it gives a summary of the model.
+# Anova
+anova(Atr_lme) 
 
-tidy_Atr <- tidy(Atr_lme) # tidy the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Atr_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Atr,'Atrazine_raw.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Atr_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Atr_lme),
+       col='red')
+plot(fitted(Atr_lme),
+     residuals(Atr_lme))
+
+# Tidy the anova summary.
+tidy_Atr <- tidy(Atr_lme) 
+
+# Export the tidied anova summary as a csv file.
+write.csv(tidy_Atr,'Atrazine_raw.csv') 
 ```
 
 ```{r Analysis of Atrazine removal efficiency,Table \@ref(tab:Anova-table}
 # Import the data
 atr_rem <- read_excel(file.choose(), sheet = "Atrazine-reff")
 
+# List the first ten entries
 head(atr_rem)
 
-# Anova
+# Subset the variables.
 Genotype <- atr_rem[, "Genotype"]
 Day <- atr_rem[, "Day"]
 
+# Create the linear model.
 Atr_reff_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = Atr_rem)
 
-anova(Atr_reff_lme) # it gives a summary of the model.
+# Anova.
+anova(Atr_reff_lme) 
 
-tidy_Atr_reff <- tidy(Atr_reff_lme) # tidies the summary from the anova.
+#check for homogeneity of variance and heteroscedacity:
+x=residuals(Atr_reff_lme)
+plotNormalHistogram(x)
 
-write.csv(tidy_Atr_reff,'Atr_reff.csv') # export the anova summary as a csv file.
+qqnorm(residuals(Atr_reff_lme),
+       ylab = 'Sample Quantiles for residuals')
+qqline(residuals(Atr_reff_lme),
+       col='red')
+plot(fitted(Atr_reff_lme),
+     residuals(Atr_reff_lme))
+
+# Tidy the anova summary.
+tidy_Atr_reff <- tidy(Atr_reff_lme) 
+
+# Export the tidied anova summary as a csv file.
+write.csv(tidy_Atr_reff,'Atr_reff.csv') 
 ```
 
 ```{r Analysis of variance-Prototype (Diclofenac (single compound), Table \@ref(tab:Anova-table}
 #import the raw data:
 mesocosm <-read_excel(file.choose(), sheet = 'Prototype_raw')
 
+# list the first ten entries.
+head(mesocosm)
+
 # subset the variables:
 Day<-mesocosm[,'Day']
 Genotype<- mesocosm[,'Genotype']
 Treatment<- mesocom[,'Treatment']
 
-#ANOVA
+# Create the linear model.
 meso_ano<-lmer(Concentration~Treatment*DAY*Genotype+(1|Genotype:Replicates),data = mesocosm)
-anova(meso_ano) # it gives a summary of the model.
+
+# Anova.
+anova(meso_ano) 
 
 #check for homogeneity of variance and heteroscedacity:
 x=residuals(meso_ano)
@@ -301,24 +505,29 @@ qqline(residuals(meso_ano),
 plot(fitted(meso_ano),
      residuals(meso_ano))
 
-tidy_meso <- tidy(meso_ano) # tidies the summary from the anova.
+# Tidy the anova summary.
+tidy_meso <- tidy(meso_ano) 
 
-write.csv(tidy_meso,'meso_raw.csv') # export the anova summary as a csv file.
+# Export the tidied anova summary as a csv file.
+write.csv(tidy_meso,'meso_raw.csv') 
 ```
 
 ```{r Analysis of variance-Prototype(Diclofenac (removal efficiency), Table \@ref(tab:Anova-tabl}
 # Import the data
 mesRE<-read_excel(file.choose(), sheet = 'removal-effic')
 
+# List the first ten entries.
 head(mesRE)
 
 # Subset the variables
 Day <- mesRE[, "Day"]
 Genotype <- mesRE[, "Genotype"]
 
-#Anova
+# Create the linear model.
 mes_re <- lmer(RE~Genotype*Day +(1|Genotype:Replicates),
              data = mesRE)
+
+# Anova.
 anova(mes_re)
 
 #check for homogeneity of variance and heteroscedacity:
@@ -332,8 +541,10 @@ qqline(residuals(meso_re),
 plot(fitted(meso_re),
      residuals(meso_re))
 
-tidy_meso_re <- tidy(meso_re) # tidies the summary from the anova.
+# Tidy the anova summary.
+tidy_meso_re <- tidy(meso_re) 
 
-write.csv(tidy_meso_re,'meso_reff.csv') # export the anova summary as a csv file.
+# Export the anova summary as a csv file.
+write.csv(tidy_meso_re,'meso_reff.csv') 
 ```
 
