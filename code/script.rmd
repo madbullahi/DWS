@@ -72,3 +72,414 @@ plot_DicloConc <- ggplot(
 print(plot_DicloConc)
 ```
 
+```{rDiclofenac-single compound, fig.cap="Removal efficiency of Diclofenac (single compound) after exposure to Daphnia genotypes}
+
+# import the data:Diclofenac removal efficiency.
+
+DicloEfficiencySingle <- read_excel(file.choose(), sheet = "rem-single")
+
+# calculate the standard error
+
+DicloEfficiencySE <- summarySE(DicloEfficiencySingle, measurevar = "RE", groupvars = c("Genotype", "Day"),
+                               na.rm = TRUE,
+                               .drop = TRUE)
+
+head(DicloEfficiencySE)
+
+# Plot removal efficiency: Diclofenac single.
+
+DicloRESingle <- ggplot(DicloEfficiencySE, aes(x = Day, y = concentration, colour = Genotype, group = interaction(Genotype))) +
+  #geom_line(position = pd, 
+   #         size = 1, 
+    #        linetype = "twodash") +
+  geom_point(position = pd) +
+  geom_errorbar(aes(ymin = concentration-se, 
+                    ymax = concentration+se), 
+                width = .2,
+                position = pd) +
+  #ylim(10, 100) +
+  coord_cartesian(clip = "off") +
+  theme_set(theme_bw()) +
+  labs(x = "Time (Days)", 
+       y = "Diclofenac Removal efficiency (%)",
+       tag = "b")+
+  scale_color_discrete(
+    name = "Genotype:",
+    labels = c("LR2-36-1", "LRV0-1", "LRV12_3", "LRV8.5-3")
+  ) +
+  theme(axis.title.x = element_text(size = 15),
+        panel.grid = element_blank(),
+        plot.margin = margin(6,45, 6, 6),
+        #legend.position = "none",
+        axis.text = element_text(color = "black", size = 15),
+        axis.title.y = element_text(vjust = 2, size = 15))
+
+print(DicloRESingle)
+
+```
+
+```{r Diclofenac-wastewater, fig.cap='Diclofenac concentration (wastewater) after exposure to Daphnia genotypes}
+
+# import the data: Diclofenac in wastewater.
+
+DiclofenacWW <- read_excel(file.choose(),sheet = "raw-wastewater")
+
+# calculate the standard error:
+
+DiclofenacWWSE <- summarySE(DiclofenacWW, measurevar = "CONCENTRATION", groupvars = c("GENOTYPE", "DAY"),
+na.rm = TRUE, .drop = TRUE)
+
+head(DiclofenacWWSE)
+
+# Plot the concentration.
+
+DicloConcWW <- ggplot(DiclofenacWWSE, aes(x = Day,y = CONCENTRATION, colour = GENOTYPE, group = interaction(GENOTYPE))) +
+  geom_line(position = pd, 
+            size = 1, 
+            linetype = "twodash") +
+  geom_point(position = pd) +
+  geom_errorbar(aes(ymin = CONCENTRATION-se, 
+                    ymax = CONCENTRATION+se), 
+                width = .2,
+                position = pd) +
+  #ylim(10, 100) +
+  coord_cartesian(clip = "off") +
+  theme_set(theme_bw()) +
+  labs(x = "Time (Days)", 
+       y = "Diclofenac concentration (ng/L)",
+       tag = "c")+
+  scale_color_discrete(
+    name = "Genotype:",
+    labels = c("LR2-36-1", "LRV0-1", "LRV12_3", "LRV8.5-3", "CONTROL")
+  ) +
+  theme(axis.title.x = element_text(size = 15),
+        panel.grid = element_blank(),
+        plot.margin = margin(6,45, 6, 6),
+        #legend.position = "none",
+        axis.text = element_text(color = "black", size = 15),
+        axis.title.y = element_text(vjust = 2, size = 15))
+
+print(DicloConcWW)
+
+```
+
+```{rDiclofenac-wastewater, fig.cap='Removal efficiency of Diclofenac (wastewater) after exposure to Daphnia genotypes}
+
+# import the data: Diclofenac(wastewater) 
+DicloREWW <- read_excel(file.choose(), sheet = "rem-wastewater")
+
+# Standard error of the data:
+
+DicloWWSE <- summarySE(DicloREWW, measurevar = "RE",
+                       groupvars = c("Genotype", "Day"),
+                       na.rm = TRUE,
+                       .drop = TRUE)
+
+head(DicloWWSE)
+
+# Plot the graph for the concentration
+
+DicloConcRE <- ggplot(DicloWWSE, aes(x = Day, 
+    y = RE,  colour = Genotype, group = interaction(Genotype))) +
+  geom_line(position = pd, 
+            size = 1, 
+            linetype = "twodash") +
+  geom_point(position = pd) +
+  geom_errorbar(aes(ymin = RE-se, 
+                    ymax = RE+se), 
+                width = .2,
+                position = pd) +
+  #ylim(10, 100) +
+  coord_cartesian(clip = "off") +
+  theme_set(theme_bw()) +
+  labs(x = "Time (Days)", 
+       y = "Removal efficiency of Diclofenac (%)",
+       tag = "d")+
+  scale_color_discrete(
+    name = "Genotype:",
+    labels = c("LR2-36-1", "LRV0-1", "LRV12_3", "LRV8.5-3")
+  ) +
+  theme(axis.title.x = element_text(size = 15),
+        panel.grid = element_blank(),
+        plot.margin = margin(6,45, 6, 6),
+        #legend.position = "none",
+        axis.text = element_text(color = "black", size = 15),
+        axis.title.y = element_text(vjust = 2, size = 15))
+
+print(DicloConcRE)
+
+```
+
+```{rAtrazine-compound, fig.cap='Concentration of Atrazine (single compound) after exposure to Daphnia genotypes}
+
+# Import the data.
+Atrazine <- read_excel(file.choose(), sheet = "raw-single")
+
+
+# calculate the standard error:
+ AtrazineSE <- summarySE(Atrazine, measurevar = "Concentration", groupvars = c("Genotype", "Day"),
+                         na.rm = TRUE,
+                         .drop = TRUE)
+ 
+head(AtrazineSE)
+
+ # Plot the concentration.
+ AtrazineRaw <- ggplot(AtrazineSE, aes(x = Day, y = RE, 
+              colour = Genotype, 
+              group = interaction(Genotype
+                                                                ))) +
+  geom_line(position = pd, 
+            size = 1, 
+            linetype = "twodash") +
+  geom_point(position = pd) +
+  geom_errorbar(aes(ymin = Concentration-se, 
+                    ymax = Concentration+se), 
+                width = .2,
+                position = pd) +
+  #ylim(10, 100) +
+  coord_cartesian(clip = "off") +
+  theme_set(theme_bw()) +
+  labs(x = "Time (Days)", 
+       y = "Atrazine concentration (mg/L)",
+       tag = "e")+
+  scale_color_discrete(
+    name = "Genotype:",
+    labels = c("LR2-36-1", "LRV0-1", "LRV12_3", "LRV8.5-3", "control")
+  ) +
+  theme(axis.title.x = element_text(size = 15),
+        panel.grid = element_blank(),
+        plot.margin = margin(6,45, 6, 6),
+        #legend.position = "none",
+        axis.text = element_text(color = "black", size = 15),
+        axis.title.y = element_text(vjust = 2, size = 15))
+
+print(AtrazineRaw)
+```
+
+```{rAtrazine-compound, fig.cap='Removal efficiency of Atrazine (single compound) after exposure to Daphnia genotypes}
+
+# import the data:
+AtrazineRE <- read_excel(file.choose(), sheet = "rem-single")
+
+# calculate the standard error:
+AtrazineRESE <- summarySE(AtrazineRE, measurevar = "RE",
+                groupvars = c("Genotype", "Day"),
+                na.rm = TRUE,
+                .drop = TRUE)
+
+head(AtrazineRESE)
+
+# Plot the removal efficiency.
+
+AtrazRE <- ggplot(AtrazineRESE, aes(x = Day, 
+          y = RE, 
+          colour = Genotype, 
+          group = interaction(Genotype
+                                                                ))) +
+  #geom_line(position = pd, 
+    #        size = 1, 
+   #         linetype = "twodash") +
+  geom_point(position = pd) +
+  geom_errorbar(aes(ymin = RE-se, 
+                    ymax = RE+se), 
+                width = .2,
+                position = pd) +
+  #ylim(10, 100) +
+  coord_cartesian(clip = "off") +
+  theme_set(theme_bw()) +
+  labs(x = "Time (Days)", 
+       y = "Removal efficiency (%)",
+       tag = "f")+
+  scale_color_discrete(
+    name = "Genotype:",
+    labels = c("LR2-36-1", "LRV0-1", "LRV12_3", "LRV8.5-3")
+  ) +
+  theme(axis.title.x = element_text(size = 15),
+        panel.grid = element_blank(),
+        plot.margin = margin(6,45, 6, 6),
+        #legend.position = "none",
+        axis.text = element_text(color = "black", size = 15),
+        axis.title.y = element_text(vjust = 2, size = 15))
+
+print(AtrazRE)
+```
+
+```{rArsenic-compound, fig.cap='Concentration of arsenic (single compound) after exposure to Daphnia genotypes}
+
+# import the data:
+Arsenic <- read_excel(file.choose(), sheet = "Raw-single")
+
+# Calculate the standard error:
+ArsenicSE <- summarySE(Arsenic, measurevar = "Concentration",groupvars = c("Genotype", "Day"),
+              na.rm = TRUE,
+              .drop = TRUE)
+
+head(ArsenicSE)
+
+# plot the concentration:
+
+ArsenicCon <- ggplot(ArsenicSE, aes(x = Day, 
+              y = Concentration, 
+              colour = Genotype, 
+              group = interaction(Genotype
+                                                                ))) +
+  geom_line(position = pd, 
+            size = 1, 
+            linetype = "twodash") +
+  geom_point(position = pd) +
+  geom_errorbar(aes(ymin = Concentration-se, 
+                    ymax = Concentration+se), 
+                width = .2,
+                position = pd) +
+  #ylim(10, 100) +
+  coord_cartesian(clip = "off") +
+  theme_set(theme_bw()) +
+  labs(x = "Time (Days)", 
+       y = "Concentration of arsenic (ug/L)",
+       tag = "g")+
+  scale_color_discrete(
+    name = "Genotype:",
+    labels = c("LR2-36-1", "LRV0-1", "LRV12_3", "LRV8.5-3", "CONTROL")
+  ) +
+  theme(axis.title.x = element_text(size = 15),
+        panel.grid = element_blank(),
+        plot.margin = margin(6,45, 6, 6),
+        #legend.position = "none",
+        axis.text = element_text(color = "black", size = 15),
+        axis.title.y = element_text(vjust = 2, size = 15))
+
+print(ArsenicCon)
+```
+
+```{rArsenic-compound, fig.cap='removal efficiency of arsenic (single compound) after exposure to Daphnia genotypes}
+
+# Import the data:
+ ArsenicRE <- read_excel(file.choose(), sheet = "rem-single")
+
+# Calculate the standard error the data
+ArseniceSE <- summarySE(ArsenicRE, measurevar = "RE",
+              groupvars = c("Genotype", "Day"), 
+              na.rm = TRUE,
+              .drop = TRUE)
+
+head(ArsniceSE)
+
+# Plot the removal efficiency:
+ArsRE <- ggplot(ArseniceSE, aes(x = Day, 
+                y = RE, 
+                colour = Genotype, 
+                group = interaction(Genotype
+                                                                ))) +
+  #geom_line(position = pd, 
+   #         size = 1, 
+    #        linetype = "twodash") +
+  geom_point(position = pd) +
+  geom_errorbar(aes(ymin = RE-se, 
+                    ymax = RE+se), 
+                width = .2,
+                position = pd) +
+  #ylim(10, 100) +
+  coord_cartesian(clip = "off") +
+  theme_set(theme_bw()) +
+  labs(x = "Time (Days)", 
+       y = "Removal efficicency of arsenic (%)",
+       tag = "g")+
+  scale_color_discrete(
+    name = "Genotype:",
+    labels = c("LR2-36-1", "LRV0-1", "LRV12_3", "LRV8.5-3")
+  ) +
+  theme(axis.title.x = element_text(size = 15),
+        panel.grid = element_blank(),
+        plot.margin = margin(6,45, 6, 6),
+        #legend.position = "none",
+        axis.text = element_text(color = "black", size = 15),
+        axis.title.y = element_text(vjust = 2, size = 15))
+
+print(ArsenicCon)
+```
+
+```{rArsenic-compound, fig.cap='Uptake of arsenic (single compound) after exposure to Daphnia genotypes}
+
+# Import the data:
+arseninUptake <- read_excel(file.choose(), sheet = "uptake-raw")
+
+# Calculate the standard error of the data:
+arsenicSE <- summarySE(arseninUptake, measurevar = "concentration",groupvars = c("Genotype", "Day"),
+                       na.rm = TRUE,
+                       .drop = TRUE)
+
+head(arsenicSE)
+
+# Plot the uptake concentration:
+ArsUptake <- ggplot(arsenicSE, aes(x = Day, 
+             y = concentration, 
+             colour = Genotype, 
+             group = interaction(Genotype
+                                                                ))) +
+  geom_line(position = pd, 
+            size = 1, 
+            linetype = "twodash") +
+  geom_point(position = pd) +
+  geom_errorbar(aes(ymin = concentration-se, 
+                    ymax = concentration+se), 
+                width = .2,
+                position = pd) +
+  #ylim(10, 100) +
+  coord_cartesian(clip = "off") +
+  theme_set(theme_bw()) +
+  labs(x = "Time (Days)", 
+       y = "Arsenic Uptake (ng/perbody mass)",
+       tag = "g")+
+  scale_color_discrete(
+    name = "Genotype:",
+    labels = c("LR2-36-1", "LRV0-1", "LRV12_3", "LRV8.5-3", "CONTROL")
+  ) +
+  theme(axis.title.x = element_text(size = 15),
+        panel.grid = element_blank(),
+        plot.margin = margin(6,45, 6, 6),
+        #legend.position = "none",
+        axis.text = element_text(color = "black", size = 15),
+        axis.title.y = element_text(vjust = 2, size = 15))
+
+print(ArsUptake)
+```
+
+```{rArsenic-compound, fig.cap='Uptake & removal of arsenic (single compound) after exposure to Daphnia genotypes}
+
+# import the data
+AUR <- read_excel(file.choose(), sheet = "Arsenic-uptake-remo")
+
+head(AUR)
+
+# calculate the standard error
+AUR_SE <- summarySE(AUR, measurevar = "Abvalue", groupvars = c("Measurement", "Day", "Genotype"), na.rm = TRUE, .drop = TRUE)
+
+head(AUR_SE)
+
+# Plot the uptake and removal
+
+upt-rem <- ggplot(AUR_SE, aes(x = Genotype,
+                                       y = Abvalue,
+                                       colour = Measurement)) +
+  geom_point(position = pd) +
+  #geom_smooth(span = .2) +
+  geom_errorbar(aes(ymin = Abvalue-se,
+                    ymax = Abvalue+se),
+                width = .2,
+                position = pd) +
+   ylim(0, 4) +
+  facet_wrap(~Day)+
+  coord_cartesian(clip = "off") +
+  theme_set(theme_bw()) +
+  labs(x = "Time (Days)", 
+       y = "Abvalue",
+       tag = "h")+
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+print(upt_rem)
+```
+
+```{rMesocosm-Diclofenac, fig.cap='concentration of diclofenacn (Mesocosm) after exposure to two mixed Daphnia genotypes}
+
+```
+
