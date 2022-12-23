@@ -3,17 +3,92 @@ title: "Data analysis of chemical data"
 author: "Muhammad"
 date: "08/10/22"
 ---
-
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
-
+# Load the required packages
 ```{r}
-plot(cars)
+library(readxl)# This package is useful for data import.
+library(tidyverse)# package collection namely: {dplyr-} for data wrangling, {tibble-} for dataframes
+
+# Packages for data analysis.
+ library(lmerTest)
+library(stats) 
+
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+```{r Analysis of Diclofenac(single compound:raw data)}
+# Import the raw data for Diclofenac.
+Dfs <- read_excel(file.choose(), sheet = "Diclofenac-raw")
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+head(Dfs)
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+# Anova
+Genotype <- Dfs[, "Genotype"]
+Treatment <- Dfs[, "Treatment"]
+DAY <- Dfs[, "DAY"]
+
+Dfs_lme <- lmer(concentration ~ Treatment*Genotype*DAY +(1|Genotype:Replicates), data = Dfs)
+
+anova(Dfs_lme) # it gives a summary of the model.
+
+tidy_DicSin_raw <- tidy(Dfs_lme) # tidies the summary from the anova.
+
+write.csv(tidy_DicSin_raw,'Diclofenac_SIngle_raw.csv') # export the anova summary as a csv file.
+```
+
+```{r Analysis of Diclofenac removal efficiency(single compound)}
+# Import the data
+Df_reff_Single <- read_excel(file.choose(), sheet = "Dic_reff_single")
+
+head(Df_reff_Single)
+
+# Anova
+Genotype <- Df_reff_Single[, "Genotype"]
+Day <- Df_reff_Single[, "Day"]
+
+Dfrem_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = Df_reff_Single)
+
+anova(Dfrem_lme) # it gives a summary of the model
+
+tidy_Dic_reff_Sin_raw <- tidy(Dfrem_lme) # tidies the summary from the anova.
+
+write.csv(tidy_Dic_reff_Sin_raw,'Dic_reff_SIngle_raw.csv') # export the anova summary as a csv file.
+```
+
+```{r Analysis of Diclofenac(wastewater:raw data)}
+# Import the data
+Dfw_raw <- read_excel(file.choose(), sheet = "Dic_raw_ww")
+
+head(Dfw_raw)
+
+# Anova
+GENOTYPE <- Dfw_raw[, "GENOTYPE"]
+TREATMENT <- Dfw_raw[, "TREATMENT"]
+DAY <- Dfw_raw[, "DAY"]
+
+Dfw_lme <- lmer(concentration ~ TREATMENT*GENOTYPE*DAY +(1|GENOTYPE:Replicates), data = Dfw_raw)
+
+anova(Dfw_lme) # it gives a summary of the model.
+
+tidy_Dic_ww_raw <- tidy(Dfw_lme) # tidies the summary from the anova.
+
+write.csv(tidy_Dic_ww_raw,'Diclofenac_ww_raw.csv') # export the anova summary as a csv file.
+```
+
+```{r Analysis of Diclofenac removal efficiency (wastewater)}
+# Import the data
+DfwW_reff <- read_excel(file.choose(), sheet = "Dic-ww-reff")
+
+head(DfwW_reff)
+
+# Anova
+Genotype <- DfwW_reff[, "Genotype"]
+Day <- DfwW_reff[, "Day"]
+
+Df_ww_rem_lme <- lmer(RE ~ Genotype*Day + (1|Genotype:Replicates), data = DfwW_reff)
+
+anova(Df_ww_rem_lme) # it gives a summary of the model
+
+tidy_Dic_ww_reff <- tidy(Df_ww_rem_lme) # tidies the summary from the anova.
+
+write.csv(tidy_Dic_ww_reff,'Dic_reff_ww.csv') # export the anova summary as a csv file.
+```
+
