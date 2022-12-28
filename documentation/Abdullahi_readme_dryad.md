@@ -1,0 +1,21 @@
+---
+#Title: "Harnessing waterfleas for water reclamation: a nature-based tertiary wastewater treatment technology"
+---
+
+## Abdullahi_PFOS - individual chemical exposure: PFOS quantified in spiked borehole water in laboratory-controlled conditions. Genotype ID (DM1900; DM1960; DM1980; and DM2015); replicate; day of exposure; concentration of the chemical before exposure to Daphnia (Initial Concentration); concentration of the chemical after exposure to Daphnia after three days (FinalConcentration); and removal efficiency (%) calculated as [initial concentration − final concentration /starting concentration] ×100. 
+
+## Abdullahi_Atrazine - individual chemical exposure: Atrazine quantified in spiked borehole water in laboratory-controlled conditions. Genotype ID (DM1900; DM1960; DM1980; and DM2015); replicate; day of exposure; concentration of the chemical before exposure to Daphnia (Initial Concentration); concentration of the chemical after exposure to Daphnia after three days (FinalConcentration); and removal efficiency (%) calculated as [initial concentration − final concentration /starting concentration] ×100.
+
+## Abdullahi_Arsenic - individual chemical exposure: Arsenic quantified in spiked borehole water in laboratory-controlled conditions. Genotype ID (DM1900; DM1960; DM1980; and DM2015); replicate; day of exposure; concentration of the chemical before exposure to Daphnia (Initial Concentration); concentration of the chemical after exposure to Daphnia after three days (FinalConcentration); and removal efficiency (%) calculated as [initial concentration − final concentration /starting concentration] ×100.
+
+## Abdullahi_Diclofenac - individual chemical exposure: Disclofenac quantified in spiked borehole water in laboratory-controlled conditions. Genotype ID (DM1900; DM1960; DM1980; and DM2015); replicate; day of exposure; concentration of the chemical before exposure to Daphnia (Initial Concentration); concentration of the chemical after exposure to Daphnia after three days (FinalConcentration); and removal efficiency (%) calculated as [initial concentration − final concentration /starting concentration] ×100.
+
+## Abdullahi_Diclofenac - wastewater exposure: Diclofenac quantified in wastewater in laboratory-controlled conditions. Genotype ID (DM1900; DM1960; DM1980; and DM2015); replicate; day of exposure; concentration of the chemical before exposure to Daphnia (Initial Concentration); concentration of the chemical after exposure to Daphnia after three days (FinalConcentration); and removal efficiency (%) calculated as [initial concentration − final concentration /starting concentration] ×100.
+
+## Abdullahi_PFOS - wastewater exposure: PFOS quantified in wastewater in laboratory-controlled conditions. Genotype ID (DM1900; DM1960; DM1980; and DM2015); replicate; day of exposure; concentration of the chemical before exposure to Daphnia (Initial Concentration); concentration of the chemical after exposure to Daphnia after three days (FinalConcentration); and removal efficiency (%) calculated as [initial concentration − final concentration /starting concentration] ×100.
+
+## Abdullahi_Arsenic - Daphnia tissue: Arsenic quantified in the four genotypes of Daphnia across three days. Genotype ID (DM1900; DM1960; DM1980; and DM2015); replicate; day of exposure; treatment (Arsenic versus control) and concentration of Arsenic retrieved in the Daphnia tissue (ng/L) are shown. 
+
+## Abdullahi_prototype – Diclofenac: Diclofenac quantified in the outdoor prototype. Removal efficiency was calculate over 4 weeks after spiking 2mg/L of Diclofenac at the beginning of each week. Sample ID; replicate; day of exposure; Initial Concentration of Disclofenac before exposure to Daphnia; FinalConcentration after exposure to Daphnia; and removal efficiency (%) calculated as [initial concentration − final concentration /starting concentration] ×100
+
+## Abdullahi_other_Inorganics: removal of organics and inorganics by Daphnia from aeration tanks and secondary clarifiers. Every 3 days and up to 4 weeks the following parameters were measured: Suspended Solids (SS), chemical oxygen demand (COD), total nitrogen (TN), total phosphorus (TP), ammonia and pH. 
