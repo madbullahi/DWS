@@ -7,6 +7,21 @@ author: "Muhammad"
 
 
 ```{r}
-plot(cars)
+# load libraries
+library(tidyverse)
+library(qiime2R)
+library(microbiome)
+library(DT)
+library(data.table)
+library(ggpubr)
+library(vegan)
+library(DESeq2)
 ```
 
+```{r}
+
+# load data
+
+
+
+```
