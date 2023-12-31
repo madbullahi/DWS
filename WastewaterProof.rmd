@@ -16,12 +16,217 @@ library(data.table)
 library(ggpubr)
 library(vegan)
 library(DESeq2)
+library(phyloseq)
 ```
 
 ```{r}
 
-# load data
-
-
+# convert qiime2 artifact to phyloseq object
+ps_ww <- qza_to_phyloseq(
+  features = "filtered_table.qza",
+  tree = "insertion-tree.qza","taxonomy.qza",
+  metadata = "MetadataWastewater.tsv"
+)
 
 ```
+
+
+```{r}
+ps_ww
+
+```
+
+```{r}
+# inspect the phyloseq object
+summary(sample_sums(ps_ww))
+```
+
+```{r}
+set.seed(123)
+# rarefy the data to 5000 reads per sample
+
+ps_ww_rare <- rarefy_even_depth(ps_ww, rngseed = 123, sample.size = 30007, replace = TRUE, trimOTUs = TRUE, verbose = TRUE)
+```
+
+```{r}
+# inspect the rarefied data
+summary(sample_sums(ps_ww_rare))
+```
+
+```{r}
+# inspect the rarefied data
+summary(sample_sums(ps_ww_rare))
+```
+
+```{r}
+table(tax_table(ps_ww_rare)[, "Phylum"], exclude = NULL)
+```
+
+```{r}
+# if any of the phylum has only one feature, consider removing it
+ww_rare <- subset_taxa(ps_ww_rare, !is.na(Phylum) & !Phylum %in% c("Nitrospirota", "Fibrobacterota", "Planctomycetota", "NA"))
+
+ww_rare 
+```
+
+```{r}
+#compute the prevalence of each feature and store in a data frame
+prevdf_ww <- apply(X = otu_table(ww_rare),
+                   MARGIN = ifelse(taxa_are_rows(ww_rare), yes = 1,   no= 2),
+                   FUN = function(OTU) {sum(OTU > 0)})
+```
+
+```{r}
+# Add taxonomy and total read counts to the data frame.
+prevdf_ww <- data.frame(Prevalence = prevdf_ww,
+                        TotalAbundance = taxa_sums(ww_rare),
+                        tax_table(ww_rare))
+
+prevdf_ww
+```
+
+```{r}
+# investigate low prevalence/abundance features and subset them out
+plyr::ddply(prevdf_ww, "Phylum", function(df1) {
+  data.frame(mean_prevalence = mean(df1$Prevalence), total_abundance = sum(df1$ TotalAbundance, na.rm = T), stringsAsFactors = F)
+})
+```
+
+```{r}
+# Define prevalence and abundance thresholds
+prevalence_threshold <- 0.50 * nsamples(ww_rare)
+
+prevalence_threshold
+```
+
+```{r}
+# execute the prevalence filter
+keep_taxa <- rownames(prevdf_ww)[prevdf_ww$Prevalence >= prevalence_threshold]
+
+length(keep_taxa)
+```
+
+```{r}
+ww_rare.2 = prune_taxa(keep_taxa, ww_rare)
+ww_rare.2
+```
+
+```{r}
+merge_less_than_top_ww <- function(ww_rare.2, top = 10) { transformed <- transform_sample_counts(ww_rare.2, function(OTU) OTU/sum(OTU)) 
+otu.table <- as.data.frame(otu_table(transformed))
+otu.sort <- otu.table[order(rowMeans(otu.table), decreasing = TRUE),]
+otu.list <- row.names(otu.sort[(top + 1):nrow(otu.sort),])
+merged <- merge_taxa(transformed, otu.list, 1)
+for (i in 1:dim(tax_table(merged))[1]){
+  if (is.na(tax_table(merged)[i,2])){
+    taxa_names(merged)[i] <- "Other"
+    tax_table(merged)[i, 1:6] <- "other"
+  }
+}
+return(merged) 
+}
+```
+
+```{r}
+ww_Gen <- tax_glom(ww_rare.2, taxrank = "Genus")
+ww_Gen
+```
+
+```{r}
+ww_Gen_10 <- merge_less_than_top_ww(ww_Gen, top = 10)
+ww_Gen_10
+```
+
+```{r}
+# convert to dataframe
+tax_rel_abun_pf_gen_top10 <- psmelt(ww_Gen_10) %>%
+  filter(Abundance > 0) %>%
+  arrange(Genus)
+
+tax_rel_abun_pf_gen_top10
+```
+
+```{r}
+WW <- ggplot(
+  tax_rel_abun_pf_gen_top10, aes(x = Day, y = Abundance, fill = Genus)+
+    facet_grid(~Genotype*Treatment, scales = "free") +
+    geom_bar(stat = "identity", position = "fill") +
+    labs(x = "Day", y = "Relative Abundance", title = "Genus Rel. Abun") +
+    theme(
+      axis.text.x = element_text(size = 10, angle = 90, hjust = 1, vjust = 0.5),
+      axis.title.x = element_text(size = 10, face = "bold", vjust = 0.5, hjust = 1),
+      axis.text.y = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 8, face = "bold"),
+      strip.text = element_text(size = 8, face = "bold")
+      
+    )
+)
+
+WW
+```
+
+```{r}
+WW<- ggplot(
+  tax_rel_abun_pf_gen_top10, aes(x = Day, y = Abundance, fill = Treatment)
+)+
+  facet_grid(~Genus, scales = "free")+
+  geom_bar(stat = "identity", position = "fill")+
+  labs(x="Day", y="Rel. Abun", title = "Genus relative abundance") +
+   theme(
+    axis.text.x = element_text(size = 10, 
+    angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 8),
+    legend.text = element_text(size = 8),
+    strip.text = element_text(size = 8)
+  )
+```
+
+```{r}
+WW
+```
+
+```{r}
+tax_rel_abun_pf_gen_top10 %>%
+  mutate(Genus_pf = case_when(is.na(Genus) ~ "Other", TRUE ~ as.character(Genus))) %>% #this part changes everything that's uncharacterised to be called other
+  #filter(Abundance > 0.01) %>% # filter out anything less than 2% abundance
+  ggplot(aes(Day,
+             Genus_pf, color =
+               Genus_pf)) +
+  geom_point(aes(size = 
+                   Abundance, 
+                 fill = Genus_pf)) + #when size = Abundance, it changes the size to depend on the relative abundance in the dataframe.
+facet_grid(~Treatment) +
+  labs(x="Day", y="Rel. Abun", title = "Genus relative abundance") +
+   theme(
+    axis.text.x = element_text(size = 10, 
+    angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 8),
+    legend.text = element_text(size = 8),
+    strip.text = element_text(size = 8)
+  )
+
+```
+
+```{r}
+#fold change plot
+
+traffic_plot_with_bars <- function(
+    plot_df_1 = plot_df,
+    #round = round_d,
+    limit_vec = c (min(plot_df_1$mean, na.rm =T ), max(plot_df_1$mean, na.rm = T)),))
+wilcox_genus = tax_rel_abun_pf_gen_top10)
+{
+  
+}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
