@@ -200,6 +200,7 @@ ww_Class
 ```{r}
 library(MicrobiotaProcess)
 library(UpSetR)
+library(VennDiagram)
 ```
 
 ```{r}
@@ -215,10 +216,40 @@ upset(upsetda, sets=unique(as.vector(sample_data(ww_rare.2)$Treatment)),
 ```
 
 ```{r}
+vennlist <- get_vennlist(obj = ww_rare.2, factorNames = "Treatment")
+```
+
+```{r}
+vennp <- venn.diagram(vennlist,
+                      height = 5,
+                      width = 5,
+                      filename = NULL,
+                      fill = c("#00AED7", "#FD9347"),
+                      cat.col = c("#00AED7", "#FD9347"),
+                      alpha = c(0.5, 0.5),
+                      fontfamily = "serif",
+                      fontface = "bold",
+                      cex = 1,
+                      cat.default.pos = "outer",
+                      cat.dist = 0.1,
+                      margin = 0.1,
+                      lwd = 3,
+                      lty = "dotted",
+                      imagetype = "png")
+grid.draw(vennp)
 
 ```
 
 ```{r}
+
+library(grDevices)
+pdf(file = "venn.pdf")
+grid.draw(vennp)
+dev.off()
+```
+
+```{r}
+                      
 ```
 
 ```{r}
