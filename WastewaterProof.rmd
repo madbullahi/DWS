@@ -87,7 +87,7 @@ prevdf_ww
 
 ```{r}
 # investigate low prevalence/abundance features and subset them out
-plyr::ddply(prevdf_ww, "Order", function(df1) {
+plyr::ddply(prevdf_ww, "Phylum", function(df1) {
   data.frame(mean_prevalence = mean(df1$Prevalence), total_abundance = sum(df1$ TotalAbundance, na.rm = T), stringsAsFactors = F)
 })
 ```
@@ -150,9 +150,9 @@ tax_rel_abun_pf_gen_top10
 
 ```{r}
 WW<- ggplot(
-  tax_rel_abun_pf_gen_top10, aes(x = Day, y = Abundance, fill = Treatment)
+  tax_rel_abun_pf_gen_top10, aes(x = Day, y = Abundance, fill = Genus)
 )+
-  facet_grid(~Genus, scales = "free")+
+  facet_grid(~Treatment, scales = "free")+
   geom_bar(stat = "identity", position = "fill")+
   labs(x="Day", y="Rel. Abun", title = "Genus relative abundance") +
    theme(
@@ -209,10 +209,12 @@ upsetda
 ```
 
 ```{r}
-upset(upsetda, sets=unique(as.vector(sample_data(ww_rare.2)$Treatment)), 
+U_ww <- upset(upsetda, sets=unique(as.vector(sample_data(ww_rare.2)$Treatment)), 
       sets.bar.color = "#56B4E9",
       order.by = "freq", 
       empty.intersections = "on")
+U_ww
+
 ```
 
 ```{r}
@@ -249,7 +251,33 @@ dev.off()
 ```
 
 ```{r}
-                      
+        
+  #Calculate the mean and standard error
+summary_data <- tax_rel_abun_pf_gen_top10 %>%
+  group_by(Day, Treatment, Genus) %>%
+  summarise(mean = mean(Abundance),
+            sd = sd(Abundance),
+            se = sd(Abundance)/sqrt(n()))
+```
+
+```{r}
+#create the line plot with standard error
+ggplot(summary_data, aes(x = Day, y = mean, colour = Treatment, group = Treatment)) +
+  geom_line() +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
+  geom_point() +
+  facet_wrap(~Genus, scales = "free") +
+  labs(x="Day", y="Rel. Abun", title = "Genus relative abundance") +
+   theme(
+    axis.text.x = element_text(size = 10, 
+    angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 8),
+    legend.text = element_text(size = 8),
+    strip.text = element_text(size = 8)
+  )
+```
+
+```{r}
 ```
 
 ```{r}
