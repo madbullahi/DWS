@@ -15,7 +15,18 @@ MBSF8	LRV_0_1	D3	Wastewater_Daphnia
 MBSF9	LRV_0_1	D3	WasteWater_Daphnia
 =======
 MBSF9	LRV_0_1	D3	Wastewater_Daphnia
+<<<<<<< HEAD:MetadataWastewater.tsv
 >>>>>>> aff36462ee053dc7977f038b659ede8bca818ea6
+=======
+MBSF10	LRV_8.5_3	D1	Wastewater_Daphnia
+MBSF11	LRV_8.5_3	D1	Wastewater_Daphnia
+MBSF12	LRV_8.5_3	D1	Wastewater_Daphnia
+MBSF13	LRV_8.5_3	D2	Wastewater_Daphnia
+MBSF14	LRV_8.5_3	D2	Wastewater_Daphnia
+MBSF15	LRV_8.5_3	D2	Wastewater_Daphnia
+MBSF16	LRV_8.5_3	D3	Wastewater_Daphnia
+MBSF17	LRV_8.5_3	D3	Wastewater_Daphnia
+>>>>>>> 6eeef9eaccd4627ec687d60d678b8e12e4e93d0e:Matadata.tsv
 R1D1BW	CONTROL	D1	Wastewater_Control
 R2D1BW	CONTROL	D1	Wastewater_Control
 R3D1BW	CONTROL	D1	Wastewater_Control
