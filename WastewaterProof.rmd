@@ -25,7 +25,7 @@ library(phyloseq)
 ps_ww <- qza_to_phyloseq(
   features = "filtered_table.qza",
   tree = "insertion-tree.qza","taxonomy.qza",
-  metadata = "MetadataWastewater.tsv"
+  metadata = "Metadata.tsv"
 )
 
 ```
