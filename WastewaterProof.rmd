@@ -43,7 +43,7 @@ summary(sample_sums(ps_ww))
 
 ```{r}
 set.seed(123)
-# rarefy the data to 5000 reads per sample
+# rarefy the data to min. reads per sample
 
 ps_ww_rare <- rarefy_even_depth(ps_ww, rngseed = 123, sample.size = 30007, replace = TRUE, trimOTUs = TRUE, verbose = TRUE)
 ```
@@ -87,7 +87,7 @@ prevdf_ww
 
 ```{r}
 # investigate low prevalence/abundance features and subset them out
-plyr::ddply(prevdf_ww, "Phylum", function(df1) {
+plyr::ddply(prevdf_ww, "Order", function(df1) {
   data.frame(mean_prevalence = mean(df1$Prevalence), total_abundance = sum(df1$ TotalAbundance, na.rm = T), stringsAsFactors = F)
 })
 ```
@@ -146,24 +146,7 @@ tax_rel_abun_pf_gen_top10 <- psmelt(ww_Gen_10) %>%
 tax_rel_abun_pf_gen_top10
 ```
 
-```{r}
-WW <- ggplot(
-  tax_rel_abun_pf_gen_top10, aes(x = Day, y = Abundance, fill = Genus)+
-    facet_grid(~Genotype*Treatment, scales = "free") +
-    geom_bar(stat = "identity", position = "fill") +
-    labs(x = "Day", y = "Relative Abundance", title = "Genus Rel. Abun") +
-    theme(
-      axis.text.x = element_text(size = 10, angle = 90, hjust = 1, vjust = 0.5),
-      axis.title.x = element_text(size = 10, face = "bold", vjust = 0.5, hjust = 1),
-      axis.text.y = element_text(size = 10, face = "bold"),
-      legend.text = element_text(size = 8, face = "bold"),
-      strip.text = element_text(size = 8, face = "bold")
-      
-    )
-)
 
-WW
-```
 
 ```{r}
 WW<- ggplot(
@@ -208,22 +191,31 @@ facet_grid(~Treatment) +
 ```
 
 ```{r}
-#fold change plot
+#class taxa
+ww_Class <- tax_glom(ww_rare.2, taxrank = "Class")
+ww_Class
 
-traffic_plot_with_bars <- function(
-    plot_df_1 = plot_df,
-    #round = round_d,
-    limit_vec = c (min(plot_df_1$mean, na.rm =T ), max(plot_df_1$mean, na.rm = T)),))
-wilcox_genus = tax_rel_abun_pf_gen_top10)
-{
-  
-}
 ```
 
 ```{r}
+library(MicrobiotaProcess)
+library(UpSetR)
 ```
 
 ```{r}
+upsetda <- get_upset(obj = ww_rare.2, factorNames= "Treatment")
+upsetda
+```
+
+```{r}
+upset(upsetda, sets=unique(as.vector(sample_data(ww_rare.2)$Treatment)), 
+      sets.bar.color = "#56B4E9",
+      order.by = "freq", 
+      empty.intersections = "on")
+```
+
+```{r}
+
 ```
 
 ```{r}
