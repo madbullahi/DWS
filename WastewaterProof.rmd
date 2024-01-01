@@ -278,6 +278,70 @@ ggplot(summary_data, aes(x = Day, y = mean, colour = Treatment, group = Treatmen
 ```
 
 ```{r}
+# create the line plot for the ASV counts
+# Subet the date to contrl and treatment
+control_data <- subset(summary_data == "Wastewater_Control")
+treatment_data <- subset(summary_data, Treatment == "Wastewater_Treatment")
+```
+
+```{r}
+# Summarise the ASV counts for each treatment
+
+control_counts <- rowSums(control_data)
+```
+
+```{r}
+treatment_counts <- rowSums(otu_table(treatment_data)[, , drop = FALSE])
+```
+
+```{r}
+# Combine the data into a dataframe
+counts_data <- data.frame(Treatment = c(rep("Control", length(control_counts)),
+                                        rep("Treatment", length(treatment_counts))),
+                          Counts = c(control_counts, treatment_counts))
+```
+
+```{r}
+# Create the line plot
+ggplot(counts_data, aes(x = Treatment, y = Counts, colour = Treatment, group = 1)) +
+  geom_line() +
+  geom_point() +
+  labs(x="Day", y="Rel. Abun", title = "Genus relative abundance") +
+   theme(
+    axis.text.x = element_text(size = 10, 
+    angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 8),
+    legend.text = element_text(size = 8),
+    strip.text = element_text(size = 8)
+  )
+```
+
+```{r}
+counts_data
+```
+
+```{r}
+control_counts
+```
+
+```{r}
+upset(fromList(upsetda),sets = c("Wastewater_Control", "Wastewater_Treatment"))
+```
+
+```{r})
+```
+
+```{r}
+```
+
+```{r}
+
+```
+
+```{r}
+```
+
+```{r}
 ```
 
 ```{r}
