@@ -259,13 +259,19 @@ summary_data <- tax_rel_abun_pf_gen_top10 %>%
             sd = sd(Abundance),
             se = sd(Abundance)/sqrt(n()))
 ```
+```{r}
+
+pd <- position_dodge(width = 0.5)
+
+
+```
+
 
 ```{r}
 #create the line plot with standard error
 ggplot(summary_data, aes(x = Day, y = mean, colour = Treatment, group = Treatment)) +
-  geom_line() +
-  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1) +
-  geom_point() +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.1, position = pd) +
+  geom_point(position = pd) +
   facet_wrap(~Genus, scales = "free") +
   labs(x="Day", y="Rel. Abun", title = "Genus relative abundance") +
    theme(
@@ -276,45 +282,74 @@ ggplot(summary_data, aes(x = Day, y = mean, colour = Treatment, group = Treatmen
     strip.text = element_text(size = 8)
   )
 ```
-
 ```{r}
-# create the line plot for the ASV counts
-# Subet the date to contrl and treatment
-control_data <- subset(summary_data == "Wastewater_Control")
-treatment_data <- subset(summary_data, Treatment == "Wastewater_Treatment")
+glom<- tax_glom(ww_rare.2, taxrank = "Genus")
+perct <- psmelt(glom)
+perct
+```
+```{r}
+# create the data for control and treatment
+control_data <- subset(perct, Treatment == "Wastewater_Control")
+treatment_data <- subset(perct, Treatment == "Wastewater_Treatment")
 ```
 
 ```{r}
-# Summarise the ASV counts for each treatment
 
-control_counts <- rowSums(control_data)
+control_ASV_abundance <- perct$Abundance[perct$Treatment == "Wastewater_Control"]
+treatment_ASV_abundance <- perct$Abundance[perct$Treatment == "Wastewater_Daphnia"]
 ```
 
 ```{r}
-treatment_counts <- rowSums(otu_table(treatment_data)[, , drop = FALSE])
+merged_data <- rbind(control_ASV_abundance, treatment_ASV_abundance)
 ```
 
 ```{r}
-# Combine the data into a dataframe
-counts_data <- data.frame(Treatment = c(rep("Control", length(control_counts)),
-                                        rep("Treatment", length(treatment_counts))),
-                          Counts = c(control_counts, treatment_counts))
+asv_data_se <- perct %>%
+  group_by(Day, Treatment, Phylum) %>%
+  summarise(mean = mean(Abundance),                               
+            sd = sd(Abundance),
+            se = sd(Abundance)/sqrt(n()))
 ```
 
 ```{r}
-# Create the line plot
-ggplot(counts_data, aes(x = Treatment, y = Counts, colour = Treatment, group = 1)) +
-  geom_line() +
-  geom_point() +
-  labs(x="Day", y="Rel. Abun", title = "Genus relative abundance") +
-   theme(
-    axis.text.x = element_text(size = 10, 
-    angle = 90, vjust = 0.5, hjust = 1),
-    axis.text.y = element_text(size = 8),
-    legend.text = element_text(size = 8),
-    strip.text = element_text(size = 8)
-  )
+# create the line plot with standard error
+ggplot(data = asv_data_se, aes(x = Day, y = mean , group = Treatment, color = Treatment)) +  
+  #geom_dotplot() 
+  geom_bar(stat = "identity", position = "dodge") +
+  geom_errorbar(data = asv_data_se, aes(ymin = mean - se, ymax = mean + se), position = position_dodge(width = 0.4), width = 0.25) +  # Add error bars
+  labs(x = "Day", y = "ASV Counts") +  # Add axis labels
+  scale_color_manual(values = c("blue", "red")) +
+  theme_minimal()# Customize line colors
 ```
+
+```{r}
+submitter(ww_rare.2, "m.abdullahi.1@bham.ac.uk", antimicrobial = "yes", 
+          metadata = "yes", metadata_file = "metadata.csv", 
+          metadata_file_type = "csv", metadata_file_delim = ",")
+```
+
+```{r}
+```
+
+```{r}
+
+```
+
+```{r}
+```
+
+```{r}
+```
+
+```{r}
+```
+
+
+
+```{r}
+```
+
+`
 
 ```{r}
 counts_data
