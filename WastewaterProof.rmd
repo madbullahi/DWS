@@ -305,27 +305,30 @@ merged_data <- rbind(control_ASV_abundance, treatment_ASV_abundance)
 
 ```{r}
 asv_data_se <- perct %>%
-  group_by(Day, Treatment, Phylum) %>%
+  group_by(Day, Treatment ) %>%
   summarise(mean = mean(Abundance),                               
             sd = sd(Abundance),
             se = sd(Abundance)/sqrt(n()))
+```
+```{r}
+
+
 ```
 
 ```{r}
 # create the line plot with standard error
 ggplot(data = asv_data_se, aes(x = Day, y = mean , group = Treatment, color = Treatment)) +  
-  #geom_dotplot() 
-  geom_bar(stat = "identity", position = "dodge") +
-  geom_errorbar(data = asv_data_se, aes(ymin = mean - se, ymax = mean + se), position = position_dodge(width = 0.4), width = 0.25) +  # Add error bars
+  #geom_point(position = pd) 
+ geom_bar(stat = "identity", position = pd, color = 'black', fill = "grey") +
+ geom_errorbar(data = asv_data_se, aes(ymin = mean - se, ymax = mean + se), position = pd, width = 0.1) +  # Add error bars
   labs(x = "Day", y = "ASV Counts") +  # Add axis labels
-  scale_color_manual(values = c("blue", "red")) +
+  #scale_color_manual(values = c("blue", "red")) +
+ # scale_fill_manual(values = c("Wastewater_Control"= "skyblue", "Wastewater_Daphnia" = "salmon")) +
   theme_minimal()# Customize line colors
 ```
 
 ```{r}
-submitter(ww_rare.2, "m.abdullahi.1@bham.ac.uk", antimicrobial = "yes", 
-          metadata = "yes", metadata_file = "metadata.csv", 
-          metadata_file_type = "csv", metadata_file_delim = ",")
+
 ```
 
 ```{r}
