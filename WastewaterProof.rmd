@@ -259,6 +259,7 @@ summary_data <- tax_rel_abun_pf_gen_top10 %>%
             sd = sd(Abundance),
             se = sd(Abundance)/sqrt(n()))
 ```
+
 ```{r}
 
 pd <- position_dodge(width = 0.5)
@@ -318,20 +319,30 @@ asv_data_se <- perct %>%
 ```{r}
 # create the line plot with standard error
 ggplot(data = asv_data_se, aes(x = Day, y = mean , group = Treatment, color = Treatment)) +  
-  #geom_point(position = pd) 
+ #geom_line(position = pd)+
+  #geom_point(position = pd)+ 
  geom_bar(stat = "identity", position = pd, color = 'black', fill = "grey") +
  geom_errorbar(data = asv_data_se, aes(ymin = mean - se, ymax = mean + se), position = pd, width = 0.1) +  # Add error bars
   labs(x = "Day", y = "ASV Counts") +  # Add axis labels
   #scale_color_manual(values = c("blue", "red")) +
  # scale_fill_manual(values = c("Wastewater_Control"= "skyblue", "Wastewater_Daphnia" = "salmon")) +
+ # geom_text(aes(label = paste0(format(round(mean, 4), nsmall = 1), "%"), y= mean), position = pd, vjust = -0.5) +
   theme_minimal()# Customize line colors
 ```
 
 ```{r}
+# Filter the data for Day 3
+asv_data_day3 <- subset(asv_data_se, Day == "D3")
 
+# Create the bar plot for Day 3
+ggplot(data = asv_data_day3, aes(x = Treatment, y = mean, fill = Treatment)) +
+  geom_bar(data = asv_data_day3, aes(ymin = mean - se, ymax = mean + se), position = pd, width = 0.1) +
+  labs(x = "Treatment", y = "Mean", title = "Bar Plot for Day 3") +
+  theme_minimal()
 ```
 
 ```{r}
+asv_data_day3
 ```
 
 ```{r}
