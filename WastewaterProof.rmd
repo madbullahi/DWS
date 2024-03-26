@@ -54,11 +54,6 @@ summary(sample_sums(ps_ww_rare))
 ```
 
 ```{r}
-# inspect the rarefied data
-summary(sample_sums(ps_ww_rare))
-```
-
-```{r}
 table(tax_table(ps_ww_rare)[, "Phylum"], exclude = NULL)
 ```
 
@@ -94,6 +89,7 @@ plyr::ddply(prevdf_ww, "Phylum", function(df1) {
 
 ```{r}
 # Define prevalence and abundance thresholds
+set.seed(123)
 prevalence_threshold <- 0.50 * nsamples(ww_rare)
 
 prevalence_threshold
