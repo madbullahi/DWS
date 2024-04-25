@@ -141,7 +141,13 @@ tax_rel_abun_pf_gen_top10 <- psmelt(ww_Gen_10) %>%
 
 tax_rel_abun_pf_gen_top10
 ```
+```{r}
+write.csv(tax_rel_abun_pf_gen_top10, "tax_rel_abun_pf_gen_top10.csv")
+```
 
+```{r}
+
+```
 
 
 ```{r}
