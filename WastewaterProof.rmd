@@ -145,10 +145,6 @@ tax_rel_abun_pf_gen_top10
 write.csv(tax_rel_abun_pf_gen_top10, "tax_rel_abun_pf_gen_top10.csv")
 ```
 
-```{r}
-
-```
-
 
 ```{r}
 WW<- ggplot(
@@ -169,6 +165,93 @@ WW<- ggplot(
 ```{r}
 WW
 ```
+```{r}
+# Filter the data for Day 3 only
+day3_data <- tax_rel_abun_pf_gen_top10 %>%
+  filter(Day == 'D3')
+
+# Find the top ten genera based on their mean abundance on Day 3
+top_genera <- day3_data %>%
+  group_by(Genus) %>%
+  summarise(mean_abundance = mean(Abundance)) %>%
+  top_n(10, mean_abundance) %>%
+  pull(Genus)
+
+# Filter the Day 3 data to include only the top ten genera
+day3_top_genera_data <- day3_data %>%
+  filter(Genus %in% top_genera)
+
+# Create the bar plot for Day 3 with the top ten genera
+WW <- ggplot(day3_top_genera_data, aes(x = Genus, y = Abundance, fill = Genus)) +
+  facet_grid(~Treatment, scales = "free_y") +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Genus", y = "Relative Abundance", title = "Top Ten Genera Relative Abundance on Day 3") +
+  theme(
+    axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 8),
+    legend.text = element_text(size = 8),
+    strip.text = element_text(size = 8)
+  ) #+
+  #scale_y_continuous(limits = c(0, 600))  # Set y-axis limits
+
+# Print the bar plot
+WW
+
+```
+
+```{r}
+
+# Create the bar plot for Day 3 with the top ten genera
+WW <- ggplot(day3_top_genera_data, aes(x = Genus, y = Abundance, fill = Genus)) +
+  facet_grid(~Treatment, scales = "free_y") +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Genus", y = "Relative Abundance", title = "Top Ten Genera Relative Abundance on Day 3") +
+  theme(
+    axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 8),
+    legend.text = element_text(size = 8),
+    strip.text = element_text(size = 8)
+  ) +
+  coord_cartesian(ylim = c(0, 1.0))  # Adjust visible y-axis range to 0 to 1.0 without clipping data
+
+# Print the bar plot
+WW
+```
+```{r}
+library(dplyr)
+library(ggplot2)
+library(forcats)
+
+# Assuming 'tax_rel_abun_pf_gen_top10' is your data frame and it contains 'Day', 'Treatment', 'Genus', and 'Abundance' columns
+
+# Filter the data for Day 3 only
+day3_data <- tax_rel_abun_pf_gen_top10 %>%
+  filter(Day == 'D3')
+
+# Reorder the 'Genus' factor levels based on the sum of 'Abundance', with "other" first
+day3_data <- day3_data %>%
+  mutate(Genus = fct_reorder(Genus, Abundance, .fun = sum, .desc = TRUE)) %>%
+  mutate(Genus = fct_relevel(Genus, "other", after = Inf))  # Place "other" last
+
+# Create the bar plot for Day 3 with the reordered genera
+WW <- ggplot(day3_data, aes(x = Genus, y = Abundance, fill = Genus)) +
+  facet_grid(~Treatment, scales = "free_y") +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Genus", y = "Relative Abundance", title = "Top Ten Genera Relative Abundance on Day 3") +
+  theme(
+    axis.text.x = element_text(size = 10, angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 8),
+    legend.text = element_text(size = 8),
+    strip.text = element_text(size = 8)
+  ) +
+  coord_cartesian(ylim = c(0, 1.0))  # Adjust visible y-axis range to 0 to 1.0 without clipping data
+
+# Print the bar plot
+WW
+
+
+```
+
 
 ```{r}
 tax_rel_abun_pf_gen_top10 %>%
@@ -290,6 +373,7 @@ glom<- tax_glom(ww_rare.2, taxrank = "Genus")
 perct <- psmelt(glom)
 perct
 ```
+
 ```{r}
 # create the data for control and treatment
 control_data <- subset(perct, Treatment == "Wastewater_Control")
@@ -315,8 +399,10 @@ asv_data_se <- perct %>%
 ```
 ```{r}
 
-
+asv_data_se
 ```
+
+
 
 ```{r}
 # create the line plot with standard error
@@ -332,67 +418,151 @@ ggplot(data = asv_data_se, aes(x = Day, y = mean , group = Treatment, color = Tr
   theme_minimal()# Customize line colors
 ```
 
-```{r}
-# Filter the data for Day 3
-asv_data_day3 <- subset(asv_data_se, Day == "D3")
 
-# Create the bar plot for Day 3
-ggplot(data = asv_data_day3, aes(x = Treatment, y = mean, fill = Treatment)) +
-  geom_bar(data = asv_data_day3, aes(ymin = mean - se, ymax = mean + se), position = pd, width = 0.1) +
-  labs(x = "Treatment", y = "Mean", title = "Bar Plot for Day 3") +
+
+
+```{r}
+# Filter the data for Day 3 only
+day3_data <- asv_data_se[asv_data_se$Day == 'D3', ]
+
+# Calculate the percentage difference in means
+wastewater_daphnia_mean <- day3_data$mean[day3_data$Treatment == "Wastewater_Daphnia"]
+wastewater_control_mean <- day3_data$mean[day3_data$Treatment == "Wastewater_control"]
+percent_diff <- (wastewater_control_mean - wastewater_daphnia_mean) / wastewater_control_mean * 100
+
+# Create the plot for Day 3
+ggplot(data = day3_data, aes(x = Treatment, y = mean, fill = Treatment)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), position = position_dodge(width = 0.9), width = 0.2) +
+  labs(x = "Treatment", y = "ASV Counts", title = paste0("Day 3: ", round(percent_diff, 2), "% Difference")) +
+  scale_y_continuous(expand = c(0, 0)) +
   theme_minimal()
-```
 
-```{r}
-asv_data_day3
 ```
-
 ```{r}
 
+# Calculate the percentage difference in means
+wastewater_daphnia_mean <- day3_data$mean[day3_data$Treatment == "Wastewater_Daphnia"]
+wastewater_control_mean <- day3_data$mean[day3_data$Treatment == "Wastewater_control"]
+percent_diff <- (wastewater_control_mean - wastewater_daphnia_mean) / wastewater_control_mean * 100
+
+# Create the plot for Day 3
+ggplot(data = day3_data, aes(x = Treatment, y = mean, fill = Treatment)) +
+  geom_bar(stat = "identity", position = "dodge", width = 0.5) +
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), position = position_dodge(width = 0.9), width = 0.2) +
+  labs(x = "Treatment", y = "ASV Counts" ) +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme_minimal()
+
 ```
+
+
+
 
 ```{r}
+
+# Create the plot for Day 3 with specified y-axis limits
+ggplot(data = day3_data, aes(x = Treatment, y = mean, color = Treatment, group = 1)) +
+  geom_line() +  # Add lines
+  geom_point(size = 4) +  # Add points to show individual data points
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +  # Add error bars
+  labs(x = "Treatment", y = "ASV Counts", title = paste0("Day 3: ", round(percent_diff, 2), "% Difference")) +
+  theme_minimal() +
+  #scale_color_manual(values = c("Wastewater_Daphnia" = "blue", "Wastewater_control" = "red")) +  # Customize colors
+  scale_y_continuous(limits = c(0, 600))  # Set y-axis limits
 ```
+
+
 
 ```{r}
-```
+# extract the bactterial count data from the phyolseq object
 
-```{r}
-```
-
-
-
-```{r}
-```
-
-`
-
-```{r}
-counts_data
-```
-
-```{r}
-control_counts
-```
-
-```{r}
-upset(fromList(upsetda),sets = c("Wastewater_Control", "Wastewater_Treatment"))
-```
-
-```{r})
-```
-
-```{r}
-```
-
-```{r}
+count_matrix <- as.matrix(otu_table(ww_rare.2))
+count_matrix
 
 ```
 
 ```{r}
+# Separate samples into two groups based on the presence of Daphnia
+
+sample_data <- as.data.frame(sample_data(ww_rare.2))
+daphnia_samples <- sample_data$Treatment == "Wastewater_Daphnia"
+control_samples <- sample_data$Treatment == "Wastewater_Control"
+
 ```
 
 ```{r}
+# Calculate the total bacterial count for each sample.
+
+total_count <- colSums(count_matrix)
+total_count
+
 ```
 
 ```{r}
+
+# Calculate the mean bacterial count for each samople group.
+
+mean_daphnia_count <- mean(total_count[daphnia_samples])
+mean_control_count <- mean(total_count[control_samples])
+
+```
+
+```{r}
+# Calculate the percentage for each bacteria removed by Daphnia.
+
+percentage_removed <- (mean_control_count - mean_daphnia_count) / mean_control_count * 100
+```
+
+```{r}
+# Print the result.
+
+cat("Percentage of bacteria removed by Daphnia: ", round(percentage_removed, 2), "%\n")
+
+```
+
+```{r}
+library(ggplot2)
+
+# Extract the bacterial count data from the phyloseq object
+count_matrix <- as.matrix(otu_table(ww_rare.2))
+
+# Separate samples into two groups based on the presence of Daphnia
+sample_data <- as.data.frame(sample_data(ww_rare.2))
+sample_data$Daphnia <- ifelse(sample_data$Treatment == "With Daphnia", "With Daphnia", "Without Daphnia")
+
+# Calculate the total bacterial count for each sample
+sample_data$Total_Count <- colSums(count_matrix)
+
+# Create a box plot
+ggplot(sample_data, aes(x = Daphnia, y = Total_Count)) +
+  geom_boxplot() +
+  labs(x = "Treatment", y = "Total Bacterial Count") +
+  theme_minimal()
+
+# Create a histogram with separate panels for each group
+ggplot(sample_data, aes(x = Total_Count)) +
+  geom_histogram(bins = 30) +
+  facet_wrap(~ Daphnia, ncol = 1) +
+  labs(x = "Total Bacterial Count", y = "Frequency") +
+  theme_minimal()
+
+```
+
+```{r}
+
+# Calculate the IQR and outlier threshold for the "Without Daphnia" group
+without_daphnia_counts <- sample_data$Total_Count[sample_data$Daphnia == "Without Daphnia"]
+Q1 <- quantile(without_daphnia_counts, 0.25)
+Q3 <- quantile(without_daphnia_counts, 0.75)
+IQR <- Q3 - Q1
+outlier_threshold <- Q3 + 1.5 * IQR
+
+# Identify the outlier samples
+outlier_samples <- sample_data$Sample[sample_data$Daphnia == "Without Daphnia" & sample_data$Total_Count > outlier_threshold]
+
+# Print the outlier samples
+print(outlier_samples)
+
+```
+
