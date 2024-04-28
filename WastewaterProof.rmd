@@ -251,6 +251,41 @@ WW
 
 
 ```
+```{r}
+
+library(dplyr)
+library(ggplot2)
+library(forcats)
+
+# Assuming 'tax_rel_abun_pf_gen_top10' is your data frame and it contains 'Day', 'Treatment', 'Genus', and 'Abundance' columns
+
+# Filter the data for Day 3 only
+day3_data <- tax_rel_abun_pf_gen_top10 %>%
+  filter(Day == 'D3')
+
+# Reorder the 'Genus' factor levels based on the sum of 'Abundance', with "other" first
+day3_data <- day3_data %>%
+  mutate(Genus = fct_reorder(Genus, Abundance, .fun = sum, .desc = TRUE)) %>%
+  mutate(Genus = fct_relevel(Genus, "other", after = Inf))  # Place "other" last
+
+# Create a stacked percentage bar plot for Day 3
+WW <- ggplot(day3_data, aes(x = Treatment, y = Abundance, fill = Genus)) +
+  geom_bar(stat = "identity", position = "fill") +  # Use position="fill" to scale each bar to sum to 1 (100%)
+  labs(x = "Treatment", y = "Relative Abundance (%)", title = "Taxonomic Composition on Day 3") +
+  scale_y_continuous(labels = scales::percent) +  # Convert y-axis to percentage
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 12, angle = 0, vjust = 0.5, hjust = 0.5),  # Increase x-axis text size
+    axis.text.y = element_text(size = 12),  # Increase y-axis text size
+    legend.text = element_text(size = 10),  # Increase legend text size
+    strip.text = element_text(size = 12)  # Increase facet label text size
+  )
+
+# Print the bar plot
+WW
+
+```
+
 
 
 ```{r}
@@ -469,7 +504,13 @@ ggplot(data = day3_data, aes(x = Treatment, y = mean, color = Treatment, group =
   labs(x = "Treatment", y = "ASV Counts", title = paste0("Day 3: ", round(percent_diff, 2), "% Difference")) +
   theme_minimal() +
   #scale_color_manual(values = c("Wastewater_Daphnia" = "blue", "Wastewater_control" = "red")) +  # Customize colors
-  scale_y_continuous(limits = c(0, 600))  # Set y-axis limits
+  scale_y_continuous(limits = c(0, 600)) +# Set y-axis limits
+theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 12, angle = 0, vjust = 0.5, hjust = 0.5),  # Increase x-axis text size
+    axis.text.y = element_text(size = 12),  # Increase y-axis text size
+    legend.text = element_text(size = 10),  # Increase legend text size
+    strip.text = element_text(size = 12))  # Increase facet label text size
 ```
 
 
