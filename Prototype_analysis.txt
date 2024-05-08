@@ -1,0 +1,15 @@
+#1. comparison in chemical removal efficiency between seasons.
+#2. Possible comparison in removal efficeincy between weeks.
+#3. Threshold for chemicals = 70% (presence of absence).
+#4. Negative values-how to handle negative values.
+#5. Post-Hoc analysis.
+
+
+
+#a. Negative values for removal efficiency.
+-i report the negative removal efficiency as they are, and discuss the potential reasons for the increase in concentration. 
+-This will provide a more accurate representation of the treatment process, and help identify areas for improvement.
+-ii consider the type of chemical and the treatment process when interpreting negative removal efficiency.
+
+#a. Handling presence or absence of values for some chemicals.
+-i if a variable has more than 70% missing data, it should potentially be excluded.

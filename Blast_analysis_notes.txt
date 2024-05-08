@@ -1,0 +1,25 @@
+#1. Merge the antibiotic-resistant gene data with your ASV count data based on the sequence IDs.
+    this will allow you to have the antibiotic resistance information alongside the ASV counts for each sample.
+#2. Create a new column in your merged data that indicates the presence or absence of antibiotic-resistant genes 
+    for each ASV.
+    You can assign a binary value (e.g., 1 for presence and 0 for absence) or a 
+    categorical value (e.g., "Resistant" and "Non-resistant") based on the antibiotic resistance data.
+
+
+
+#a. Use the original sequences as a reference: Since you have the original sequences processed in QIIME2 using DADA2, 
+    you can use those sequences as a reference to map the antibiotic resistance data.
+#b. You can create a sequence list with the detected amplicon sequences and their corresponding ASV IDs using the "Create ASV sequence list" 
+    functionality in the CLC Microbial Genomics Module
+#c. Then, you can use this sequence list to map the antibiotic resistance data to the corresponding ASV IDs.
+
+
+
+#3. After running DADA2, you will have:
+-a count table with the number of times each ASV was observed in each sample.
+-b a sequence table with the unique ASV sequences.
+-c To get the final sequence list, combine the ASV IDs and sequences into one file.
+
+
+
+269
