@@ -474,6 +474,8 @@ ggplot(data = day3_data, aes(x = Treatment, y = mean, fill = Treatment)) +
   theme_minimal()
 
 ```
+
+
 ```{r}
 
 # Calculate the percentage difference in means
@@ -604,6 +606,49 @@ outlier_samples <- sample_data$Sample[sample_data$Daphnia == "Without Daphnia" &
 
 # Print the outlier samples
 print(outlier_samples)
+
+```
+
+*********Merged AVS counts with Sequence Data*********
+
+```{r}
+#Read in the ASV sequence data.
+asv_seqs <- readLines("dna-sequences-250.fasta")
+
+
+
+```
+
+
+```{r}
+#Read in the ASV count table 
+asv_tab <- read.table("feature-table-250.tsv", header=T, row.names=1)
+
+```
+
+
+```{r}
+# Get the ASV IDs
+
+asv_ids <- paste0(">", row.names(asv_tab))
+
+```
+
+```{r}
+# Make a sequence list by combining the IDs and sequences.
+
+#asv_list <- data.frame(ASV = asv_ids, Sequence = asv_seqs)
+asv_list <- data.frame(ASV = asv_ids, Sequence = asv_seqs[1:length(asv_ids)])
+
+
+```
+
+```{r}
+
+
+# Write out the sequence list to a file.
+
+write.table(asv_list, "ASV_sequence_list.txt", sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
 
 ```
 
