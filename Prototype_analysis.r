@@ -58,3 +58,48 @@ ggplot(tidy_data,
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         legend.position = "bottom")
 
+
+
+#*********************Excluding chemicals  that are less than 50% present******************###
+#******************************************************************************************###
+
+# calculate the % of non-missing values for each chemical.
+
+chemical_presence <- tidy_data %>%
+  group_by(Chemical) %>%
+  summarise(pct_pesent = mean(!is.na(Value))) %>%
+  filter(pct_present >= 0.5)
+
+
+# Filter the data to include only the chemicals with at least 50% presence.
+
+tidy_data_filtered <- tidy_data %>%
+  semi_join(chemical_presence, by = "Chemical")
+
+
+# ******Adding standard error bars to the plot*************.
+
+# Group data by week and chemical, calculate the mean and standard error.
+
+tidy_data_summarised <- tidy_data_filtered %>%
+  group_by(Week, Chemical) %>%
+  summarise(mean_value = mean(Value, na.rm = TRUE),
+            se_value = sd(Value, na.rm = TRUE) / sqrt(n()))
+
+
+
+# Create the line plot with standard error bars.
+
+ggplot(tidy_data_summarised, 
+       aes(x = Week, y = mean_value, color = Chemical, group = Chemical)) +
+  geom_line() +
+  geom_errorbar(aes(ymin = mean_value - se_value, ymax = mean_value + se_value), width = 0.2) +
+  labs(...) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "bottom")
+
+
+
+  
+  
