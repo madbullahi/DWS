@@ -142,13 +142,33 @@ library(lmerTest)
 
 data_anova <- read_excel("Stat_table_Removal.xlsx")
 
+# Convert Week and Chemical to factors.
+
+data_anova$Week <- as.factor(data_anova$Week)
+data_anova$Chemical <- as.factor(data_anova$Chemical)
+
 
 # fit thee linear mixed-effects model.
 
-model1 <- lmer(Removal_Efficiency ~ Week * Chemical + (1 | Chemical: Replicates), data = data_anova)
+model1 <- lmer(Removal_Efficiency ~ Chemical * Week + (1 | Chemical: Replicates), data = data_anova)
+model2 <- lmer(Removal_Efficiency ~ Week + Chemical +(1|Chemical:Replicates), data = data_anova)
+anova(model2)# Perform the ANOVA test.
 
-# Perform the ANOVA test.
-
+write.table(anova(model2), "anova_results.txt")
 anova_results <- anova(model1)
 summary(anova_results)
 anova_results
+
+
+## Normality test for residuals.
+
+shapiro.test(residuals(model1))
+
+# Plot the residuals to check for normality.
+
+qqnorm(residuals(model1))
+qqline(residuals(model1))
+
+
+# save the residual plot.
+pdf("residual_plot.pdf")
