@@ -3,23 +3,37 @@
 # Load the necessary libraries
 library(tidyr)
 library(dplyr)
+library(readxl)
+
+# Import the data from an Excel file.
+original_data <- read_excel("Prototype_Removal.xlsx")
+original_data 
 
 
 # Assuming your original data is in a wide format.
 
-original_data <-  data.frame(Week = 1:12, Chemical1 = ..., Chemical2 = ..., Chemical3 = ..., ..., Chemical30 = ...)
+original_data <-  data.frame(Week = 1:12, Chemical1 =  "Metformin", Chemical2 =  "Nicotine", Chemical3 = "Acetaminophen", Chemical4 = "Amoxicillin", Chemical5 = "Gabapentin", Chemical6 = "Codeine", 
+                             Chemical7 = "Caffeine", Chemical8 =  "Trimethoprim", Chemical9 = "Sulfamethoxazole", Chemical10 =  "Tramadol", Chemical11 =  "Metoprolo", Chemical12 = "Doxycycline", 
+                             Chemical13 = "Propranolol", Chemical14 = "Carbamazepine",
+                             Chemical15 = "Hydrocortisone", Chemical16 =  "Erythromycin",
+                             Chemical17 =  "DEET", Chemical18 = "Clotrimazole", Chemical19 =  "Mefloquine", 
+                             Chemical20 = "Oxazepam",
+                             Chemical21 = "Diazepam", Chemical22 =  "Valsartan", Chemical23 = "Ibuprofen", 
+                             Chemical24 = "Naproxen", Chemical25 = "Diclofenac", Chemical26 = "Meclofenamic",
+                             Chemical27 = "Glyburide", Chemical28 = "Gemfibrozil", Chemical29 = "EthinylEstradiole", 
+                             Chemical30 = "Estradiol", Chemical31 = "PFOS", Chemical32 = "PFOA")
 
 
 # Convert the data to long format.
 
 tidy_data <- pivot_longer(original_data, cols = -Week, names_to = "Chemical", values_to = "Value")
 
-
+tidy_data
 # Load the ggplot2 library and create the line plot.
 
 library(ggplot2)
 
-ggplot(tidy_data, aes(x = Week, y = Value, color = Chemical, group = Chemical)) +
+ggplot(original_data, aes(x = "Week", y = Value, color = Chemical, group = Chemical)) +
   geom_line() +
   labs(title = "Chemical Concentrations Over Time",
        x = "Week",
@@ -31,7 +45,7 @@ ggplot(tidy_data, aes(x = Week, y = Value, color = Chemical, group = Chemical)) 
 #  Customise the plot appearance by adding titles, adjusting axis labels, and modifying the theme.
 
 
-ggplot(tidy_data
+ggplot(t_data
        ,aes(x = Week, y = Value, color = Chemical, group = Chemical)) +
   geom_line() +
   labs(title = "Chemical Concentrations Over Time",
@@ -63,43 +77,78 @@ ggplot(tidy_data,
 #*********************Excluding chemicals  that are less than 50% present******************###
 #******************************************************************************************###
 
-# calculate the % of non-missing values for each chemical.
 
-chemical_presence <- tidy_data %>%
-  group_by(Chemical) %>%
-  summarise(pct_pesent = mean(!is.na(Value))) %>%
-  filter(pct_present >= 0.5)
+# Calculate percentage presence for each chemical across weeks.
+chemical_presence <- original_data %>%                                           
+  pivot_longer(cols = starts_with("Week"), names_to = "Week", values_to = "Concentration") %>%    # here we are converting the data to long format.
+  group_by(Chemical) %>%                                                         # we are grouping the data by chemical, 
+  summarise(pct_present = mean(!is.na(Concentration)) * 100) %>%                # we are calculating the percentage presence of each chemical (i.e non-missing values).
+  ungroup()
 
+# Filter out chemicals with less than 50% presence  
+original_data_filtered <- original_data %>%
+  semi_join(chemical_presence %>% filter(pct_present >= 70), by = "Chemical")    # here we are filtering out chemicals with less than 50% presence.
 
-# Filter the data to include only the chemicals with at least 50% presence.
+original_data_filtered
 
-tidy_data_filtered <- tidy_data %>%
-  semi_join(chemical_presence, by = "Chemical")
-
+write.csv(original_data_filtered, "original_data_filtered.csv")
 
 # ******Adding standard error bars to the plot*************.
 
-# Group data by week and chemical, calculate the mean and standard error.
+# Reshape the data into long format.
+library(tidyr)
+library(dplyr)
 
-tidy_data_summarised <- tidy_data_filtered %>%
-  group_by(Week, Chemical) %>%
-  summarise(mean_value = mean(Value, na.rm = TRUE),
-            se_value = sd(Value, na.rm = TRUE) / sqrt(n()))
+long_data <- original_data_filtered %>%
+  pivot_longer(cols = starts_with("Week"), 
+               names_to = "Week", 
+               values_to = "Concentration")
 
+long_data
+  
+# Calculate the mean and standard error for each week and chemical combination.
 
+summarized_data <- long_data %>%
+  group_by(Chemical, Week) %>%
+  summarise(mean_conc = mean(Concentration, na.rm = TRUE),
+            se_conc = sd(Concentration, na.rm = TRUE) / sqrt(n()))
 
-# Create the line plot with standard error bars.
+summarized_data
 
-ggplot(tidy_data_summarised, 
-       aes(x = Week, y = mean_value, color = Chemical, group = Chemical)) +
+# Create the line plot with error bars.
+
+library(ggplot2)
+
+ggplot(summarized_data, aes(x = Week, y = mean_conc, color = Chemical, group = Chemical)) +
   geom_line() +
-  geom_errorbar(aes(ymin = mean_value - se_value, ymax = mean_value + se_value), width = 0.2) +
-  labs(...) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "bottom")
+  geom_errorbar(aes(ymin = mean_conc - se_conc, ymax = mean_conc + se_conc), width = 0.2) +
+  labs(x = "Week", y = "Mean Concentration", color = "Chemical") +
+  theme_minimal()
 
 
 
-  
-  
+
+
+
+#************Run ANOVA test to determine if there are significant differences in chemical concentrations over time.*************#
+#*******************************************************************************************************************************#
+#*******************************************************************************************************************************#
+
+
+# Load the necessary libraries.
+library(lmerTest)
+
+# The data is in long format, so we can use the Week variable as a numeric predictor.
+
+data_anova <- read_excel("Stat_table_Removal.xlsx")
+
+
+# fit thee linear mixed-effects model.
+
+model1 <- lmer(Removal_Efficiency ~ Week * Chemical + (1 | Chemical: Replicates), data = data_anova)
+
+# Perform the ANOVA test.
+
+anova_results <- anova(model1)
+summary(anova_results)
+anova_results
