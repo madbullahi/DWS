@@ -1,0 +1,25 @@
+#A. Dataset description
+The data consist of the following variables:
+-i. Replicates: indicates the number of repeated measurement for each combination of chemical per week.
+-ii. Chemical: Lists the names or identifiers of the different chemicals or compounds analysed.
+-iii. Week: Represents the time point or week at which the measurement were taken.
+-iv. Removal_Efficiency: Contains the numerical values representing the removal efficiency of each chemical at the corresponding week.
+
+# The dataset includes measurements for 32 different chemicals over a period of 12 weeks.
+# Some chemicals have data for all 12 weeks, while others  have missing values for certain weeks.
+# the removal efficiency values range from negative numbers to positive values.
+
+
+#B. Data Preprocessing.
+-before conducting the analysis, the following data preprocessing steps were performed.
+#1. Filtering Chemicals: Chemicals that were present in less than 50% of the weeks were excludes from the analysis. This was done to avoid potential 
+bias introduced by chemicals with a high percentage of missing data.
+
+
+#C. ANOVA Analysis.
+-i Initially, a linear mixed-effects model with Week, Chemical and their interaction as fixed effects, with Replicates (i.e. values from days) as a random effect, was attempted.
+However, this model encountered a rank deficiency error, likely due to the large number parameters, missing data patterns and potential colinearity.
+-ii. final model: To address this rank deficiency issue, the model was simplified by removing the interaction term and considering only the main effcts of Week and Chemical. This revised
+model was fitted using the lmer() function from the lmertest package in R
+
+model<- lmer(Removal_Efficiency~Chemical + Week +(1|Chemical:Replicates), data = data).
