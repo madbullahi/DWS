@@ -194,3 +194,36 @@ data_inorganic$Phase <- as.factor(data_inorganic$Phase)
 
 model_inorganic <- lmer(Removal ~ Inorganic + Week + Phase + (1 | Inorganic: Replicaates), data = data_inorganic)
 anova(model_inorganic)
+
+# run a posthoc test.
+  
+posthoc <- emmeans(model_inorganic, pairwise ~ Inorganic)
+posthoc
+
+
+
+# import the data for the organic compound without COD values.
+data_organic_COD_absent <- read_excel(file.choose(), sheet = "Sheet2")
+data_organic_COD_absent
+
+# Convert the variables to factors.
+
+data_organic_COD_absent$Week <- as.factor(data_organic_COD_absent$Week)
+data_organic_COD_absent$Inorganic <- as.factor(data_organic_COD_absent$Inorganic)
+data_organic_COD_absent$Phase <- as.factor(data_organic_COD_absent$Phase)
+
+# fit the linear mixed-effects model.
+model_organic_COD_absent <- lmer(Removal ~ Inorganic + Week + Phase + (1 | Inorganic:Replicaates), data = data_organic_COD_absent)
+anova(model_organic_COD_absent)
+
+# save the anova results as table.
+write.table(anova(model_organic_COD_absent), "anova_results_organic_COD_absent.txt")
+
+# posthoc test.
+
+posthoc_organic_COD_absent <- emmeans(model_organic_COD_absent, pairwise ~ Inorganic)
+posthoc_organic_COD_absent
+
+# check for normality of residuals.
+qqnorm(residuals(model_organic_COD_absent))
+qqline(residuals(model_organic_COD_absent))
