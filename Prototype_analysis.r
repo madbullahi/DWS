@@ -172,3 +172,25 @@ qqline(residuals(model1))
 
 # save the residual plot.
 pdf("residual_plot.pdf")
+
+
+# IMport the data for inorganic compound.
+data_inorganic <- read_excel("Prototype_Inorganic_Removal.xlsx")
+data_inorganic
+
+str(data_inorganic)
+# Convrt the data into a dataframe.
+
+data_inorganic <- as.data.frame(data_inorganic)
+
+# Convert the Week , Chemical,and Phase to factors
+
+data_inorganic$Week <- as.factor(data_inorganic$Week)
+data_inorganic$Inorganic <- as.factor(data_inorganic$Inorganic)
+data_inorganic$Phase <- as.factor(data_inorganic$Phase)
+
+
+# fit the linear mixed-effects model.
+
+model_inorganic <- lmer(Removal ~ Inorganic + Week + Phase + (1 | Inorganic: Replicaates), data = data_inorganic)
+anova(model_inorganic)
