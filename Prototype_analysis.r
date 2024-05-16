@@ -195,6 +195,10 @@ data_inorganic$Phase <- as.factor(data_inorganic$Phase)
 model_inorganic <- lmer(Removal ~ Inorganic + Week + Phase + (1 | Inorganic: Replicaates), data = data_inorganic)
 anova(model_inorganic)
 
+# save the anoova results as table.
+
+write.table(anova(model_inorganic), "anova_results_inorganic.txt")
+
 # run a posthoc test.
   
 posthoc <- emmeans(model_inorganic, pairwise ~ Inorganic)
@@ -223,6 +227,9 @@ write.table(anova(model_organic_COD_absent), "anova_results_organic_COD_absent.t
 
 posthoc_organic_COD_absent <- emmeans(model_organic_COD_absent, pairwise ~ Inorganic)
 posthoc_organic_COD_absent
+
+# save the potshoc results as table.
+write.table(posthoc_organic_COD_absent, "posthoc_results_organic_COD_absent.txt")
 
 # check for normality of residuals.
 qqnorm(residuals(model_organic_COD_absent))
