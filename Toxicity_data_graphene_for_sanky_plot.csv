@@ -1,0 +1,63 @@
+Test Organism,Material,Endpoints, EC50 (mg/L),Morphology
+Daphnia,Graphene oxide(GO),oxidative stress,50,single layer
+,,promote growth ,50:EC10,63 um
+,,and reproduction at ,,
+,,"low concentration,",,
+Daphnia(5 d),Graphene oxide(GO),"oxidative stress,  ",44.3:72h,"size:200–300 nm, "
+,,"membrane damage,",,thickness:1nm
+,,accumulation,,single layer
+,,,,
+Daphnia (<24h),Graphene oxide(GO),oxidative stress,84.3,thickness: 0.8–1.2 nm
+,,accumulation,,diameter: 0.5–5.0 ?m
+,,inhibition of growth,,Single layer
+,,,,
+Daphnia (<24h),Graphene oxide(GO),"0xidative stress,,",70,"single layer,size:0.8-1.2nm"
+,, antioxidant defense,,thickness:0.5-5um
+,,,,
+,,,,
+Daphnia (<24h),Graphene oxide(GO),"oxdative stress, ",21,single layer
+,,membrane damage,,thinckness:0.55-1.2
+,,,,size:0.5-30 um
+,,,,
+,,,,
+Daphnia,Graphene oxide(GO),"oxidative strss, apoptosis",80.62,"single layer,1nm"
+,," membrane damage,",,5um
+,,,,
+,,,,
+Daphnia(21d),Graphene oxide(GO),"Oxidative stress,  ",7.53: GO,"size:200–300 nm, "
+,reduced GO(rGO),inhibited growth &,5.14:rGO,thickness:1nm
+,,"reproduction,",,single layer
+,,altered metabolic and,,
+,,stress renponse,,
+,,pathways,,
+,,,,
+Daphnia (21d),Graphene (GO),"greater oxidative stress,","GO:5.2, ",with/without Cu2+
+,,gowth &reproduction ,GO+Cu2+: 3.7,
+,,"inhibition, antioxidant ",,
+,,defense disruption ,,
+,,than GO alone,,
+,,,,
+Daphnia (21d),Graphene oxide ,Lower pH enhanced ,pH6.0:6.14,"pH6.0,"
+,,toxicity: increased,pH7.9:7.53,pH7.8
+,,"accumulation,",pH9.0:9.21,pH9.0
+,,"oxidative stress,",,
+,,& reproductive impairment,,
+,,,,
+ Leydig (TM3) & Sertoli (TM4) cells,Graphene oxide,"20nm showed higher toxicity, disruption of ",10.5 µg/ml:20nm:leydig cells,20 & 100 nm
+,,mitochondrial membrane potentia,12.5 µg/mL:20nm:Sertoli,
+,,"DNA damage,",15.5 µg/mL:100nm:Sertoli:Leydig,
+,,apoptosis,,
+,,,,
+,,,,
+,,,,
+Scenedesmus obliquus ,"Graphene,","Oxidative stress,",EC10: ~1,-
+(algae)(72h), f-MWCNT,"antioxidant defense,",mg/L for both,
+,", and binary mixture",,,
+,,,,
+,,,,
+,,,,
+Ceriodaphnia dubia,Greaphene oxide,oxidative stress,1.25,Single layer 1.0 nm
+,,ROS generation at 0.05mg/L,,
+,,,,
+,,,,
+Daphnia,Graphene diamonds,,7.8,4nm
