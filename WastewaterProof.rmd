@@ -652,3 +652,68 @@ write.table(asv_list, "ASV_sequence_list.txt", sep = "\t", quote = FALSE, row.na
 
 ```
 
+
+
+
+
+
+
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+""""Wasteswater Microbiome Analysis""""
+
+
+"""Fresh Analysis"""""""""""""""""""""""""""""""""""""
+
+
+# Initial Sample QC Check
+```{r}
+
+metadata <- read.csv("MetadataWastewater.csv")
+stats <-  read_tsv("read-stats.tsv", show_col_types = FALSE)
+
+
+```
+
+```{r}
+
+head(metadata)
+
+head(stats)
+
+```
+
+```{r}
+#lets give the stats dataframe column names
+
+colnames(stats) = c("sample.id", "input", "filtered","reads_passed-filter", "denoised", "merged", "percentage_merged", "non-chimeric", "percentage_non-chimeric")
+
+```
+
+```{r}
+head(stats)
+
+```
+
+
+```{r}
+
+library(tidyverse)
+library(dplyr)
+```
+
+
+```{r}
+
+#join the two dataframes.
+
+ww_data <- left_join(metadata, stats)
+ww_data
+
+```
+
+```{r}
+
+```
+
+```{r}
