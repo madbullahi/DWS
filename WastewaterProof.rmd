@@ -829,13 +829,31 @@ rarecurve(otu_mat, step = 500, col = "red", cex = 0.8,
 ```
 
 ```{r}
+# inspect the rarefied phyloseq object.
 
+table(tax_table(ps_object_rarefied)[, "Phylum"], exclude = NULL)
 
 ```
 
 
 ```{r}
 
+# if any of the phylum has only one feature, consider removing it
+ps_object_rare_subset <- subset_taxa(ps_object_rarefied, !is.na(Phylum) & !Phylum %in% c("Spirochaetota", "Campilobacterota", "Elusimicrobiota", "NA"))
+
+table(tax_table(ps_object_rare_subset)[, "Phylum"], exclude = NULL)
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
 ```
 
 ```{r}
