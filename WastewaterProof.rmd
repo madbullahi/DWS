@@ -710,9 +710,75 @@ library(dplyr)
 ww_data <- left_join(metadata, stats)
 ww_data
 
+# save the joined data to a file.
+
+write.csv(ww_data, "ww_data.csv")
+
+
+```
+
+
+```{r}
+#lets selects samples with atleats more than 1000 reads from non-chimeric reads.
+
+ww_data_filtered <- ww_data %>% 
+  filter( `non-chimeric`> 10000) %>%
+  select('Replicate','sample.id', 'Genotype', 'Day', 'Treatment', 'non-chimeric')
+
 ```
 
 ```{r}
+ww_data_filtered
+
+```
+
+```{r}
+
+#save the filtered data to a file.
+
+write.csv(ww_data_filtered, "ww_data_filtered.csv")
+
+```
+
+```{r}
+# inspecting ASVs and Taxonomy files.
+
+#taxonomy file
+
+taxas <- read_tsv("taxonomy.tsv", show_col_types = FALSE)
+
+#ASV file
+
+asv <- read_tsv("frequency_genus-table.tsv", show_col_types = FALSE)
+
+```
+
+```{r}
+problems(asv)
+problems(taxas)
+
+```
+
+```{r}
+head(taxas)
+```
+
+```{r}
+# create a phyloseq object from the qiime2 artifacts.
+
+ps_object <- qza_to_phyloseq(
+  features = "filtered_table.qza",
+  tree = "insertion-tree.qza","taxonomy.qza",
+  metadata = "MetData_Pathogen_removal.tsv"
+)  
+
+```
+
+```{r}
+
+# print the phyloseq object.
+
+ps_object
 
 ```
 
