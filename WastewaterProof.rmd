@@ -846,11 +846,24 @@ table(tax_table(ps_object_rare_subset)[, "Phylum"], exclude = NULL)
 ```
 
 ```{r}
+#compute the prevalence of each feature and store in a data frame
+prevdf_rarefied <- apply(X = otu_table(ps_object_rare_subset),
+                   MARGIN = ifelse(taxa_are_rows(ps_object_rare_subset), yes = 1,   no= 2),
+                   FUN = function(OTU) {sum(OTU > 0)})
 
 ```
 
 ```{r}
+# Add taxonomy and total read counts to the data frame.
+prevdf_rarefied <- data.frame(Prevalence = prevdf_rarefied,
+                        TotalAbundance = taxa_sums(ps_object_rare_subset),
+                        tax_table(ps_object_rare_subset))
 
+prevdf_rarefied
+
+```
+
+```{r}
 ```
 
 ```{r}
