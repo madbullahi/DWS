@@ -783,3 +783,60 @@ ps_object
 ```
 
 ```{r}
+# inspect the phyloseq object.
+
+summary(sample_sums(ps_object))
+```
+
+```{r}
+# rarefy the phyloseq object to the minimum sample read depth.
+
+set.seed(1234)
+
+# plot the read depth before rarefaction.
+plot_read_depth <-  function(ps_object){
+  # Extract sample read depths
+  read_depths <- sample_sums(ps_object)
+  
+  # create a data frame with sample names and read depths
+  df <- data.frame(Sample = names(read_depths), Read_Depth = read_depths)
+  
+  # create the plot
+  ggplot(df, aes(x = Sample , y = Read_Depth)) +
+    geom_bar(stat = "identity", fill = "steelblue") +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+    labs(x = "Sample", y = "Read Depth", title = "Read Depth Before Rarefaction")
+}
+
+# plot the read depth before rarefaction
+plot_read_depth(ps_object)
+
+```
+
+```{r}
+# Rarefy the phyloseq object to the minimum(even) sample read depth.
+
+ps_object_rarefied <- rarefy_even_depth(ps_object, rngseed = 1234, sample.size = 22574,
+                                        replace = TRUE, verbose = TRUE, trimOTUs = TRUE)
+
+# plot rarefaction curves with custom color.
+set.seed(123)
+otu_mat <- t(as(otu_table(ps_object_rarefied), "matrix"))
+rarecurve(otu_mat, step = 500, col = "red", cex = 0.8, 
+          xlab = "Number of Sequences", ylab = "Number of ASVs", 
+          main = "Rarefaction Curves")
+
+```
+
+```{r}
+
+
+```
+
+
+```{r}
+
+```
+
+```{r}
+
