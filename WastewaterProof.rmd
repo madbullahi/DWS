@@ -890,11 +890,62 @@ ps_object_rare1
 
 ```
 
+# Prevalence filtering
 ```{r}
+# subset to the remaining phyla.
+
+prevdf_rare1 <- subset(prevdf_rarefied, Phylum %in% get_taxa_unique(ps_object_rare1, "Phylum"))
 
 ```
 
 ```{r}
+ggplot(prevdf_rare1, aes(TotalAbundance, Prevalence / nsamples(ps_object_rare_subset), color = Phylum)) +
+  # include a guess for parameter
+  
+  geom_hline(yintercept = 0.05, alpha = 0.5, linetype = 2) +
+  geom_point(size = 2, alpha = 0.7) +
+  scale_x_log10() + xlab("Total Abundance") + ylab("Prevalence [Frac. samples]") +
+  facet_wrap(~Phylum) +
+  theme(legend.position = "none") 
+```
+
+```{r}
+# define the prevance threshold. as 5% of total sampls.
+prevalence_threshold <- 0.05 * nsamples(ps_object_rare_subset)  ## 5% of total samples.
+prevalence_threshold
+
+```
+
+```{r}
+# Execute prevalence filtering.
+
+keepTaxa <-  rownames(prevdf_rare1)[(prevdf_rare1$Prevalence >= prevalence_threshold)]
+ps_object_rare2 <- prune_taxa(keepTaxa,ps_object_rare_subset)
+ps_object_rare2
+
+```
+
+# Agglomerate taxa
+```{r}
+# how many genera would be present after filtering?
+length(get_taxa_unique(ps_object_rare2, "Genus"))
+
+```
+
+```{r}
+# how many family would be present after filtering?
+length(get_taxa_unique(ps_object_rare2, "Family"))
+
+```
+
+```{r}
+ps_object_rare3 <- tax_glom(ps_object_rare2, "Genus", NArm = TRUE)
+ps_object_rare4 <- tax_glom(ps_object_rare2, "Family", NArm = TRUE)
+
+```
+
+```{r}
+
 ```
 
 ```{r}
