@@ -763,6 +763,9 @@ problems(taxas)
 head(taxas)
 ```
 
+
+
+#New analysis
 ```{r}
 # create a phyloseq object from the qiime2 artifacts.
 
@@ -881,7 +884,7 @@ plyr::ddply(prevdf_rarefied, "Phylum",
 ```{r}
 # remove features with low prevalence.
 
-filterPhyla <-  c("Chloroflexi","Cyanobacteria", "Fibrobacterota", "Firmicutes", "Planctomycetota", "Gemmatimonadota", "Nitrospirota")
+filterPhyla <-  c("Fibrobacterota", "Firmicutes", "Planctomycetota", "Nitrospirota")
 
 # filter entries with unidentified phylum.
 ps_object_rare1 <- subset_taxa(ps_object_rare_subset, Phylum %in% filterPhyla)
@@ -911,6 +914,7 @@ ggplot(prevdf_rare1, aes(TotalAbundance, Prevalence / nsamples(ps_object_rare_su
 
 ```{r}
 # define the prevance threshold. as 5% of total sampls.
+set.seed(1234)
 prevalence_threshold <- 0.05 * nsamples(ps_object_rare_subset)  ## 5% of total samples.
 prevalence_threshold
 
@@ -919,7 +923,7 @@ prevalence_threshold
 ```{r}
 # Execute prevalence filtering.
 
-keepTaxa <-  rownames(prevdf_rare1)[(prevdf_rare1$Prevalence >= prevalence_threshold)]
+keepTaxa <-  rownames(prevdf_rarefied)[(prevdf_rarefied$Prevalence >= prevalence_threshold)]
 ps_object_rare2 <- prune_taxa(keepTaxa,ps_object_rare_subset)
 ps_object_rare2
 
@@ -944,7 +948,10 @@ ps_object_rare4 <- tax_glom(ps_object_rare2, "Family", NArm = TRUE)
 
 ```
 
+
+# Abundance value transformation
 ```{r}
+
 
 ```
 
