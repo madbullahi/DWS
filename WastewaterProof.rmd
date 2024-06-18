@@ -844,11 +844,17 @@ ps_object_rare_subset <- subset_taxa(ps_object_rarefied, !is.na(Phylum) & !Phylu
 table(tax_table(ps_object_rare_subset)[, "Phylum"], exclude = NULL)
 
 ```
+```{r}
+# remove features with ambiguous phylum annotation.
+
+ps_object_rare_subset <- subset_taxa(ps_object_rare_subset, !is.na(Phylum) & !Phylum %in% c("", "uncharacterized"))
+
+```
 
 ```{r}
 #compute the prevalence of each feature and store in a data frame
-prevdf_rarefied <- apply(X = otu_table(ps_object_rare_subset),
-                   MARGIN = ifelse(taxa_are_rows(ps_object_rare_subset), yes = 1,   no= 2),
+prevdf_rarefied <- apply(X = otu_table(ps_object_rare_subset),      
+                   MARGIN = ifelse(taxa_are_rows(ps_object_rare_subset), yes = 1,   no= 2), # number of samples in which taxa are present at least once.
                    FUN = function(OTU) {sum(OTU > 0)})
 
 ```
@@ -860,6 +866,15 @@ prevdf_rarefied <- data.frame(Prevalence = prevdf_rarefied,
                         tax_table(ps_object_rare_subset))
 
 prevdf_rarefied
+
+```
+
+```{r}
+# Are there phyla that are comprised of low prevaence features?
+# compute the total and avergae prevalence of features in each phylum.
+
+plyr::ddply(prevdf_rarefied, "Phylum",
+            function(df1){cbind(mean(df1$Prevalence), sum(df1$Prevalence))})
 
 ```
 
