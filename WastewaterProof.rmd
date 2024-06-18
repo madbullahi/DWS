@@ -879,6 +879,22 @@ plyr::ddply(prevdf_rarefied, "Phylum",
 ```
 
 ```{r}
+# remove features with low prevalence.
+
+filterPhyla <-  c("Chloroflexi","Cyanobacteria", "Fibrobacterota", "Firmicutes", "Planctomycetota", "Gemmatimonadota", "Nitrospirota")
+
+# filter entries with unidentified phylum.
+ps_object_rare1 <- subset_taxa(ps_object_rare_subset, Phylum %in% filterPhyla)
+
+ps_object_rare1
+
+```
+
+```{r}
+
+```
+
+```{r}
 ```
 
 ```{r}
