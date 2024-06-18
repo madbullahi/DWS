@@ -915,11 +915,12 @@ ggplot(prevdf_rare1, aes(TotalAbundance, Prevalence / nsamples(ps_object_rare_su
 ```{r}
 # define the prevance threshold. as 5% of total sampls.
 set.seed(1234)
-prevalence_threshold <- 0.05 * nsamples(ps_object_rare_subset)  ## 5% of total samples.
+prevalence_threshold <- 0.1 * nsamples(ps_object_rare_subset)  ## 10% of total samples.
 prevalence_threshold
 
 ```
-
+# Note: prevalence filtering is used to remove 
+#rare features that are only present in less than half of the samples
 ```{r}
 # Execute prevalence filtering.
 
@@ -949,14 +950,55 @@ ps_object_rare4 <- tax_glom(ps_object_rare2, "Family", NArm = TRUE)
 ```
 
 
-# Abundance value transformation
+# Calculate apha and beta diveristy at varying prevalence thresholds.
 ```{r}
-
+# define the prevalence thresholds.
+prevthreshold <-  c(0.01,0.05, 0.1, 0.2, 0.5)
 
 ```
 
 ```{r}
+# function to calculate alpha and beta diversity metrics.
+calc_diversity <- function(prevdf_rarefied, prevthreshold){
+ 
+   # filter taxa based on prevalence threshold.
+  ps_object_filtered <- filter_taxa(ps_object_rare_subset, function(x) sum(x > 0) > (prevthreshold * length(x)), TRUE)
+  
+                        
+  
+  # calculate alpha diversity
+  alpha_div <- estimate_richness(ps_object_filtered, measures = c("Observed", "Shannon", "Simpson"))
+  
+  # calculate beta diversity
+  beta_div <- vegdist(otu_table(ps_object_filtered), method = "bray")
+  
+  return(list(alpha_div = alpha_div, beta_div = beta_div))
+}
+
+```
+
+
+```{r}
+#evaluate the diversity at different prevalence thresholds.
+diversity_list <- lapply(prevthreshold, function(threshold) calc_diversity(prevdf_rarefied, threshold))
+
 ```
 
 ```{r}
+# print alpha diversity result.
+lapply(diversity_list, function(x) x$alpha_div)
+
+```
+
+```{r}
+
+# print beta diversity result.
+lapply(diversity_list, function(x) print(summary(as.dist(x$beta_div))))
+
+```
+
+```{r}
+
+
+```
 
