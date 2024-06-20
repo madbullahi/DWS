@@ -1004,16 +1004,18 @@ lapply(diversity_list, function(x) print(summary(as.dist(x$beta_div))))
 alpha_div <- estimate_richness(ps_object_rare2, measures = c("Observed", "Shannon", "Simpson"))
 
 # plot alpha divresity metrics.
-plot_richness(ps_object_rare2, x = "Day", measures = c("Observed", "Shannon", "Simpson")) +
+plot_richness(ps_object_rare2, x = "Day", measures ="Simpson") +
   geom_boxplot(aes(fill = Treatment))+ # Add fill color based on Treatment.
   theme_bw() +
+  facet_grid(~Genotype) + # facet by Genotype.
   theme(
     axis.text.x = element_text(angle = 90,
                                hjust = 1,
                                vjust = 0.5),
     axis.title.x = element_text(size = 14, face = "bold"),
-    axis.text = element_text(size = 12)) # rotate x-axis labels.
-
+    axis.text = element_text(size = 12)) +# rotate x-axis labels.
+ scale_y_continuous(limits = c(0, max(alpha_div$Simpson) * 1.1), # Adjust y-axis limits
+                     expand = c(0, 0))
 ```
 
 ```{r}
@@ -1086,3 +1088,28 @@ plot_ordination(ps_object_rare2, ord_unifrac, color = "Genotype", title = "Weigh
   theme_bw()
 
 ```
+
+
+```{r}
+merge_less_than_top_ww <- function(ww_rare.2, top = 10) { transformed <- transform_sample_counts(ww_rare.2, function(OTU) OTU/sum(OTU)) 
+otu.table <- as.data.frame(otu_table(transformed))
+otu.sort <- otu.table[order(rowMeans(otu.table), decreasing = TRUE),]
+otu.list <- row.names(otu.sort[(top + 1):nrow(otu.sort),])
+merged <- merge_taxa(transformed, otu.list, 1)
+for (i in 1:dim(tax_table(merged))[1]){
+  if (is.na(tax_table(merged)[i,2])){
+    taxa_names(merged)[i] <- "Other"
+    tax_table(merged)[i, 1:6] <- "other"
+  }
+}
+return(merged) 
+}
+
+```
+
+
+```{r}
+
+
+```
+
