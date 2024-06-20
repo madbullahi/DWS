@@ -1035,7 +1035,102 @@ plot_ordination(ps_object_rare2, ord, color = "Treatment", title = "Bray-Curtis 
   theme_bw() 
   
 
+
+
+
 ```
+
+
+
+```{r}
+
+# Calculate Bray-Curtis dissimilarity
+bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
+
+# Perform PCoA ordination
+ord <- ordinate(ps_object_rare2, method = "PCoA", distance = bc_dist)
+
+# Plot PCoA ordination
+plot_ordination(ps_object_rare2, ord, color = "Genotype", shape = "Treatment") +
+  facet_grid(~Day) +  # Add facet_grid to create separate plots for each Day
+  geom_point(size = 5) +
+  theme_bw()
+
+
+
+```
+
+
+```{r}
+library(phyloseq)
+library(ggplot2)
+library(pheatmap)
+
+# Calculate Bray-Curtis dissimilarity
+bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
+
+# Convert distance matrix to a data frame
+bc_dist_df <- as.data.frame(as.matrix(bc_dist))
+
+# Get metadata
+metadata <- data.frame(sample_data(ps_object_rare2))
+
+# Create annotation dataframe. This dataframe will be used to color the heatmap based on metadata.
+annotation_df <- data.frame(
+  Genotype = metadata$Genotype,
+  Treatment = metadata$Treatment,
+  Day = metadata$Day
+)
+
+# Define colors for annotation
+annotation_colors <- list(
+  Genotype = c("LRV_0_1" = "red", "LRV_12_3" = "blue", "LRV_8.5_3" = "green", "LR2_36_1" = "purple"), #
+  Treatment = c("Wastewater_Control" = "orange", "Wastewater_Daphnia" = "cyan"),
+  Day = c("D1" = "yellow", "D2" = "pink", "D3" = "brown")
+)
+
+# Create heatmap
+pheatmap(bc_dist_df,
+         annotation_col = annotation_df,
+         annotation_colors = annotation_colors,
+         show_rownames = FALSE,
+         show_colnames = FALSE,
+         main = "Bray-Curtis Distance Heatmap",
+         clustering_distance_rows = bc_dist,
+         clustering_distance_cols = bc_dist,
+         width = 15,
+         height = 12,
+         angle_col = 45
+         )
+
+```
+```{r}
+print(unique(annotation_df$Genotype))
+print(unique(annotation_df$Treatment))
+print(unique(annotation_df$Day))
+
+
+```
+```{r}
+library(ggplot2)
+
+ggplot(annotation_df, aes(x = 1, y = 1, fill = Genotype)) +
+  geom_tile() +
+  scale_fill_manual(values = annotation_colors$Genotype)
+
+ggplot(annotation_df, aes(x = 1, y = 1, fill = Treatment)) +
+  geom_tile() +
+  scale_fill_manual(values = annotation_colors$Treatment)
+
+ggplot(annotation_df, aes(x = 1, y = 1, fill = Day)) +
+  geom_tile() +
+  scale_fill_manual(values = annotation_colors$Day)
+
+
+
+```
+
+
 
 ```{r}
 
