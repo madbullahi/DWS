@@ -1528,5 +1528,12 @@ df_family_top10 <- psmelt(pf_family_10) %>%
 ```
 
 ```{r}
+#save the data
+write.csv(df_gen_top10, "genus_top10.csv")
+write.csv(df_family_top10, "family_top10.csv")
+
+```
+
+```{r}
 ```
 
