@@ -1510,18 +1510,18 @@ ps_family <- tax_glom(ps_object_rare2, "Family", NArm = TRUE)
 ```
 
 ```{r}
-
-ps_Gen_10 <- merge_less_than_top_ps(ps_gen, top = 10)
-pf_family_10 <- merge_less_than_top_ps(ps_family, top = 10)
+# Merge less than top 15 genera and families
+ps_Gen_15 <- merge_less_than_top_ps(ps_gen, top = 15)
+pf_family_15 <- merge_less_than_top_ps(ps_family, top = 15)
 
 ```
 
 ```{r}
 # convert to dataframe
-df_gen_top10 <- psmelt(ps_Gen_10) %>%
+df_gen_top15 <- psmelt(ps_Gen_15) %>%
   filter(Abundance > 0) %>%
   arrange(Genus)
-df_family_top10 <- psmelt(pf_family_10) %>%
+df_family_top15 <- psmelt(pf_family_15) %>%
   filter(Abundance > 0) %>%
   arrange(Family)
 
@@ -1529,11 +1529,13 @@ df_family_top10 <- psmelt(pf_family_10) %>%
 
 ```{r}
 #save the data
-write.csv(df_gen_top10, "genus_top10.csv")
-write.csv(df_family_top10, "family_top10.csv")
+write.csv(df_gen_top15, "genus_top10.csv")
+write.csv(df_family_top15, "family_top10.csv")
 
 ```
 
 ```{r}
+
+df_gen_top10 
 ```
 
