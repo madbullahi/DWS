@@ -1051,8 +1051,8 @@ bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
 ord <- ordinate(ps_object_rare2, method = "PCoA", distance = bc_dist)
 
 # Plot PCoA ordination
-plot_ordination(ps_object_rare2, ord, color = "Genotype", shape = "Treatment") +
-  facet_grid(~Day) +  # Add facet_grid to create separate plots for each Day
+plot_ordination(ps_object_rare2, ord, color = "Genotype", shape = "Day") +
+  facet_grid(~Treatment) +  # Add facet_grid to create separate plots for each Day
   geom_point(size = 5) +
   theme_bw()
 
@@ -1111,6 +1111,305 @@ print(unique(annotation_df$Day))
 
 
 ```
+```{r}
+library(phyloseq)
+library(pheatmap)
+library(gridExtra)
+
+# Calculate Bray-Curtis dissimilarity
+bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
+
+# Convert distance matrix to a data frame
+bc_dist_df <- as.data.frame(as.matrix(bc_dist))
+
+# Ensure row names and column names match
+if(!all(rownames(bc_dist_df) == colnames(bc_dist_df))) {
+  warning("Row names and column names of bc_dist_df don't match. This may cause issues.")
+}
+
+# Get metadata
+metadata <- data.frame(sample_data(ps_object_rare2))
+
+# Create annotation dataframe
+annotation_df <- data.frame(
+  Genotype = metadata$Genotype,
+  Treatment = metadata$Treatment,
+  Day = metadata$Day
+)
+
+# Ensure sample names in annotation_df match bc_dist_df
+rownames(annotation_df) <- rownames(metadata)
+if(!all(rownames(annotation_df) %in% colnames(bc_dist_df))) {
+  warning("Some sample names in annotation_df are not present in bc_dist_df. This may cause issues.")
+}
+
+# Define colors for annotation
+annotation_colors <- list(
+  Treatment = c("Wastewater_Control" = "orange", "Wastewater_Daphnia" = "cyan"),
+  Day = c("D1" = "yellow", "D2" = "pink", "D3" = "brown")
+)
+
+# Create a list to store heatmaps
+heatmap_list <- list()
+
+# Loop through each genotype
+for (genotype in unique(annotation_df$Genotype)) {
+  # Subset data for the current genotype
+  genotype_samples <- rownames(annotation_df)[annotation_df$Genotype == genotype]
+  
+  # Ensure genotype_samples exist in bc_dist_df
+  valid_samples <- intersect(genotype_samples, colnames(bc_dist_df))
+  
+  if(length(valid_samples) == 0) {
+    warning(paste("No valid samples found for genotype:", genotype))
+    next
+  }
+  
+  bc_dist_subset <- bc_dist_df[valid_samples, valid_samples]
+  annotation_subset <- annotation_df[valid_samples, c("Treatment", "Day")]
+  
+  # Check if subset is empty
+  if(nrow(bc_dist_subset) == 0 || ncol(bc_dist_subset) == 0) {
+    warning(paste("Empty subset for genotype:", genotype))
+    next
+  }
+  
+  # Create heatmap for the current genotype
+  tryCatch({
+    heatmap <- pheatmap(bc_dist_subset,
+                        annotation_col = annotation_subset,
+                        annotation_colors = annotation_colors,
+                        show_rownames = FALSE,
+                        show_colnames = FALSE,
+                        main = paste("Bray-Curtis Distance Heatmap -", genotype),
+                        clustering_distance_rows = as.dist(bc_dist_subset),
+                        clustering_distance_cols = as.dist(bc_dist_subset),
+                        silent = TRUE)
+    
+    # Store the heatmap in the list
+    heatmap_list[[genotype]] <- heatmap$gtable
+  }, error = function(e) {
+    warning(paste("Error creating heatmap for genotype:", genotype, "\nError message:", e$message))
+  })
+}
+
+# Check if any heatmaps were created
+if(length(heatmap_list) == 0) {
+  stop("No heatmaps were created. Please check your data and error messages.")
+}
+
+# Arrange all heatmaps in a grid
+grid.arrange(grobs = heatmap_list, ncol = 2)
+
+
+```
+
+
+```{r}
+
+print(colnames(bc_dist_df))
+print(genotype_samples)
+
+
+```
+
+```{r}
+library(phyloseq)
+library(pheatmap)
+library(gridExtra)
+library(dplyr)
+
+# Calculate Bray-Curtis dissimilarity
+bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
+
+# Convert distance matrix to a data frame
+bc_dist_df <- as.data.frame(as.matrix(bc_dist))
+
+# Ensure row names and column names match
+if(!all(rownames(bc_dist_df) == colnames(bc_dist_df))) {
+  warning("Row names and column names of bc_dist_df don't match. This may cause issues.")
+}
+
+# Get metadata
+metadata <- data.frame(sample_data(ps_object_rare2))
+
+# Create annotation dataframe
+annotation_df <- data.frame(
+  Genotype = metadata$Genotype,
+  Treatment = metadata$Treatment,
+  Day = metadata$Day
+)
+
+# Ensure sample names in annotation_df match bc_dist_df
+rownames(annotation_df) <- rownames(metadata)
+if(!all(rownames(annotation_df) %in% colnames(bc_dist_df))) {
+  warning("Some sample names in annotation_df are not present in bc_dist_df. This may cause issues.")
+}
+
+# Check data distribution
+print("Distribution of samples across Genotype and Treatment:")
+print(table(annotation_df$Genotype, annotation_df$Treatment))
+
+# Define colors for annotation with increased contrast
+annotation_colors <- list(
+  Treatment = c("Wastewater_Control" = "red", "Wastewater_Daphnia" = "blue"),
+  Day = c("D1" = "yellow", "D2" = "pink", "D3" = "brown")
+)
+
+# Create a list to store heatmaps
+heatmap_list <- list()
+
+# Loop through each genotype
+for (genotype in unique(annotation_df$Genotype)) {
+  # Subset data for the current genotype
+  genotype_samples <- rownames(annotation_df)[annotation_df$Genotype == genotype]
+  
+  # Ensure genotype_samples exist in bc_dist_df
+  valid_samples <- intersect(genotype_samples, colnames(bc_dist_df))
+  
+  if(length(valid_samples) == 0) {
+    warning(paste("No valid samples found for genotype:", genotype))
+    next
+  }
+  
+  bc_dist_subset <- bc_dist_df[valid_samples, valid_samples]
+  annotation_subset <- annotation_df[valid_samples, c("Treatment", "Day")]
+  
+  # Check if subset is empty
+  if(nrow(bc_dist_subset) == 0 || ncol(bc_dist_subset) == 0) {
+    warning(paste("Empty subset for genotype:", genotype))
+    next
+  }
+  
+  # Print unique treatments for this genotype
+  print(paste("Unique treatments for genotype", genotype, ":"))
+  print(unique(annotation_subset$Treatment))
+  
+  # Create heatmap for the current genotype
+  tryCatch({
+    heatmap <- pheatmap(bc_dist_subset,
+                        annotation_col = annotation_subset,
+                        annotation_colors = annotation_colors,
+                        show_rownames = FALSE,
+                        show_colnames = FALSE,
+                        main = paste("Bray-Curtis Distance Heatmap -", genotype),
+                        clustering_distance_rows = as.dist(bc_dist_subset),
+                        clustering_distance_cols = as.dist(bc_dist_subset),
+                        annotation_legend = TRUE,
+                        annotation_names_col = FALSE,
+                        annotation_names_row = FALSE,
+                        silent = TRUE)
+    
+    # Store the heatmap in the list
+    heatmap_list[[genotype]] <- heatmap$gtable
+  }, error = function(e) {
+    warning(paste("Error creating heatmap for genotype:", genotype, "\nError message:", e$message))
+  })
+}
+
+# Check if any heatmaps were created
+if(length(heatmap_list) == 0) {
+  stop("No heatmaps were created. Please check your data and error messages.")
+}
+
+# Arrange all heatmaps in a grid
+grid.arrange(grobs = heatmap_list, ncol = 2)
+
+
+
+```
+
+
+```{r}
+# Extract phylum information
+tax_table <- tax_table(ps_object_rare2)
+phylum_data <- tax_table[, "Phylum"]
+otu_table <- otu_table(ps_object_rare2)
+
+# Aggregate OTU counts at phylum level
+phylum_counts <- aggregate(otu_table, by = list(Phylum = phylum_data), sum)
+rownames(phylum_counts) <- phylum_counts$Phylum
+phylum_counts$Phylum <- NULL
+
+# Convert to relative abundance
+phylum_rel_abund <- sweep(phylum_counts, 2, colSums(phylum_counts), '/')
+
+
+
+```
+
+
+
+```{r}
+# Loop through each genotype
+for (genotype in unique(annotation_df$Genotype)) {
+  # Subset data for the current genotype
+  genotype_samples <- rownames(annotation_df)[annotation_df$Genotype == genotype]
+  
+  # Ensure genotype_samples exist in bc_dist_df
+  valid_samples <- intersect(genotype_samples, colnames(bc_dist_df))
+  
+  if(length(valid_samples) == 0) {
+    warning(paste("No valid samples found for genotype:", genotype))
+    next
+  }
+  
+  bc_dist_subset <- bc_dist_df[valid_samples, valid_samples]
+  annotation_subset <- annotation_df[valid_samples, c("Treatment", "Day")]
+  phylum_subset <- phylum_rel_abund[, valid_samples]
+  
+  # Check if subset is empty
+  if(nrow(bc_dist_subset) == 0 || ncol(bc_dist_subset) == 0) {
+    warning(paste("Empty subset for genotype:", genotype))
+    next
+  }
+  
+  # Create heatmap for the current genotype
+  tryCatch({
+    # Bray-Curtis distance heatmap
+    heatmap_bc <- pheatmap(bc_dist_subset,
+                           annotation_col = annotation_subset,
+                           annotation_colors = annotation_colors,
+                           show_rownames = FALSE,
+                           show_colnames = FALSE,
+                           main = paste("Bray-Curtis Distance -", genotype),
+                           clustering_distance_rows = as.dist(bc_dist_subset),
+                           clustering_distance_cols = as.dist(bc_dist_subset),
+                           annotation_legend = TRUE,
+                           annotation_names_col = FALSE,
+                           annotation_names_row = FALSE,
+                           silent = TRUE)
+    
+    # Phylum relative abundance heatmap
+    heatmap_phylum <- pheatmap(phylum_subset,
+                               annotation_col = annotation_subset,
+                               annotation_colors = annotation_colors,
+                               show_rownames = TRUE,
+                               show_colnames = FALSE,
+                               main = paste("Phylum Relative Abundance -", genotype),
+                               clustering_distance_cols = as.dist(bc_dist_subset),
+                               annotation_legend = TRUE,
+                               annotation_names_col = FALSE,
+                               annotation_names_row = FALSE,
+                               silent = TRUE)
+    
+    # Combine the two heatmaps
+    combined_heatmap <- grid.arrange(heatmap_bc$gtable, heatmap_phylum$gtable, ncol = 1)
+    
+    # Store the combined heatmap in the list
+    heatmap_list[[genotype]] <- combined_heatmap
+  }, error = function(e) {
+    warning(paste("Error creating heatmap for genotype:", genotype, "\nError message:", e$message))
+  })
+}
+
+
+
+
+```
+
+
+
 ```{r}
 library(ggplot2)
 
@@ -1186,7 +1485,7 @@ plot_ordination(ps_object_rare2, ord_unifrac, color = "Genotype", title = "Weigh
 
 
 ```{r}
-merge_less_than_top_ww <- function(ww_rare.2, top = 10) { transformed <- transform_sample_counts(ww_rare.2, function(OTU) OTU/sum(OTU)) 
+merge_less_than_top_ps <- function(ps_object_rare2, top = 10) { transformed <- transform_sample_counts(ps_object_rare2, function(OTU) OTU/sum(OTU)) 
 otu.table <- as.data.frame(otu_table(transformed))
 otu.sort <- otu.table[order(rowMeans(otu.table), decreasing = TRUE),]
 otu.list <- row.names(otu.sort[(top + 1):nrow(otu.sort),])
@@ -1204,7 +1503,30 @@ return(merged)
 
 
 ```{r}
+ps_gen <- tax_glom(ps_object_rare2, "Genus", NArm = TRUE)
+ps_family <- tax_glom(ps_object_rare2, "Family", NArm = TRUE)
 
 
+```
+
+```{r}
+
+ps_Gen_10 <- merge_less_than_top_ps(ps_gen, top = 10)
+pf_family_10 <- merge_less_than_top_ps(ps_family, top = 10)
+
+```
+
+```{r}
+# convert to dataframe
+df_gen_top10 <- psmelt(ps_Gen_10) %>%
+  filter(Abundance > 0) %>%
+  arrange(Genus)
+df_family_top10 <- psmelt(pf_family_10) %>%
+  filter(Abundance > 0) %>%
+  arrange(Family)
+
+```
+
+```{r}
 ```
 
