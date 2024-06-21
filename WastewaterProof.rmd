@@ -1529,13 +1529,186 @@ df_family_top15 <- psmelt(pf_family_15) %>%
 
 ```{r}
 #save the data
-write.csv(df_gen_top15, "genus_top10.csv")
-write.csv(df_family_top15, "family_top10.csv")
+write.csv(df_gen_top15, "genus_top15.csv")
+write.csv(df_family_top15, "family_top15.csv")
 
 ```
 
 ```{r}
 
-df_gen_top10 
+df_gen_top15 
 ```
+
+```{r}
+
+df_family_top15
+
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Assuming tax_rel_abun_pf_gen_top10 is your data frame
+# First, let's ensure we have the top 15 genera
+top_15_genera <- df_gen_top15 %>%
+  group_by(Genus) %>%
+  summarize(total_abundance = sum(Abundance)) %>%
+  top_n(15, total_abundance) %>%
+  pull(Genus)
+
+# Filter the data for top 15 genera
+data_top_15 <- df_gen_top15 %>%
+  filter(Genus %in% top_15_genera)
+
+# Create the plot
+WW <- ggplot(
+  data_top_15, 
+  aes(x = Day, y = Abundance, fill = Genus)
+) +
+  facet_grid(Genotype ~ Treatment, scales = "free_x") +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(x = "Day", y = "Relative Abundance", title = "Top 15 Genera Relative Abundance") +
+  scale_y_continuous(labels = scales::percent_format()) +
+  scale_fill_brewer(palette = "Paired") +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 8, angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 8),
+    legend.text = element_text(size = 7),
+    legend.title = element_text(size = 8),
+    strip.text = element_text(size = 8),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  ) +
+  guides(fill = guide_legend(ncol = 5))
+
+print(WW)
+
+
+```
+
+
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Function to create the plot for a specific genotype vs control
+plot_genotype_vs_control <- function(data, genotype_of_interest, control_genotype = "CONTROL") {
+  # Filter data for the genotype of interest and control
+  filtered_data <- data %>%
+    filter(Genotype %in% c(genotype_of_interest, control_genotype))
+  
+  # Get top 15 genera
+  top_15_genera <- filtered_data %>%
+    group_by(Genus) %>%
+    summarize(total_abundance = sum(Abundance)) %>%
+    top_n(15, total_abundance) %>%
+    pull(Genus)
+  
+  # Filter for top 15 genera
+  data_top_15 <- filtered_data %>%
+    filter(Genus %in% top_15_genera)
+  
+  # Create the plot
+  plot <- ggplot(
+    data_top_15, 
+    aes(x = Day, y = Abundance, fill = Genus)
+  ) +
+    facet_grid(Genotype ~ Treatment, scales = "free_x") +
+    geom_bar(stat = "identity", position = "fill") +
+    labs(
+      x = "Day", 
+      y = "Relative Abundance", 
+      title = paste("Top 15 Genera Relative Abundance:", genotype_of_interest, "vs", control_genotype)
+    ) +
+    scale_y_continuous(labels = scales::percent_format()) +
+    scale_fill_brewer(palette = "Paired") +
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(size = 8, angle = 90, vjust = 0.5, hjust = 1),
+      axis.text.y = element_text(size = 8),
+      legend.text = element_text(size = 7),
+      legend.title = element_text(size = 8),
+      strip.text = element_text(size = 8),
+      panel.grid.major = element_blank(),
+      panel.grid.minor = element_blank(),
+      legend.position = "bottom"
+    ) +
+    guides(fill = guide_legend(ncol = 5))
+  
+  return(plot)
+}
+
+# Usage example:
+# Replace 'df_gen_top15' with your actual data frame name
+# Replace 'LRV_0_1' with the genotype you want to compare against control
+WW <- plot_genotype_vs_control(df_gen_top15, "LRV_0_1")
+print(WW)
+
+# To plot a different genotype, just change the genotype name:
+# WW <- plot_genotype_vs_control(df_gen_top15, "LRV_12_3")
+# print(WW)
+
+
+```
+
+
+```{r}
+gen_10<- ggplot(
+  df_gen_top15, aes(x = Day, y = Abundance, fill = Genus)
+)+
+  facet_grid(~Genotype, scales = "free")+
+  geom_bar(stat = "identity", position = "fill")+
+  labs(x="Day", y="Rel. Abun", title = "Genus relative abundance") +
+   theme(
+    axis.text.x = element_text(size = 10, 
+    angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 8),
+    legend.text = element_text(size = 8),
+    strip.text = element_text(size = 8)
+  )
+gen_10
+```
+```{r}
+library(ggplot2)
+library(viridis)  # For a more vibrant color palette
+
+gen_10 <- ggplot(
+  df_gen_top15, aes(x = Day, y = Abundance, fill = Genus)
+) +
+  facet_grid(~Genotype, scales = "free") +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(x = "Day", y = "Relative Abundance", title = "Genus Relative Abundance") +
+  scale_fill_viridis(discrete = TRUE, option = "turbo") +  # More vibrant color palette
+  theme_minimal() +  # Cleaner background
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 10),
+    strip.text = element_text(size = 14, face = "bold"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  ) +
+  guides(fill = guide_legend(ncol = 3))  # Adjust legend layout
+
+# Increase plot size
+ggsave("genus_relative_abundance.png", gen_10, width = 15, height = 10, dpi = 300)
+
+# Display the plot
+print(gen_10)
+
+
+```
+
+
 
