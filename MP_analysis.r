@@ -189,3 +189,31 @@ writeData(wb, "ANOVA_Results_Mp_PFOS", anova_df, rowNames = TRUE)
 
 # Save the workbook to an Excel file
 saveWorkbook(wb, "anova_results_mp_PFOS.xlsx", overwrite = TRUE)
+
+
+Mp_PFOA_anova <- read_excel(file.choose(), sheet = "MP_PFOA")
+Mp_PFOA_anova
+
+# Fit the nested mixed-effect model
+model3 <- lmer(RE ~ Genotype * Day + (1|Genotype:Replicates), data = Mp_PFOA_anova)
+
+# Perform ANOVA on the model
+anova_result3 <- anova(model3)
+
+# Print the ANOVA table
+print(anova_result3)
+
+
+# Convert the ANOVA table to a data frame
+anova_df <- as.data.frame(anova_result3)
+
+
+# Create a new workbook and add a worksheet
+wb <- createWorkbook()
+addWorksheet(wb, "ANOVA_Results_Mp_PFOA")
+
+# Write the ANOVA table to the worksheet
+writeData(wb, "ANOVA_Results_Mp_PFOA", anova_df, rowNames = TRUE)
+
+# Save the workbook to an Excel file
+saveWorkbook(wb, "anova_results_mp_PFOA.xlsx", overwrite = TRUE)
