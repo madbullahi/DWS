@@ -133,5 +133,31 @@ print(ppt, target = "removal_efficiency.pptx")
 
 
 # calculate the ANOVA.
+library(lme4)
+
+Mp_anova <- read_excel(file.choose(), sheet = "MP")
+Mp_anova
+
+# Fit the nested mixed-effect model
+model <- lmer(RE ~ Genotype * Day + (1|Genotype:Replicates), data = Mp_anova)
+
+# Perform ANOVA on the model
+anova_result <- anova(model)
+
+# Print the ANOVA table
+print(anova_result)
 
 
+# Convert the ANOVA table to a data frame
+anova_df <- as.data.frame(anova_result)
+
+
+# Create a new workbook and add a worksheet
+wb <- createWorkbook()
+addWorksheet(wb, "ANOVA_Results_Mp")
+
+# Write the ANOVA table to the worksheet
+writeData(wb, "ANOVA_Results_Mp", anova_df, rowNames = TRUE)
+
+# Save the workbook to an Excel file
+saveWorkbook(wb, "anova_results_mp.xlsx", overwrite = TRUE)
