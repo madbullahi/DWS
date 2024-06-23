@@ -94,10 +94,13 @@ library(officer)
 library(rvg)
 
 # Create the plot
-plot <- ggplot(sE_Mp_data, aes(x = Day, y = RE, color = Genotype)) + 
-  geom_line(size = 1.5) +
+color_palette <- c("#E69F00", "#56B4E9")
+
+ggplot(sE_Mp_data, aes(x = Day, y = RE, color = Genotype, group = interaction(Genotype, Treatment))) + 
+  geom_line(size = 1.5, position = position_dodge(width = 0.5)) +
   geom_errorbar(aes(ymin = RE - se, ymax = RE + se), 
                 width = 0.2, size = 1, position = position_dodge(width = 0.5)) + 
+  facet_wrap(~ Treatment, nrow = 2) +
   theme_minimal(base_size = 14) +
   labs(title = "Mean of Removal Efficiency (%)", 
        x = "Day",
@@ -107,8 +110,12 @@ plot <- ggplot(sE_Mp_data, aes(x = Day, y = RE, color = Genotype)) +
         axis.title = element_text(size = 14, face = "bold"),
         plot.title = element_text(size = 16, face = "bold"),
         legend.text = element_text(size = 12),
-        legend.title = element_text(size = 14, face = "bold"))
-
+        legend.title = element_text(size = 14, face = "bold"),
+        panel.grid.major = element_line(color = "gray90", size = 0.2),
+        panel.grid.minor = element_blank()) +
+  scale_color_manual(values = color_palette) +
+  ylim(min(sE_Mp_data$RE - sE_Mp_data$se), max(sE_Mp_data$RE + sE_Mp_data$se)) +
+  expand_limits(y = c(0, max(sE_Mp_data$RE + sE_Mp_data$se) * 1.05))
 # Create a PowerPoint presentation
 ppt <- read_pptx()
 
