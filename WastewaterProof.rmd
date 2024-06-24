@@ -1059,6 +1059,94 @@ plot_ordination(ps_object_rare2, ord, color = "Genotype", shape = "Day") +
 
 
 ```
+```{r}
+
+# Calculate Bray-Curtis dissimilarity
+bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
+
+# Perform PCoA ordination
+ord <- ordinate(ps_object_rare2, method = "PCoA", distance = bc_dist)
+
+# Plot PCoA ordination
+plot_ordination(ps_object_rare2, ord, color = "Genotype", shape = "Day") +
+  geom_point(aes(fill = Treatment), size = 5, stroke = 1) +
+  scale_shape_manual(values = c(21, 22, 23)) +  # Different shapes for each Day
+  scale_fill_manual(values = c("white", "black")) +  # Fill colors for Treatment
+  theme_bw() +
+  labs(title = "PCoA of Bray-Curtis Dissimilarity",
+       x = "PCoA1", y = "PCoA2") +
+  theme(legend.position = "right",
+        plot.title = element_text(hjust = 0.5, size = 16),
+        axis.title = element_text(size = 14),
+        axis.text = element_text(size = 12),
+        legend.title = element_text(size = 12),
+        legend.text = element_text(size = 10)) +
+  guides(color = guide_legend(title = "Genotype"),
+         shape = guide_legend(title = "Day"),
+         fill = guide_legend(title = "Treatment"))
+
+
+
+```
+
+```{r}
+library(phyloseq)
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+
+# Calculate Bray-Curtis dissimilarity
+bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
+
+# Perform PCoA ordination
+ord <- ordinate(ps_object_rare2, method = "PCoA", distance = bc_dist)
+
+# Extract the percent variance explained by each axis
+variance_explained <- ord$values$Relative_eig * 100
+
+# Create a data frame with the PCoA coordinates and metadata
+plot_data <- data.frame(
+  PC1 = ord$vectors[,1],
+  PC2 = ord$vectors[,2],
+  Day = sample_data(ps_object_rare2)$Day,
+  Genotype = sample_data(ps_object_rare2)$Genotype
+)
+
+# Define color palettes for Genotype and Day
+genotype_colors <- brewer.pal(n = length(unique(plot_data$Genotype)), name = "Set1")
+day_colors <- brewer.pal(n = length(unique(plot_data$Day)), name = "Dark2")
+
+# Plot PCoA ordination
+ggplot(plot_data, aes(x = PC1, y = PC2)) +
+  geom_point(aes(color = Genotype, shape = Day), size = 5, stroke = 1.5) +
+  scale_color_manual(values = genotype_colors) +
+  scale_shape_manual(values = c(16, 17, 18)) +
+  labs(
+    x = paste0("PC1 (", round(variance_explained[1], 2), "%)"),
+    y = paste0("PC2 (", round(variance_explained[2], 2), "%)"),
+    title = "PCoA of Bray-Curtis Dissimilarity",
+    color = "Genotype",
+    shape = "Day"
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 14, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(1, "cm")
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 5)),
+         shape = guide_legend(override.aes = list(size = 5)))
+
+ggsave("PCoA_Genotype_Day.pdf", width = 10, height = 8, dpi = 300)
+
+```
+
+
+
 
 
 ```{r}
@@ -1709,6 +1797,42 @@ print(gen_10)
 
 
 ```
+
+```{r}
+family_15 <- ggplot(
+  df_family_top15, aes(x = Day, y = Abundance, fill = Family)
+) +
+  facet_grid(~Genotype, scales = "free") +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(x = "Day", y = "Relative Abundance", title = "Family Relative Abundance") +
+  scale_fill_viridis(discrete = TRUE, option = "turbo") +  # More vibrant color palette
+  theme_minimal() +  # Cleaner background
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 10),
+    strip.text = element_text(size = 14, face = "bold"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  ) +
+  guides(fill = guide_legend(ncol = 3))  # Adjust legend layout
+
+# Increase plot size
+ggsave("Family_relative_abundance.png", gen_10, width = 15, height = 10, dpi = 300)
+
+# Display the plot
+print(family_15)
+
+```
+
+```{r}
+#PERMANOVA on Bray-Curtis dissimilarity matrix.
+
+
 
 
 
