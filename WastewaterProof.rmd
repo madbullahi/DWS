@@ -1903,9 +1903,53 @@ print(family_15)
 ```
 
 ```{r}
-#PERMANOVA on Bray-Curtis dissimilarity matrix.
+# compute test for group differences.
+# create a new variable representing the combination of Genotype and Replicates.
+
+sample_data(ps_object_rare2_transformed)$Genotype_Replicates <- interaction(sample_data(ps_object_rare2_transformed)$Genotype,sample_data(ps_object_rare2_transformed)$Replicates)
 
 
+
+```
+
+
+```{r}
+# Test for group differences using adonis with the interaction term and strata.
+
+adonis_result <-  adonis(
+  wunifrac_dist ~ Genotype * Day, data = as(sample_data(
+    ps_object_rare2_transformed
+  ), "data.frame"),
+  strata = sample_data(ps_object_rare2_transformed)$Genotype_Replicates
+)  # Adonis test with interaction term and strata
+
+
+```
+
+```{r}
+# Extract the adonis results.
+
+library(openxlsx)
+adonis_table <- adonis_result$aov.tab
+
+# create a new workbook and aad a new worksheet.
+
+wb <- createWorkbook()
+addWorksheet(wb, "Adonis Results")
+
+# Write the adonis results to the worksheet.
+
+writeData(wb, "Adonis Results", adonis_table)
+
+# Save the workbook to a file.
+
+saveWorkbook(wb, "adonis_results.xlsx", overwrite = TRUE)
+
+```
+
+```{r}
+
+```
 
 
 
