@@ -819,8 +819,8 @@ plot_read_depth(ps_object)
 ```{r}
 # Rarefy the phyloseq object to the minimum(even) sample read depth.
 
-ps_object_rarefied <- rarefy_even_depth(ps_object, rngseed = 1234, sample.size = 22574,
-                                        replace = TRUE, verbose = TRUE, trimOTUs = TRUE)
+ps_object_rarefied <- rarefy_even_depth(ps_object, rngseed = 1234,  sample.size = 22574,
+                                        replace = TRUE, verbose = TRUE, trimOTUs = TRUE) # trimOTUs = TRUE removes OTUs with zero counts in all samples.
 
 # plot rarefaction curves with custom color.
 set.seed(123)
@@ -873,8 +873,8 @@ prevdf_rarefied
 ```
 
 ```{r}
-# Are there phyla that are comprised of low prevaence features?
-# compute the total and avergae prevalence of features in each phylum.
+# Are there phyla that are comprised of low prevalence features?
+# compute the total and average prevalence of features in each phylum.
 
 plyr::ddply(prevdf_rarefied, "Phylum",
             function(df1){cbind(mean(df1$Prevalence), sum(df1$Prevalence))})
@@ -884,7 +884,7 @@ plyr::ddply(prevdf_rarefied, "Phylum",
 ```{r}
 # remove features with low prevalence.
 
-filterPhyla <-  c("Fibrobacterota", "Firmicutes", "Planctomycetota", "Nitrospirota")
+filterPhyla <-  c("Fibrobacterota", "Firmicutes", "Planctomycetota", "Nitrospirota") # phyla with low prevalence features.
 
 # filter entries with unidentified phylum.
 ps_object_rare1 <- subset_taxa(ps_object_rare_subset, Phylum %in% filterPhyla)
@@ -915,8 +915,8 @@ ggplot(prevdf_rare1, aes(TotalAbundance, Prevalence / nsamples(ps_object_rare_su
 ```{r}
 # define the prevance threshold. as 5% of total sampls.
 set.seed(1234)
-prevalence_threshold <- 0.1 * nsamples(ps_object_rare_subset)  ## 10% of total samples.
-prevalence_threshold
+prevalence_threshold <- 0.05 * nsamples(ps_object_rare_subset)  ## 5% of total samples.
+prevalence_threshold  
 
 ```
 # Note: prevalence filtering is used to remove 
@@ -927,6 +927,12 @@ prevalence_threshold
 keepTaxa <-  rownames(prevdf_rarefied)[(prevdf_rarefied$Prevalence >= prevalence_threshold)]
 ps_object_rare2 <- prune_taxa(keepTaxa,ps_object_rare_subset)
 ps_object_rare2
+
+```
+
+```{r}
+# phyloseq object before filtering
+ps_object_rare_subset
 
 ```
 
@@ -1094,12 +1100,18 @@ library(phyloseq)
 library(ggplot2)
 library(dplyr)
 library(RColorBrewer)
+library(microbiome)
+
+# Aplly transformation to the data
+
+ps_object_rare2_transformed <- transform_sample_counts(ps_object_rare2, function(x) x / sum(x))
 
 # Calculate Bray-Curtis dissimilarity
-bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
+bc_dist <- phyloseq::distance(ps_object_rare2_transformed, method = "bray")
+
 
 # Perform PCoA ordination
-ord <- ordinate(ps_object_rare2, method = "PCoA", distance = bc_dist)
+ord <- ordinate(ps_object_rare2_transformed, method = "PCoA", distance = bc_dist)
 
 # Extract the percent variance explained by each axis
 variance_explained <- ord$values$Relative_eig * 100
@@ -1108,8 +1120,8 @@ variance_explained <- ord$values$Relative_eig * 100
 plot_data <- data.frame(
   PC1 = ord$vectors[,1],
   PC2 = ord$vectors[,2],
-  Day = sample_data(ps_object_rare2)$Day,
-  Genotype = sample_data(ps_object_rare2)$Genotype
+  Day = sample_data(ps_object_rare2_transformed)$Day,
+  Genotype = sample_data(ps_object_rare2_transformed)$Genotype
 )
 
 # Define color palettes for Genotype and Day
@@ -1573,7 +1585,7 @@ plot_ordination(ps_object_rare2, ord_unifrac, color = "Genotype", title = "Weigh
 
 
 ```{r}
-merge_less_than_top_ps <- function(ps_object_rare2, top = 10) { transformed <- transform_sample_counts(ps_object_rare2, function(OTU) OTU/sum(OTU)) 
+merge_less_than_top_ps <- function(ps_object_rare2, top = 20) { transformed <- transform_sample_counts(ps_object_rare2, function(OTU) OTU/sum(OTU)) 
 otu.table <- as.data.frame(otu_table(transformed))
 otu.sort <- otu.table[order(rowMeans(otu.table), decreasing = TRUE),]
 otu.list <- row.names(otu.sort[(top + 1):nrow(otu.sort),])
@@ -1599,8 +1611,8 @@ ps_family <- tax_glom(ps_object_rare2, "Family", NArm = TRUE)
 
 ```{r}
 # Merge less than top 15 genera and families
-ps_Gen_15 <- merge_less_than_top_ps(ps_gen, top = 15)
-pf_family_15 <- merge_less_than_top_ps(ps_family, top = 15)
+ps_Gen_15 <- merge_less_than_top_ps(ps_gen, top = 20)
+pf_family_15 <- merge_less_than_top_ps(ps_family, top = 20)
 
 ```
 
