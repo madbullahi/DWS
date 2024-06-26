@@ -1104,7 +1104,7 @@ library(microbiome)
 
 # Aplly transformation to the data
 
-ps_object_rare2_transformed <- transform_sample_counts(ps_object_rare2, function(x) x / sum(x))
+ps_object_rare2_transformed <- transform_sample_counts(ps_object_rare2, function(x) x / sum(x)) # Relative abundance.
 
 # Calculate Bray-Curtis dissimilarity
 bc_dist <- phyloseq::distance(ps_object_rare2_transformed, method = "bray")
@@ -1158,7 +1158,68 @@ ggsave("PCoA_Genotype_Day.pdf", width = 10, height = 8, dpi = 300)
 ```
 
 
+```{r}
+# Weighted Unifrac.
+library(phyloseq)
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(microbiome)
 
+# Apply transformation to the data
+ps_object_rare2_transformed <- transform_sample_counts(ps_object_rare2, function(x) x / sum(x)) # Relative abundance
+
+# Calculate weighted UniFrac distance
+wunifrac_dist <- phyloseq::distance(ps_object_rare2_transformed, method = "wunifrac")
+
+# Perform PCoA ordination
+ord <- ordinate(ps_object_rare2_transformed, method = "PCoA", distance = wunifrac_dist)
+
+# Extract the percent variance explained by each axis
+variance_explained <- ord$values$Relative_eig * 100
+
+# Create a data frame with the PCoA coordinates and metadata
+plot_data <- data.frame(
+  PC1 = ord$vectors[,1],
+  PC2 = ord$vectors[,2],
+  Day = sample_data(ps_object_rare2_transformed)$Day,
+  Genotype = sample_data(ps_object_rare2_transformed)$Genotype
+)
+
+# Define color palettes for Genotype and Day
+genotype_colors <- brewer.pal(n = length(unique(plot_data$Genotype)), name = "Set1")
+day_colors <- brewer.pal(n = length(unique(plot_data$Day)), name = "Dark2")
+
+# Plot PCoA ordination
+ggplot(plot_data, aes(x = PC1, y = PC2)) +
+  geom_point(aes(color = Genotype, shape = Day), size = 5, stroke = 1.5) +
+  scale_color_manual(values = genotype_colors) +
+  scale_shape_manual(values = c(16, 17, 18)) +
+  labs(
+    x = paste0("PC1 (", round(variance_explained[1], 2), "%)"),
+    y = paste0("PC2 (", round(variance_explained[2], 2), "%)"),
+    title = "PCoA of Weighted UniFrac Distance",
+    color = "Genotype",
+    shape = "Day"
+  ) +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    plot.title = element_text(hjust = 0.5, size = 18, face = "bold"),
+    axis.title = element_text(size = 16, face = "bold"),
+    axis.text = element_text(size = 14),
+    legend.title = element_text(size = 14, face = "bold"),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(1, "cm")
+  ) +
+  guides(color = guide_legend(override.aes = list(size = 5)),
+         shape = guide_legend(override.aes = list(size = 5)))
+
+ggsave("PCoA_Weighted_UniFrac_Genotype_Day.pdf", width = 10, height = 8, dpi = 300)
+
+
+
+```
 
 
 ```{r}
