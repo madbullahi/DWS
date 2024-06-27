@@ -884,7 +884,7 @@ plyr::ddply(prevdf_rarefied, "Phylum",
 ```{r}
 # remove features with low prevalence.
 
-filterPhyla <-  c("Fibrobacterota", "Firmicutes", "Planctomycetota", "Nitrospirota") # phyla with low prevalence features.
+filterPhyla <-  c("Fibrobacterota", "Planctomycetota") # phyla with low prevalence features.
 
 # filter entries with unidentified phylum.
 ps_object_rare1 <- subset_taxa(ps_object_rare_subset, Phylum %in% filterPhyla)
@@ -1234,6 +1234,13 @@ bc_adonis
 
 
 
+
+
+
+
+
+
+
 ```{r}
 merge_less_than_top_ps <- function(ps_object_rare2, top = 15) { transformed <- transform_sample_counts(ps_object_rare2, function(OTU) OTU/sum(OTU)) 
 otu.table <- as.data.frame(otu_table(transformed))
@@ -1386,6 +1393,10 @@ adonis_result <-  adonis(
   strata = sample_data(ps_object_rare2_transformed)$Genotype_Replicates
 )  # Adonis test with interaction term and strata
 
+
+```
+```{r}
+adonis_result
 
 ```
 
@@ -1563,5 +1574,90 @@ write.csv(genus_table, "top_15_genera_abundance_by_genotype_and_day.csv", row.na
 
 
 ```
+
+```{r}
+library(phyloseq)
+library(ggplot2)
+library(dplyr)
+
+# Assuming ps_merged is your phyloseq object after merging low abundance taxa
+
+# Convert to relative abundance
+ps_rel <- transform_sample_counts(ps_merged, function(x) x / sum(x))
+
+# Melt the phyloseq object to a long format
+ps_melted <- psmelt(ps_rel)
+
+# Select the top 15 most abundant genera
+top_15_genera <- ps_melted %>%
+  group_by(Genus) %>%
+  summarise(mean_abundance = mean(Abundance)) %>%
+  arrange(desc(mean_abundance)) %>%
+  top_n(15, mean_abundance) %>%
+  pull(Genus)
+
+# Filter the melted data for the top 15 genera
+ps_top15 <- ps_melted %>%
+  filter(Genus %in% top_15_genera)
+
+# Create boxplot
+ggplot(ps_top15, aes(x = Genus, y = Abundance, fill = Genotype)) +
+  geom_boxplot() +
+  facet_wrap(~Day, scales = "free_y") +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Genus", y = "Relative Abundance", 
+       title = "Relative Abundance of Top 15 Genera by Genotype and Day") +
+  scale_y_continuous(labels = scales::percent)
+
+# Save the plot
+ggsave("top_15_genera_boxplot.png", width = 15, height = 10, dpi = 300)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#differential abundance analysis
+```{r}
+library(ANCOMBC)
+library(phyloseq)
+library(tidyverse)
+
+# Perform ANCOM-BC analysis
+ancombc_result <- ancombc(phyloseq = ps_merged, 
+                          formula = "Genotype + Day", 
+                          p_adj_method = "holm",
+                          zero_cut = 0.90, # prevalence filter
+                          lib_cut = 1000, # library size filter
+                          group = "Genotype", 
+                          struc_zero = TRUE, 
+                          neg_lb = TRUE, 
+                          tol = 1e-5, 
+                          max_iter = 100, 
+                          conserve = TRUE, 
+                          alpha = 0.05, 
+                          global = FALSE)
+
+# Extract results
+res <- ancombc_result$res
+
+
+
+
+
+
+```
+
 
 
