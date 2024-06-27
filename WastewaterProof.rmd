@@ -1948,8 +1948,44 @@ saveWorkbook(wb, "adonis_results.xlsx", overwrite = TRUE)
 ```
 
 ```{r}
+# merge low abundance.
+
+merge_low_abundance <- function(ps, threshold = 0.01, level = "Genus") {
+  # Identify taxa below threshold
+  low_abundance <- taxa_sums(ps) < threshold
+  
+  # Merge low abundance taxa
+  ps_merged <- merge_taxa(ps, taxa_names(ps)[low_abundance])
+  
+  # Rename merged taxon
+  taxa_names(ps_merged)[taxa_names(ps_merged) == "merged"] <- "Other"
+  
+  # Set the taxonomic level for the merged "Other" taxon
+  tax_table(ps_merged)[taxa_names(ps_merged) == "Other", level] <- "Other"
+  
+  return(ps_merged)
+}
+
+
 
 ```
 
+```{r}
+
+# Apply the function to the transformed phyloseq object.
+
+ps_merged <-  merge_low_abundance(ps_object_rare2_transformed, threshold = 0.01, level = "Genus")   # Merge low abundance taxa
+
+
+# remember you can adjust the threshold to your desired value. e.g change the threshold to 0.05 to merge taxa with abundance less than 0.05 and level to Family to merge at the family level.
+
+
+
+
+```
+
+
+
+```{r}
 
 
