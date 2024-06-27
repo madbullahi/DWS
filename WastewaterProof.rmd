@@ -1529,3 +1529,39 @@ kable(genus_table,
 write.csv(genus_table, "top_15_genera_abundance.csv", row.names = FALSE)
 
 ```
+
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(knitr)
+
+# Calculate mean and standard error for each genus across Genotypes and Days
+genus_stats <- df_gen_top15 %>%
+  dplyr::group_by(Genus, Genotype, Day) %>%
+  dplyr::summarise(
+    Mean_Abundance = mean(Abundance),
+    SE_Abundance = sd(Abundance) / sqrt(dplyr::n()),
+    .groups = "drop"
+  ) %>%
+  dplyr::arrange(Genotype, Day, desc(Mean_Abundance))
+
+# Format the table
+genus_table <- genus_stats %>%
+  dplyr::mutate(
+    Mean_Abundance = sprintf("%.4f", Mean_Abundance),
+    SE_Abundance = sprintf("%.4f", SE_Abundance)
+  )
+
+# Print the table
+kable(genus_table, 
+      col.names = c("Genus", "Genotype", "Day", "Mean Relative Abundance", "Standard Error"),
+      caption = "Top 15 Genera by Mean Relative Abundance across Genotypes and Days")
+
+# Save the table to a CSV file
+write.csv(genus_table, "top_15_genera_abundance_by_genotype_and_day.csv", row.names = FALSE)
+
+
+```
+
+
