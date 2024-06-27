@@ -1576,59 +1576,120 @@ write.csv(genus_table, "top_15_genera_abundance_by_genotype_and_day.csv", row.na
 ```
 
 ```{r}
-library(phyloseq)
-library(ggplot2)
 library(dplyr)
+library(ggplot2)
+library(tidyr)
 
-# Assuming ps_merged is your phyloseq object after merging low abundance taxa
+# Assuming df_gen_top15 is your dataset
+# Calculate relative abundance
+df_relative <- df_gen_top15 %>%
+  group_by(Genotype, Day, Genus) %>%
+  summarise(RelativeAbundance = sum(Abundance) / sum(Abundance), .groups = "drop") %>%
+  ungroup()
 
-# Convert to relative abundance
-ps_rel <- transform_sample_counts(ps_merged, function(x) x / sum(x))
-
-# Melt the phyloseq object to a long format
-ps_melted <- psmelt(ps_rel)
-
-# Select the top 15 most abundant genera
-top_15_genera <- ps_melted %>%
+# Get top 15 genera
+top_15_genera <- df_relative %>%
   group_by(Genus) %>%
-  summarise(mean_abundance = mean(Abundance)) %>%
-  arrange(desc(mean_abundance)) %>%
-  top_n(15, mean_abundance) %>%
+  summarise(TotalAbundance = sum(RelativeAbundance)) %>%
+  arrange(desc(TotalAbundance)) %>%
+  slice_head(n = 15) %>%
   pull(Genus)
 
-# Filter the melted data for the top 15 genera
-ps_top15 <- ps_melted %>%
-  filter(Genus %in% top_15_genera)
+# Prepare data for plotting
+df_plot <- df_relative %>%
+  mutate(Genus = ifelse(Genus %in% top_15_genera, Genus, "Other")) %>%
+  group_by(Genotype, Day, Genus) %>%
+  summarise(RelativeAbundance = sum(RelativeAbundance), .groups = "drop")
 
-# Create boxplot
-ggplot(ps_top15, aes(x = Genus, y = Abundance, fill = Genotype)) +
-  geom_boxplot() +
-  facet_wrap(~Day, scales = "free_y") +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  labs(x = "Genus", y = "Relative Abundance", 
-       title = "Relative Abundance of Top 15 Genera by Genotype and Day") +
-  scale_y_continuous(labels = scales::percent)
+# Calculate standard error
+df_plot <- df_plot %>%
+  group_by(Genotype, Genus) %>%
+  mutate(SE = sd(RelativeAbundance) / sqrt(n())) %>%
+  ungroup()
+
+```
+
+```{r}
+
+main_plot <- ggplot(df_plot, aes(x = Genotype, y = RelativeAbundance, fill = Genus)) +
+  geom_bar(stat = "identity", position = "stack") +
+  geom_errorbar(aes(ymin = RelativeAbundance - SE, ymax = RelativeAbundance + SE), 
+                width = 0.2, position = position_stack(vjust = 0.5)) +
+  facet_wrap(~Day, ncol = 1) +
+  scale_fill_viridis_d(option = "turbo") +
+  labs(x = "Genotype", y = "Relative Abundance", title = "Genus Relative Abundance") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "right")
+
+
+
+```
+
+
+```{r}
+
+create_pie <- function(data, x_pos, y_pos, radius) {
+  data$fraction <- data$RelativeAbundance / sum(data$RelativeAbundance)
+  data$ymax <- cumsum(data$fraction)
+  data$ymin <- c(0, head(data$ymax, n=-1))
+  
+  ggplot(data, aes(fill = Genus, ymax = ymax, ymin = ymin, xmax = 4, xmin = 3)) +
+    geom_rect() +
+    coord_polar(theta = "y") +
+    xlim(c(0, 4)) +
+    theme_void() +
+    theme(legend.position = "none")
+}
+
+
+
+
+```
+
+
+```{r}
+
+library(cowplot)
+
+# Create pie charts for each Genotype and Day combination
+pie_charts <- df_plot %>%
+  group_by(Genotype, Day) %>%
+  group_map(~ create_pie(.x, 0, 0, 0.4))
+
+# Combine main plot with pie charts
+final_plot <- ggdraw(main_plot) +
+  map2(pie_charts, seq_along(pie_charts), function(p, i) {
+    draw_plot(p, x = 0.9, y = 1 - i * 0.2, width = 0.1, height = 0.1)
+  })
+
+# Display the plot
+print(final_plot)
 
 # Save the plot
-ggsave("top_15_genera_boxplot.png", width = 15, height = 10, dpi = 300)
+ggsave("genus_abundance_with_pies.png", final_plot, width = 12, height = 15, dpi = 300)
+
+
+# Create pie charts for each Genotype and Day
+
+
+
+
+
+
+
+
+
+
 
 ```
 
 
 
 
-
-
-
-
-
-
-
-
-
-
 #differential abundance analysis
+
+
 ```{r}
 library(ANCOMBC)
 library(phyloseq)
