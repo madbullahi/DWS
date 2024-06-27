@@ -1222,404 +1222,7 @@ ggsave("PCoA_Weighted_UniFrac_Genotype_Day.pdf", width = 10, height = 8, dpi = 3
 ```
 
 
-```{r}
-library(phyloseq)
-library(ggplot2)
-library(pheatmap)
 
-# Calculate Bray-Curtis dissimilarity
-bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
-
-# Convert distance matrix to a data frame
-bc_dist_df <- as.data.frame(as.matrix(bc_dist))
-
-# Get metadata
-metadata <- data.frame(sample_data(ps_object_rare2))
-
-# Create annotation dataframe. This dataframe will be used to color the heatmap based on metadata.
-annotation_df <- data.frame(
-  Genotype = metadata$Genotype,
-  Treatment = metadata$Treatment,
-  Day = metadata$Day
-)
-
-# Define colors for annotation
-annotation_colors <- list(
-  Genotype = c("LRV_0_1" = "red", "LRV_12_3" = "blue", "LRV_8.5_3" = "green", "LR2_36_1" = "purple"), #
-  Treatment = c("Wastewater_Control" = "orange", "Wastewater_Daphnia" = "cyan"),
-  Day = c("D1" = "yellow", "D2" = "pink", "D3" = "brown")
-)
-
-# Create heatmap
-pheatmap(bc_dist_df,
-         annotation_col = annotation_df,
-         annotation_colors = annotation_colors,
-         show_rownames = FALSE,
-         show_colnames = FALSE,
-         main = "Bray-Curtis Distance Heatmap",
-         clustering_distance_rows = bc_dist,
-         clustering_distance_cols = bc_dist,
-         width = 15,
-         height = 12,
-         angle_col = 45
-         )
-
-```
-```{r}
-print(unique(annotation_df$Genotype))
-print(unique(annotation_df$Treatment))
-print(unique(annotation_df$Day))
-
-
-```
-```{r}
-library(phyloseq)
-library(pheatmap)
-library(gridExtra)
-
-# Calculate Bray-Curtis dissimilarity
-bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
-
-# Convert distance matrix to a data frame
-bc_dist_df <- as.data.frame(as.matrix(bc_dist))
-
-# Ensure row names and column names match
-if(!all(rownames(bc_dist_df) == colnames(bc_dist_df))) {
-  warning("Row names and column names of bc_dist_df don't match. This may cause issues.")
-}
-
-# Get metadata
-metadata <- data.frame(sample_data(ps_object_rare2))
-
-# Create annotation dataframe
-annotation_df <- data.frame(
-  Genotype = metadata$Genotype,
-  Treatment = metadata$Treatment,
-  Day = metadata$Day
-)
-
-# Ensure sample names in annotation_df match bc_dist_df
-rownames(annotation_df) <- rownames(metadata)
-if(!all(rownames(annotation_df) %in% colnames(bc_dist_df))) {
-  warning("Some sample names in annotation_df are not present in bc_dist_df. This may cause issues.")
-}
-
-# Define colors for annotation
-annotation_colors <- list(
-  Treatment = c("Wastewater_Control" = "orange", "Wastewater_Daphnia" = "cyan"),
-  Day = c("D1" = "yellow", "D2" = "pink", "D3" = "brown")
-)
-
-# Create a list to store heatmaps
-heatmap_list <- list()
-
-# Loop through each genotype
-for (genotype in unique(annotation_df$Genotype)) {
-  # Subset data for the current genotype
-  genotype_samples <- rownames(annotation_df)[annotation_df$Genotype == genotype]
-  
-  # Ensure genotype_samples exist in bc_dist_df
-  valid_samples <- intersect(genotype_samples, colnames(bc_dist_df))
-  
-  if(length(valid_samples) == 0) {
-    warning(paste("No valid samples found for genotype:", genotype))
-    next
-  }
-  
-  bc_dist_subset <- bc_dist_df[valid_samples, valid_samples]
-  annotation_subset <- annotation_df[valid_samples, c("Treatment", "Day")]
-  
-  # Check if subset is empty
-  if(nrow(bc_dist_subset) == 0 || ncol(bc_dist_subset) == 0) {
-    warning(paste("Empty subset for genotype:", genotype))
-    next
-  }
-  
-  # Create heatmap for the current genotype
-  tryCatch({
-    heatmap <- pheatmap(bc_dist_subset,
-                        annotation_col = annotation_subset,
-                        annotation_colors = annotation_colors,
-                        show_rownames = FALSE,
-                        show_colnames = FALSE,
-                        main = paste("Bray-Curtis Distance Heatmap -", genotype),
-                        clustering_distance_rows = as.dist(bc_dist_subset),
-                        clustering_distance_cols = as.dist(bc_dist_subset),
-                        silent = TRUE)
-    
-    # Store the heatmap in the list
-    heatmap_list[[genotype]] <- heatmap$gtable
-  }, error = function(e) {
-    warning(paste("Error creating heatmap for genotype:", genotype, "\nError message:", e$message))
-  })
-}
-
-# Check if any heatmaps were created
-if(length(heatmap_list) == 0) {
-  stop("No heatmaps were created. Please check your data and error messages.")
-}
-
-# Arrange all heatmaps in a grid
-grid.arrange(grobs = heatmap_list, ncol = 2)
-
-
-```
-
-
-```{r}
-
-print(colnames(bc_dist_df))
-print(genotype_samples)
-
-
-```
-
-```{r}
-library(phyloseq)
-library(pheatmap)
-library(gridExtra)
-library(dplyr)
-
-# Calculate Bray-Curtis dissimilarity
-bc_dist <- phyloseq::distance(ps_object_rare2, method = "bray")
-
-# Convert distance matrix to a data frame
-bc_dist_df <- as.data.frame(as.matrix(bc_dist))
-
-# Ensure row names and column names match
-if(!all(rownames(bc_dist_df) == colnames(bc_dist_df))) {
-  warning("Row names and column names of bc_dist_df don't match. This may cause issues.")
-}
-
-# Get metadata
-metadata <- data.frame(sample_data(ps_object_rare2))
-
-# Create annotation dataframe
-annotation_df <- data.frame(
-  Genotype = metadata$Genotype,
-  Treatment = metadata$Treatment,
-  Day = metadata$Day
-)
-
-# Ensure sample names in annotation_df match bc_dist_df
-rownames(annotation_df) <- rownames(metadata)
-if(!all(rownames(annotation_df) %in% colnames(bc_dist_df))) {
-  warning("Some sample names in annotation_df are not present in bc_dist_df. This may cause issues.")
-}
-
-# Check data distribution
-print("Distribution of samples across Genotype and Treatment:")
-print(table(annotation_df$Genotype, annotation_df$Treatment))
-
-# Define colors for annotation with increased contrast
-annotation_colors <- list(
-  Treatment = c("Wastewater_Control" = "red", "Wastewater_Daphnia" = "blue"),
-  Day = c("D1" = "yellow", "D2" = "pink", "D3" = "brown")
-)
-
-# Create a list to store heatmaps
-heatmap_list <- list()
-
-# Loop through each genotype
-for (genotype in unique(annotation_df$Genotype)) {
-  # Subset data for the current genotype
-  genotype_samples <- rownames(annotation_df)[annotation_df$Genotype == genotype]
-  
-  # Ensure genotype_samples exist in bc_dist_df
-  valid_samples <- intersect(genotype_samples, colnames(bc_dist_df))
-  
-  if(length(valid_samples) == 0) {
-    warning(paste("No valid samples found for genotype:", genotype))
-    next
-  }
-  
-  bc_dist_subset <- bc_dist_df[valid_samples, valid_samples]
-  annotation_subset <- annotation_df[valid_samples, c("Treatment", "Day")]
-  
-  # Check if subset is empty
-  if(nrow(bc_dist_subset) == 0 || ncol(bc_dist_subset) == 0) {
-    warning(paste("Empty subset for genotype:", genotype))
-    next
-  }
-  
-  # Print unique treatments for this genotype
-  print(paste("Unique treatments for genotype", genotype, ":"))
-  print(unique(annotation_subset$Treatment))
-  
-  # Create heatmap for the current genotype
-  tryCatch({
-    heatmap <- pheatmap(bc_dist_subset,
-                        annotation_col = annotation_subset,
-                        annotation_colors = annotation_colors,
-                        show_rownames = FALSE,
-                        show_colnames = FALSE,
-                        main = paste("Bray-Curtis Distance Heatmap -", genotype),
-                        clustering_distance_rows = as.dist(bc_dist_subset),
-                        clustering_distance_cols = as.dist(bc_dist_subset),
-                        annotation_legend = TRUE,
-                        annotation_names_col = FALSE,
-                        annotation_names_row = FALSE,
-                        silent = TRUE)
-    
-    # Store the heatmap in the list
-    heatmap_list[[genotype]] <- heatmap$gtable
-  }, error = function(e) {
-    warning(paste("Error creating heatmap for genotype:", genotype, "\nError message:", e$message))
-  })
-}
-
-# Check if any heatmaps were created
-if(length(heatmap_list) == 0) {
-  stop("No heatmaps were created. Please check your data and error messages.")
-}
-
-# Arrange all heatmaps in a grid
-grid.arrange(grobs = heatmap_list, ncol = 2)
-
-
-
-```
-
-
-```{r}
-# Extract phylum information
-tax_table <- tax_table(ps_object_rare2)
-phylum_data <- tax_table[, "Phylum"]
-otu_table <- otu_table(ps_object_rare2)
-
-# Aggregate OTU counts at phylum level
-phylum_counts <- aggregate(otu_table, by = list(Phylum = phylum_data), sum)
-rownames(phylum_counts) <- phylum_counts$Phylum
-phylum_counts$Phylum <- NULL
-
-# Convert to relative abundance
-phylum_rel_abund <- sweep(phylum_counts, 2, colSums(phylum_counts), '/')
-
-
-
-```
-
-
-
-```{r}
-# Loop through each genotype
-for (genotype in unique(annotation_df$Genotype)) {
-  # Subset data for the current genotype
-  genotype_samples <- rownames(annotation_df)[annotation_df$Genotype == genotype]
-  
-  # Ensure genotype_samples exist in bc_dist_df
-  valid_samples <- intersect(genotype_samples, colnames(bc_dist_df))
-  
-  if(length(valid_samples) == 0) {
-    warning(paste("No valid samples found for genotype:", genotype))
-    next
-  }
-  
-  bc_dist_subset <- bc_dist_df[valid_samples, valid_samples]
-  annotation_subset <- annotation_df[valid_samples, c("Treatment", "Day")]
-  phylum_subset <- phylum_rel_abund[, valid_samples]
-  
-  # Check if subset is empty
-  if(nrow(bc_dist_subset) == 0 || ncol(bc_dist_subset) == 0) {
-    warning(paste("Empty subset for genotype:", genotype))
-    next
-  }
-  
-  # Create heatmap for the current genotype
-  tryCatch({
-    # Bray-Curtis distance heatmap
-    heatmap_bc <- pheatmap(bc_dist_subset,
-                           annotation_col = annotation_subset,
-                           annotation_colors = annotation_colors,
-                           show_rownames = FALSE,
-                           show_colnames = FALSE,
-                           main = paste("Bray-Curtis Distance -", genotype),
-                           clustering_distance_rows = as.dist(bc_dist_subset),
-                           clustering_distance_cols = as.dist(bc_dist_subset),
-                           annotation_legend = TRUE,
-                           annotation_names_col = FALSE,
-                           annotation_names_row = FALSE,
-                           silent = TRUE)
-    
-    # Phylum relative abundance heatmap
-    heatmap_phylum <- pheatmap(phylum_subset,
-                               annotation_col = annotation_subset,
-                               annotation_colors = annotation_colors,
-                               show_rownames = TRUE,
-                               show_colnames = FALSE,
-                               main = paste("Phylum Relative Abundance -", genotype),
-                               clustering_distance_cols = as.dist(bc_dist_subset),
-                               annotation_legend = TRUE,
-                               annotation_names_col = FALSE,
-                               annotation_names_row = FALSE,
-                               silent = TRUE)
-    
-    # Combine the two heatmaps
-    combined_heatmap <- grid.arrange(heatmap_bc$gtable, heatmap_phylum$gtable, ncol = 1)
-    
-    # Store the combined heatmap in the list
-    heatmap_list[[genotype]] <- combined_heatmap
-  }, error = function(e) {
-    warning(paste("Error creating heatmap for genotype:", genotype, "\nError message:", e$message))
-  })
-}
-
-
-
-
-```
-
-
-
-```{r}
-library(ggplot2)
-
-ggplot(annotation_df, aes(x = 1, y = 1, fill = Genotype)) +
-  geom_tile() +
-  scale_fill_manual(values = annotation_colors$Genotype)
-
-ggplot(annotation_df, aes(x = 1, y = 1, fill = Treatment)) +
-  geom_tile() +
-  scale_fill_manual(values = annotation_colors$Treatment)
-
-ggplot(annotation_df, aes(x = 1, y = 1, fill = Day)) +
-  geom_tile() +
-  scale_fill_manual(values = annotation_colors$Day)
-
-
-
-```
-
-
-
-```{r}
-
-
-plot_ordination(ps_object_rare2, ord, color = "Genotype", title = "Bray-Curtis PCoA") +
-  geom_point(size = 3) +
-  stat_ellipse(aes(group = Genotype), level = 0.95, linetype = 2) +
-  scale_x_continuous(breaks = seq(-1,1,0.2)) +
-  theme_bw()
-```
-
-
-```{r}
-plot_ordination(ps_object_rare2, ord, color = "Genotype", title = "Bray-Curtis PCoA") +
-  geom_point(size = 3) +
-  stat_ellipse(level = 0.95, linetype = 2) +
-  coord_equal() +
-  theme_bw()
-
-```
-```{r}
-
-plot_ordination(ps_object_rare2, ord, color = "Day", title = "Bray-Curtis PCoA") +
-  geom_point(size = 3) +
-  stat_ellipse(aes(group = Day), level = 0.95, linetype = 2) +
-  scale_x_continuous(breaks = seq(-1,1,0.2)) +
-  theme_bw()
-
-```
 ```{r}
  #Permutation test for differences between treatments
 
@@ -1628,25 +1231,11 @@ bc_adonis
 
 ```
 
-```{r}
-# Calculate weighted UniFrac distances
-unifrac_dist <- UniFrac(ps_object_rare2, weighted = TRUE)
 
-# Perform PCoA ordination
-ord_unifrac <- ordinate(ps_object_rare2, "PCoA", distance = unifrac_dist)
-
-# Plot PCoA with weighted UniFrac
-plot_ordination(ps_object_rare2, ord_unifrac, color = "Genotype", title = "Weighted UniFrac PCoA") +
-  geom_point(size = 3) +
-  stat_ellipse(aes(group = Genotype), level = 0.95, linetype = 2) +
-  scale_x_continuous(breaks = seq(-1, 1, 0.2)) +
-  theme_bw()
-
-```
 
 
 ```{r}
-merge_less_than_top_ps <- function(ps_object_rare2, top = 20) { transformed <- transform_sample_counts(ps_object_rare2, function(OTU) OTU/sum(OTU)) 
+merge_less_than_top_ps <- function(ps_object_rare2, top = 15) { transformed <- transform_sample_counts(ps_object_rare2, function(OTU) OTU/sum(OTU)) 
 otu.table <- as.data.frame(otu_table(transformed))
 otu.sort <- otu.table[order(rowMeans(otu.table), decreasing = TRUE),]
 otu.list <- row.names(otu.sort[(top + 1):nrow(otu.sort),])
@@ -1672,8 +1261,8 @@ ps_family <- tax_glom(ps_object_rare2, "Family", NArm = TRUE)
 
 ```{r}
 # Merge less than top 15 genera and families
-ps_Gen_15 <- merge_less_than_top_ps(ps_gen, top = 20)
-pf_family_15 <- merge_less_than_top_ps(ps_family, top = 20)
+ps_Gen_15 <- merge_less_than_top_ps(ps_gen, top = 15)
+pf_family_15 <- merge_less_than_top_ps(ps_family, top = 15)
 
 ```
 
@@ -1706,136 +1295,10 @@ df_family_top15
 
 ```
 
-```{r}
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-
-# Assuming tax_rel_abun_pf_gen_top10 is your data frame
-# First, let's ensure we have the top 15 genera
-top_15_genera <- df_gen_top15 %>%
-  group_by(Genus) %>%
-  summarize(total_abundance = sum(Abundance)) %>%
-  top_n(15, total_abundance) %>%
-  pull(Genus)
-
-# Filter the data for top 15 genera
-data_top_15 <- df_gen_top15 %>%
-  filter(Genus %in% top_15_genera)
-
-# Create the plot
-WW <- ggplot(
-  data_top_15, 
-  aes(x = Day, y = Abundance, fill = Genus)
-) +
-  facet_grid(Genotype ~ Treatment, scales = "free_x") +
-  geom_bar(stat = "identity", position = "fill") +
-  labs(x = "Day", y = "Relative Abundance", title = "Top 15 Genera Relative Abundance") +
-  scale_y_continuous(labels = scales::percent_format()) +
-  scale_fill_brewer(palette = "Paired") +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(size = 8, angle = 90, vjust = 0.5, hjust = 1),
-    axis.text.y = element_text(size = 8),
-    legend.text = element_text(size = 7),
-    legend.title = element_text(size = 8),
-    strip.text = element_text(size = 8),
-    panel.grid.major = element_blank(),
-    panel.grid.minor = element_blank(),
-    legend.position = "bottom"
-  ) +
-  guides(fill = guide_legend(ncol = 5))
-
-print(WW)
-
-
-```
 
 
 
-```{r}
 
-library(ggplot2)
-library(dplyr)
-library(tidyr)
-
-# Function to create the plot for a specific genotype vs control
-plot_genotype_vs_control <- function(data, genotype_of_interest, control_genotype = "CONTROL") {
-  # Filter data for the genotype of interest and control
-  filtered_data <- data %>%
-    filter(Genotype %in% c(genotype_of_interest, control_genotype))
-  
-  # Get top 15 genera
-  top_15_genera <- filtered_data %>%
-    group_by(Genus) %>%
-    summarize(total_abundance = sum(Abundance)) %>%
-    top_n(15, total_abundance) %>%
-    pull(Genus)
-  
-  # Filter for top 15 genera
-  data_top_15 <- filtered_data %>%
-    filter(Genus %in% top_15_genera)
-  
-  # Create the plot
-  plot <- ggplot(
-    data_top_15, 
-    aes(x = Day, y = Abundance, fill = Genus)
-  ) +
-    facet_grid(Genotype ~ Treatment, scales = "free_x") +
-    geom_bar(stat = "identity", position = "fill") +
-    labs(
-      x = "Day", 
-      y = "Relative Abundance", 
-      title = paste("Top 15 Genera Relative Abundance:", genotype_of_interest, "vs", control_genotype)
-    ) +
-    scale_y_continuous(labels = scales::percent_format()) +
-    scale_fill_brewer(palette = "Paired") +
-    theme_minimal() +
-    theme(
-      axis.text.x = element_text(size = 8, angle = 90, vjust = 0.5, hjust = 1),
-      axis.text.y = element_text(size = 8),
-      legend.text = element_text(size = 7),
-      legend.title = element_text(size = 8),
-      strip.text = element_text(size = 8),
-      panel.grid.major = element_blank(),
-      panel.grid.minor = element_blank(),
-      legend.position = "bottom"
-    ) +
-    guides(fill = guide_legend(ncol = 5))
-  
-  return(plot)
-}
-
-# Usage example:
-# Replace 'df_gen_top15' with your actual data frame name
-# Replace 'LRV_0_1' with the genotype you want to compare against control
-WW <- plot_genotype_vs_control(df_gen_top15, "LRV_0_1")
-print(WW)
-
-# To plot a different genotype, just change the genotype name:
-# WW <- plot_genotype_vs_control(df_gen_top15, "LRV_12_3")
-# print(WW)
-
-
-```
-
-
-```{r}
-gen_10<- ggplot(
-  df_gen_top15, aes(x = Day, y = Abundance, fill = Genus)
-)+
-  facet_grid(~Genotype, scales = "free")+
-  geom_bar(stat = "identity", position = "fill")+
-  labs(x="Day", y="Rel. Abun", title = "Genus relative abundance") +
-   theme(
-    axis.text.x = element_text(size = 10, 
-    angle = 90, vjust = 0.5, hjust = 1),
-    axis.text.y = element_text(size = 8),
-    legend.text = element_text(size = 8),
-    strip.text = element_text(size = 8)
-  )
-gen_10
-```
 ```{r}
 library(ggplot2)
 library(viridis)  # For a more vibrant color palette
@@ -1948,44 +1411,88 @@ saveWorkbook(wb, "adonis_results.xlsx", overwrite = TRUE)
 ```
 
 ```{r}
-# merge low abundance.
-
-merge_low_abundance <- function(ps, threshold = 0.01, level = "Genus") {
+merge_less_than_threshold <- function(ps_object_rare2, threshold = 0.01) {
+  transformed <- transform_sample_counts(ps_object_rare2, function(OTU) OTU/sum(OTU))
+  otu.table <- as.data.frame(otu_table(transformed))
+  
   # Identify taxa below threshold
-  low_abundance <- taxa_sums(ps) < threshold
+  taxa_to_merge <- rownames(otu.table)[rowMeans(otu.table) < threshold]
   
-  # Merge low abundance taxa
-  ps_merged <- merge_taxa(ps, taxa_names(ps)[low_abundance])
+  merged <- merge_taxa(transformed, taxa_to_merge, 1)
   
-  # Rename merged taxon
-  taxa_names(ps_merged)[taxa_names(ps_merged) == "merged"] <- "Other"
+  for (i in 1:dim(tax_table(merged))[1]){
+    if (taxa_names(merged)[i] == "merged"){
+      taxa_names(merged)[i] <- "Other"
+      tax_table(merged)[i, 1:6] <- "Other"
+    }
+  }
   
-  # Set the taxonomic level for the merged "Other" taxon
-  tax_table(ps_merged)[taxa_names(ps_merged) == "Other", level] <- "Other"
-  
-  return(ps_merged)
+  return(merged)
 }
 
 
-
 ```
+
 
 ```{r}
 
-# Apply the function to the transformed phyloseq object.
-
-ps_merged <-  merge_low_abundance(ps_object_rare2_transformed, threshold = 0.01, level = "Genus")   # Merge low abundance taxa
-
-
-# remember you can adjust the threshold to your desired value. e.g change the threshold to 0.05 to merge taxa with abundance less than 0.05 and level to Family to merge at the family level.
-
+genus_df <- tax_glom(ps_object_rare2, "Genus", NArm = TRUE)
 
 
 
 ```
 
 
+```{r}
+# Filter out low abundance genera
+
+ps_merged <- merge_less_than_threshold(genus_df, threshold = 0.01)
+
+```
+
 
 ```{r}
 
+# convert to dataframe
+gen_top <- psmelt(ps_merged) %>%
+  filter(Abundance > 0) %>%
+  arrange(Genus)
 
+```
+
+```{r}
+library(ggplot2)
+library(viridis)  # For a more vibrant color palette
+
+gen <- ggplot(
+  gen_top, aes(x = Day, y = Abundance, fill = Genus)
+) +
+  facet_grid(~Genotype, scales = "free") +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(x = "Day", y = "Relative Abundance", title = "Genus Relative Abundance") +
+  scale_fill_viridis(discrete = TRUE, option = "turbo") +  # More vibrant color palette
+  theme_minimal() +  # Cleaner background
+  theme(
+    plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
+    axis.title = element_text(size = 14, face = "bold"),
+    axis.text.x = element_text(size = 12, angle = 90, vjust = 0.5, hjust = 1),
+    axis.text.y = element_text(size = 12),
+    legend.title = element_text(size = 12, face = "bold"),
+    legend.text = element_text(size = 10),
+    strip.text = element_text(size = 14, face = "bold"),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    legend.position = "bottom"
+  ) +
+  guides(fill = guide_legend(ncol = 3))  # Adjust legend layout
+
+# Increase plot size
+ggsave("genus_relative_abundance.png", gen, width = 15, height = 10, dpi = 300)
+
+# Display the plot
+print(gen)
+
+
+
+
+```
