@@ -1576,6 +1576,11 @@ write.csv(genus_table, "top_15_genera_abundance_by_genotype_and_day.csv", row.na
 ```
 
 ```{r}
+
+
+
+
+
 library(dplyr)
 library(ggplot2)
 library(tidyr)
@@ -1597,98 +1602,127 @@ top_15_genera <- df_relative %>%
 
 # Prepare data for plotting
 df_plot <- df_relative %>%
-  mutate(Genus = ifelse(Genus %in% top_15_genera, Genus, "Other")) %>%
+  filter(Genus %in% top_15_genera) %>%
   group_by(Genotype, Day, Genus) %>%
-  summarise(RelativeAbundance = sum(RelativeAbundance), .groups = "drop")
+  summarise(
+    MeanAbundance = mean(RelativeAbundance),
+    SE = sd(RelativeAbundance) / sqrt(n()),
+    .groups = "drop"
+  )
 
-# Calculate standard error
-df_plot <- df_plot %>%
-  group_by(Genotype, Genus) %>%
-  mutate(SE = sd(RelativeAbundance) / sqrt(n())) %>%
-  ungroup()
-
-```
-
-```{r}
-
-main_plot <- ggplot(df_plot, aes(x = Genotype, y = RelativeAbundance, fill = Genus)) +
-  geom_bar(stat = "identity", position = "stack") +
-  geom_errorbar(aes(ymin = RelativeAbundance - SE, ymax = RelativeAbundance + SE), 
-                width = 0.2, position = position_stack(vjust = 0.5)) +
-  facet_wrap(~Day, ncol = 1) +
+# Create the plot
+ggplot(df_plot, aes(x = interaction(Day, Genotype), y = MeanAbundance, fill = Genus)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8)) +
+  geom_errorbar(aes(ymin = MeanAbundance - SE, ymax = MeanAbundance + SE), 
+                position = position_dodge(width = 0.8), width = 0.25) +
+  facet_wrap(~ Genus, scales = "free_y", ncol = 3) +
   scale_fill_viridis_d(option = "turbo") +
-  labs(x = "Genotype", y = "Relative Abundance", title = "Genus Relative Abundance") +
+  labs(x = "Day and Genotype", y = "Relative Abundance", title = "Genus Relative Abundance") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
-        legend.position = "right")
-
-
-
-```
-
-
-```{r}
-
-create_pie <- function(data, x_pos, y_pos, radius) {
-  data$fraction <- data$RelativeAbundance / sum(data$RelativeAbundance)
-  data$ymax <- cumsum(data$fraction)
-  data$ymin <- c(0, head(data$ymax, n=-1))
-  
-  ggplot(data, aes(fill = Genus, ymax = ymax, ymin = ymin, xmax = 4, xmin = 3)) +
-    geom_rect() +
-    coord_polar(theta = "y") +
-    xlim(c(0, 4)) +
-    theme_void() +
-    theme(legend.position = "none")
-}
-
-
-
-
-```
-
-
-```{r}
-
-library(cowplot)
-
-# Create pie charts for each Genotype and Day combination
-pie_charts <- df_plot %>%
-  group_by(Genotype, Day) %>%
-  group_map(~ create_pie(.x, 0, 0, 0.4))
-
-# Combine main plot with pie charts
-final_plot <- ggdraw(main_plot) +
-  map2(pie_charts, seq_along(pie_charts), function(p, i) {
-    draw_plot(p, x = 0.9, y = 1 - i * 0.2, width = 0.1, height = 0.1)
-  })
-
-# Display the plot
-print(final_plot)
+        legend.position = "none") +
+  scale_x_discrete(labels = function(x) gsub("\\.", "\n", x))
 
 # Save the plot
-ggsave("genus_abundance_with_pies.png", final_plot, width = 12, height = 15, dpi = 300)
+ggsave("genus_abundance_with_error_bars.png", width = 15, height = 20, dpi = 300)
 
 
-# Create pie charts for each Genotype and Day
+```
+
+```{r}
+
+install.packages(c("VennDiagram", "RColorBrewer"))
+library(VennDiagram)
+library(RColorBrewer)
 
 
+```
 
+```{r}
+# Extract the OTU table
+otu_table <- as(otu_table(ps_object_rare2), "matrix")
 
+# Get the sample data
+sample_data <- as(sample_data(ps_object_rare2), "data.frame")
 
-
-
-
-
+# Create a presence/absence matrix
+presence_absence <- otu_table > 0
 
 
 ```
 
 
+```{r}
 
 
-#differential abundance analysis
+print(dim(otu_table))
+print(dim(sample_data))
+print(nrow(sample_data))
+print(ncol(otu_table))
 
+
+```
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+
+# Prepare the data
+plot_data <- df_gen_top15 %>%
+  group_by(Genotype, Day, Genus) %>%
+  summarise(
+    MeanAbundance = mean(Abundance),
+    SE = sd(Abundance) / sqrt(n())
+  ) %>%
+  ungroup()
+
+# Create the plot
+ggplot(plot_data, aes(x = interaction(Day, Genotype), y = MeanAbundance, fill = Genus)) +
+  geom_bar(stat = "identity", position = position_dodge()) +
+  geom_errorbar(aes(ymin = MeanAbundance - SE, ymax = MeanAbundance + SE), 
+                position = position_dodge(width = 0.9), width = 0.25) +
+  facet_wrap(~ Genus, scales = "free_y", ncol = 3) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Day and Genotype", y = "Mean Abundance", title = "Genus Abundance by Genotype and Day")
+
+ggsave("genus_abundance_plot.png", width = 15, height = 20, dpi = 300)
+
+
+```
+
+
+```{r}
+
+library(VennDiagram)
+
+# Prepare the data
+genotype_asvs <- split(df_gen_top15$Genus[df_gen_top15$Abundance > 0], df_gen_top15$Genotype)
+
+# Create the Venn diagram
+venn.diagram(
+  x = genotype_asvs,
+  category.names = names(genotype_asvs),
+  filename = "ASV_venn_diagram.png",
+  output = TRUE,
+  imagetype = "png",
+  height = 3000,
+  width = 3000,
+  resolution = 300,
+  compression = "lzw",
+  lwd = 2,
+  lty = 'blank',
+  fill = rainbow(length(genotype_asvs)),
+  cex = 0.6,
+  fontface = "bold",
+  fontfamily = "sans",
+  cat.cex = 0.6,
+  cat.fontface = "bold",
+  cat.default.pos = "outer"
+)
+
+
+```
 
 ```{r}
 library(ANCOMBC)
