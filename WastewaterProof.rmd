@@ -1864,6 +1864,221 @@ venn.diagram(
 
 ```
 
+#Network Analysis
+```{r}
+# install and load the necessary packages.
+
+library(igraph)
+library(pheatmap)
+
+```
+
+```{r}
+
+# Convert to relative abundance
+ps_rel <- transform_sample_counts(ps_object, function(x) x / sum(x))
+
+# Calculate correlations between ASVs
+asv_cor <- cor(t(otu_table(ps_rel)), method = "spearman")
+
+# Create a graph from the correlation matrix
+graph <- graph_from_adjacency_matrix(asv_cor, weighted = TRUE, mode = "undirected", diag = FALSE)
+
+
+```
+
+```{r}
+
+summary(abs(E(graph)$weight))
+
+```
+```{r}
+
+# Remove NA weights
+graph <- delete_edges(graph, which(is.na(E(graph)$weight)))
+
+# Keep only edges with weight above a certain threshold
+threshold <- 0.25  # You can adjust this value
+graph <- delete_edges(graph, which(E(graph)$weight < threshold))
+
+
+```
+
+```{r}
+
+# Create a new plot.
+library(igraph)
+library(ggplot2)
+
+# Create a layout
+layout <- layout_with_fr(graph)
+
+# Plot the graph
+plot(graph, 
+     layout = layout,
+     vertex.size = 5,
+     vertex.label = NA,  # Remove labels for clarity
+     edge.width = E(graph)$weight * 5,  # Adjust edge width based on weight
+     main = "Filtered Network")
+
+
+```
+
+```{r}
+# plot the heatmap of the top20 ASVs.
+library(pheatmap)
+library(dplyr)
+library(tidyr)
+
+library(dplyr)
+library(tidyr)
+library(pheatmap)
+
+# Aggregate data
+heatmap_data <- df_gen_top15 %>%
+  group_by(Genotype, Day, Genus) %>%
+  summarise(MeanAbundance = mean(Abundance), .groups = "drop") %>%
+  pivot_wider(names_from = Genus, values_from = MeanAbundance, values_fill = 0)
+
+# Create annotation for Days
+annotation_col <- data.frame(
+  Day = heatmap_data$Day,
+  row.names = paste(heatmap_data$Genotype, heatmap_data$Day, sep="_")
+)
+
+# Prepare matrix for heatmap
+heatmap_matrix <- heatmap_data %>%
+  select(-Genotype, -Day) %>%
+  as.matrix()
+rownames(heatmap_matrix) <- paste(heatmap_data$Genotype, heatmap_data$Day, sep="_")
+
+# Create the heatmap
+pheatmap(heatmap_matrix,
+         scale = "row",
+         annotation_col = annotation_col,
+         main = "Top Genera Abundance Across Genotypes and Days",
+         fontsize = 8,
+         cellwidth = 10,
+         cellheight = 10)
+
+
+
+```
+```{r}
+print(heatmap_matrix)
+print(annotation_col)
+```
+
+```{r}
+print(all(colnames(heatmap_matrix) %in% rownames(annotation_col)))
+print(all(rownames(annotation_col) %in% colnames(heatmap_matrix)))
+
+```
+
+```{r}
+
+library(dplyr)
+library(tidyr)
+library(pheatmap)
+
+# Prepare data for heatmap
+heatmap_data <- df_gen_top15 %>%
+  group_by(Genotype, Day, Genus) %>%
+  summarise(MeanAbundance = mean(Abundance), .groups = "drop") %>%
+  pivot_wider(names_from = Genus, values_from = MeanAbundance, values_fill = 0)
+
+# Create unique identifiers for each Genotype-Day combination
+heatmap_data$ID <- paste(heatmap_data$Genotype, heatmap_data$Day, sep="_")
+
+# Prepare matrix for heatmap
+heatmap_matrix <- heatmap_data %>%
+  select(-Genotype, -Day) %>%
+  column_to_rownames("ID") %>%
+  as.matrix()
+
+# Create annotation for Days and Genotypes
+annotation_col <- heatmap_data %>%
+  select(ID, Genotype, Day) %>%
+  column_to_rownames("ID")
+
+# Verify that row names match
+all(rownames(heatmap_matrix) == rownames(annotation_col))
+
+```
+```{r}
+# Create custom color palette
+my_palette <- colorRampPalette(brewer.pal(9, "YlOrRd"))(100)
+
+# Create the heatmap
+pheatmap(heatmap_matrix,
+         scale = "row",
+         annotation_row = annotation_col,
+         main = "Genera Abundance Across Treatment and Days",
+         fontsize = 10,
+         cellwidth = 15,
+         cellheight = 10,
+         fontsize_row = 8,
+         fontsize_col = 8,
+         color = my_palette,
+         angle_col = 45,
+         treeheight_row = 30,
+         treeheight_col = 30,
+         border_color = NA,
+         filename = "heatmap.png",
+         width = 12,
+         height = 10)
+
+         
+         
+         
+
+```
+
+#network analysis plot
+```{r}
+
+#library(igraph)
+
+library(igraph)
+library(dplyr)
+
+# Create edges based on co-occurrence of genera across samples
+edges <- df_gen_top15 %>%
+  group_by(Genotype, Day) %>%
+  do(data.frame(t(combn(.$Genus, 2)))) %>%
+  ungroup() %>%
+  dplyr::count(X1, X2) %>%
+  filter(n > 1)  # Only keep connections that occur more than once
+
+# Create the graph
+net <- graph_from_data_frame(edges, directed = FALSE)
+
+# Add node attributes
+V(net)$type <- V(net)$name %in% unique(df_gen_top15$Genus)
+V(net)$color <- ifelse(V(net)$type, "lightblue", "lightgreen")
+V(net)$shape <- ifelse(V(net)$type, "circle", "square")
+
+# Plot the network
+plot(net, 
+     vertex.label.cex = 0.6, 
+     vertex.size = 10, 
+     edge.width = E(net)$n/5,
+     layout = layout_with_fr,
+     main = "Network of Genera Co-occurrence")
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
 
 
 
