@@ -1400,6 +1400,93 @@ adonis_result
 
 ```
 
+
+```{r}
+# Assuming you have already run your PERMANOVA and have your distance matrix (wunifrac_dist)
+# and your sample data (sample_data)
+
+# Perform pairwise comparisons for Day
+pairwise_day <- pairwise.perm.manova(resp = wunifrac_dist, 
+                                     fact = sample_data$Day, 
+                                     nperm = 999,
+                                     p.method = "bonferroni")
+
+# Perform pairwise comparisons for Genotype
+pairwise_genotype <- pairwise.perm.manova(resp = wunifrac_dist, 
+                                          fact = sample_data$Genotype, 
+                                          nperm = 999,
+                                          p.method = "bonferroni")
+
+# View results
+print(pairwise_day)
+print(pairwise_genotype)
+
+
+```
+```{r}
+
+library(RVAideMemoire)
+
+# Assuming you have your distance matrix (wunifrac_dist) and sample data
+pairwise_results <- pairwise.perm.manova(resp = wunifrac_dist, 
+                                         fact = sample_data$Day, 
+                                         nperm = 999,
+                                         p.method = "bonferroni")
+
+
+
+# Extract the p-values
+p_values <- pairwise_results$p.value
+
+
+library(ggplot2)
+library(reshape2)
+
+# Melt the p-value matrix for ggplot
+melted_results <- melt(p_values)
+
+# Create the heatmap
+ggplot(melted_results, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", high = "white", mid = "orange", 
+                       midpoint = 0.05, limit = c(0, 1), name = "p-value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Day", y = "Day", title = "Pairwise Comparisons of Days")
+
+```
+```{r}
+# Assuming you have your distance matrix (wunifrac_dist) and sample data
+pairwise_results <- pairwise.perm.manova(resp = wunifrac_dist, 
+                                         fact = sample_data$Genotype, 
+                                         nperm = 999,
+                                         p.method = "bonferroni")
+
+
+
+# Extract the p-values
+p_values <- pairwise_results$p.value
+
+
+library(ggplot2)
+library(reshape2)
+
+# Melt the p-value matrix for ggplot
+melted_results <- melt(p_values)
+
+# Create the heatmap
+ggplot(melted_results, aes(x = Var1, y = Var2, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", high = "white", mid = "orange", 
+                       midpoint = 0.05, limit = c(0, 1), name = "p-value") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(x = "Genotype", y = "Genotype", title = "Pairwise Comparisons of Genotype")
+
+```
+
+
+
 ```{r}
 # Extract the adonis results.
 
