@@ -2164,7 +2164,120 @@ pheatmap(heatmap_matrix,
 ```
 
 
+```{r}
+heatmap_plot <- pheatmap(heatmap_matrix,
+         scale = "row",
+         annotation_row = annotation_row,
+         annotation_colors = ann_colors,
+         main = "Genus Relative Abundance Across Genotypes and Days",
+         fontsize = 12,
+         fontsize_row = 10,
+         fontsize_col = 10,
+         cellwidth = 15,
+         cellheight = 15,
+         cluster_rows = FALSE,
+         cluster_cols = TRUE,
+         show_rownames = FALSE,
+         color = my_palette,
+         gaps_row = cumsum(table(annotation_row$Genotype)),
+         annotation_names_row = FALSE,
+         annotation_legend = TRUE)
 
+
+
+
+
+# Save as PNG
+png("improved_heatmap.png", width = 12, height = 10, units = "in", res = 300)
+print(heatmap_plot)
+dev.off()
+
+# Or save as PDF
+pdf("improved_heatmap.pdf", width = 12, height = 10)
+print(heatmap_plot)
+dev.off()
+
+
+
+
+
+
+```
+```{r}
+
+# Assuming you've performed statistical tests and have a matrix of p-values
+p_values <- matrix(runif(nrow(heatmap_matrix) * ncol(heatmap_matrix)), 
+                   nrow = nrow(heatmap_matrix), 
+                   ncol = ncol(heatmap_matrix))
+
+# Function to convert p-values to significance symbols
+sig_symbols <- function(p) {
+  symnum(p, corr = FALSE, na = FALSE, 
+         cutpoints = c(0, 0.001, 0.01, 0.05, 1), 
+         symbols = c("***", "**", "*", ""))
+}
+
+# Apply the function to your p-values
+sig_matrix <- matrix(sig_symbols(p_values), nrow = nrow(p_values))
+
+# Create the heatmap with significance symbols
+pheatmap(heatmap_matrix,
+         scale = "row",
+         annotation_row = annotation_row,
+         annotation_colors = ann_colors,
+         main = "Genus Relative Abundance Across Genotypes and Days",
+         fontsize = 8,
+         cellwidth = 10,
+         cellheight = 10,
+         cluster_rows = FALSE,
+         cluster_cols = TRUE,
+         show_rownames = FALSE,
+         color = my_palette,
+         gaps_row = cumsum(table(annotation_row$Genotype)),
+         annotation_names_row = FALSE,
+         annotation_legend = TRUE,
+         display_numbers = sig_matrix)
+
+
+
+```
+
+
+```{r}
+
+pdf("heatmap_for_powerpoint.pdf", width = 12, height = 10)
+pheatmap(heatmap_matrix,
+         scale = "row",
+         annotation_row = annotation_row,
+         annotation_colors = ann_colors,
+         main = "Genus Relative Abundance Across Genotypes and Days",
+         fontsize = 8,
+         cellwidth = 10,
+         cellheight = 10,
+         cluster_rows = FALSE,
+         cluster_cols = TRUE,
+         show_rownames = FALSE,
+         color = my_palette,
+         gaps_row = cumsum(table(annotation_row$Genotype)),
+         annotation_names_row = FALSE,
+         annotation_legend = TRUE,
+         display_numbers = sig_matrix)
+dev.off()
+
+
+```
+
+```{r}
+
+library(svglite)
+svglite("heatmap_for_powerpoint.svg", width = 12, height = 10)
+pheatmap(heatmap_matrix,
+         # ... (same parameters as above)
+         )
+dev.off()
+
+
+```
 
 
 #network analysis plot
