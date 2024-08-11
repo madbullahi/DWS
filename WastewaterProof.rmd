@@ -1268,6 +1268,38 @@ htmlwidgets::saveWidget(p, file = "3D_PCoA_Bray_Curtis.html", selfcontained = TR
 
 ```
 
+
+
+```{r}
+
+# Install and load required packages
+install.packages(c("plotly", "officer"))
+library(plotly)
+library(officer)
+
+# Assuming you have the 'p' plotly object from your previous code
+
+# Export the plot as a static image file
+png("3D_PCoA_Bray_Curtis.png", width = 800, height = 600, res = 150)
+print(p)
+dev.off()
+
+# Create a new PowerPoint document
+doc <- read_pptx()
+
+# Add a new slide
+doc <- add_slide(doc, layout = "Blank")
+
+# Add the image to the slide
+doc <- ph_with(doc, value = external_img("3D_PCoA_Bray_Curtis.png"), 
+               location = ph_location(left = 1, top = 1, width = 8, height = 5.5))
+
+# Save the PowerPoint file
+print(doc, target = "3D_PCoA_Bray_Curtis.pptx")
+
+```
+
+
 ```{r}
 # Weighted Unifrac.
 library(phyloseq)
