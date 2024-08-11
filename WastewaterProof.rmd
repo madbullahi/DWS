@@ -286,6 +286,42 @@ WW
 
 ```
 
+```{r}
+
+# Assuming 'tax_rel_abun_pf_gen_top10' is your data frame
+
+# Filter the data for Day 3 only
+day3_data <- tax_rel_abun_pf_gen_top10 %>%
+  filter(Day == 'D3')
+
+# Reorder the 'Genus' factor levels based on the sum of 'Abundance', with 'other' first
+day3_data <- day3_data %>%
+  mutate(Genus = fct_reorder(Genus, Abundance, .fun = sum, .desc = TRUE)) %>%
+  mutate(Genus = fct_relevel(Genus, 'other', after = Inf))  # Place 'other' last
+
+# Create a stacked percentage bar plot for Day 3
+WW <- ggplot(day3_data, aes(x = Treatment, y = Abundance, fill = Genus)) +
+  geom_bar(stat = 'identity', position = 'fill') +  # Use position='fill' to scale each bar to sum to 1 (100%)
+  labs(x = 'Treatment', y = 'Relative Abundance (%)', title = 'Taxonomic Composition on Day 3') +
+  scale_y_continuous(labels = scales::percent) +  # Convert y-axis to percentage
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(size = 14, angle = 0, vjust = 0.5, hjust = 0.5, face = "bold" ),  # Increase x-axis text size
+    axis.text.y = element_text(size = 14, face = "bold"),  # Increase y-axis text size
+    legend.text = element_text(size = 10, face = "bold"),  # Increase legend text size
+    strip.text = element_text(size = 12, face = "bold"),  # Increase facet label text size
+    aspect.ratio = 1  # Set aspect ratio to be square
+  )
+
+# Print the bar plot
+WW
+
+
+
+```
+
+
+
 
 
 ```{r}
@@ -515,6 +551,53 @@ theme_minimal() +
     strip.text = element_text(size = 12))  # Increase facet label text size
 ```
 
+```{r}
+# Create the plot for Day 3 as a line plot
+ggplot(data = day3_data, aes(x = Treatment, y = mean, group = 1, color = Treatment)) +
+  geom_line(size = 1) +  # Add lines
+  geom_point(size = 4) +  # Add points to show individual data points
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +  # Add error bars
+  labs(x = "Treatment", y = "ASV Counts", title = paste0("Day 3: ", round(percent_diff, 2), "% Difference")) +
+  scale_y_continuous(limits = c(0, max(day3_data$mean + day3_data$se)), expand = c(0, 0)) +  # Set y-axis to start from 0
+  theme_minimal() +
+  theme(
+    axis.title.x = element_text(size = 14, face = "bold"),  # Make x-axis title bold and legible
+    axis.title.y = element_text(size = 14, face = "bold"),  # Make y-axis title bold and legible
+    axis.text.x = element_text(size = 12, face = "bold"),  # Make x-axis text bold and legible
+    axis.text.y = element_text(size = 12, face = "bold"),  # Make y-axis text bold and legible
+    aspect.ratio = 1  # Set aspect ratio to be square
+  )
+
+
+```
+
+```{r}
+
+# Calculate the maximum mean and standard error for Wastewater_control treatment
+max_mean_control <- max(day3_data$mean[day3_data$Treatment == "Wastewater_control"])
+max_se_control <- max(day3_data$se[day3_data$Treatment == "Wastewater_control"])
+
+# Calculate the maximum y-value needed to accommodate the error bar
+max_y <- max_mean_control + max_se_control
+
+# Create the plot for Day 3 as a line plot
+ggplot(data = day3_data, aes(x = Treatment, y = mean, group = 1, color = Treatment)) +
+  geom_line(size = 1) +  # Add lines
+  geom_point(size = 4) +  # Add points to show individual data points
+  geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0.2) +  # Add error bars
+  labs(x = "Treatment", y = "ASV Counts", title = paste0("Day 3: ", round(percent_diff, 2), "% Difference")) +
+  scale_y_continuous(limits = c(0, max_y), expand = c(0, 0)) +  # Set y-axis limits based on calculated max_y
+  theme_minimal() +
+  theme(
+    axis.title.x = element_text(size = 14, face = "bold"),  # Make x-axis title bold and legible
+    axis.title.y = element_text(size = 14, face = "bold"),  # Make y-axis title bold and legible
+    axis.text.x = element_text(size = 12, face = "bold"),  # Make x-axis text bold and legible
+    axis.text.y = element_text(size = 12, face = "bold"),  # Make y-axis text bold and legible
+    aspect.ratio = 1  # Set aspect ratio to be square
+  )
+
+
+```
 
 
 ```{r}
@@ -847,6 +930,8 @@ ps_object_rare_subset <- subset_taxa(ps_object_rarefied, !is.na(Phylum) & !Phylu
 table(tax_table(ps_object_rare_subset)[, "Phylum"], exclude = NULL)
 
 ```
+
+
 ```{r}
 # remove features with ambiguous phylum annotation.
 
@@ -1127,7 +1212,61 @@ ggplot(plot_data, aes(x = PC1, y = PC2)) +
 ggsave("PCoA_Genotype_Day.pdf", width = 10, height = 8, dpi = 300)
 
 ```
+```{r}
+# Apply transformation to the data
+ps_object_rare2_transformed <- transform_sample_counts(ps_object_rare2, function(x) x / sum(x)) # Relative abundance
 
+# Calculate Bray-Curtis distance
+bray_dist <- phyloseq::distance(ps_object_rare2_transformed, method = "bray")
+
+# Perform PCoA ordination
+ord <- ordinate(ps_object_rare2_transformed, method = "PCoA", distance = bray_dist)
+
+# Extract the percent variance explained by each axis
+variance_explained <- ord$values$Relative_eig * 100
+
+# Create a data frame with the PCoA coordinates and metadata
+plot_data <- data.frame(
+  PC1 = ord$vectors[,1],
+  PC2 = ord$vectors[,2],
+  PC3 = ord$vectors[,3],
+  Day = sample_data(ps_object_rare2_transformed)$Day,
+  Genotype = sample_data(ps_object_rare2_transformed)$Genotype
+)
+
+# Define color palettes for Genotype and Day
+genotype_colors <- brewer.pal(n = length(unique(plot_data$Genotype)), name = "Set1")
+day_colors <- brewer.pal(n = length(unique(plot_data$Day)), name = "Dark2")
+
+# Plot 3D PCoA ordination using plotly
+library(plotly)
+
+p <- plot_ly(plot_data, x = ~PC1, y = ~PC2, z = ~PC3, color = ~Genotype, symbol = ~Day, 
+        colors = genotype_colors, symbols = c("circle", "square", "diamond"),
+        marker = list(size = 8, line = list(width = 1.5))) %>%
+  layout(scene = list(xaxis = list(title = paste0("PC1 (", round(variance_explained[1], 2), "%)"),
+                                   titlefont = list(size = 18, color = "black", family = "Arial", weight = "bold")),
+                      yaxis = list(title = paste0("PC2 (", round(variance_explained[2], 2), "%)"),
+                                   titlefont = list(size = 18, color = "black", family = "Arial", weight = "bold")),
+                      zaxis = list(title = paste0("PC3 (", round(variance_explained[3], 2), "%)"),
+                                   titlefont = list(size = 18, color = "black", family = "Arial", weight = "bold"))),
+         title = list(text = "3D PCoA of Bray-Curtis Distance",
+                      font = list(size = 24, color = "black", family = "Arial", weight = "bold")),
+         legend = list(title = list(text = "Genotype",
+                                    font = list(size = 18, color = "black", family = "Arial", weight = "bold")),
+                       font = list(size = 14, color = "black", family = "Arial")))
+
+# Display the plot
+p
+
+# Export the plot as an HTML file
+htmlwidgets::saveWidget(p, file = "3D_PCoA_Bray_Curtis.html", selfcontained = TRUE)
+
+
+
+
+
+```
 
 ```{r}
 # Weighted Unifrac.
