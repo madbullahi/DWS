@@ -2771,6 +2771,32 @@ ggplot(sigtab_with_metadata, aes(x = Genus, y = log2FoldChange, fill = Genotype)
 
 ```
 
+#DAA with interaction
+```{r}
+# Convert character variables to factors
+metadata$Genotype <- as.factor(metadata$Genotype)
+metadata$Day <- as.factor(metadata$Day)
+
+# Check for missing combinations
+table(metadata$Genotype, metadata$Day)
+
+
+# Create the DESeq2 object with both Genotype and Day
+dds <- phyloseq_to_deseq2(ps_genus, ~ Genotype + Day)
+
+```
+```{r}
+# Run DESeq2
+dds <- DESeq(dds)
+
+# Get results
+res_genotype <- results(dds, contrast=c("Genotype", "LRV_12_3", "CONTROL"))
+res_day <- results(dds, name="Day")
+
+
+
+```
+
 
 ```{r}
 library(ANCOMBC)
