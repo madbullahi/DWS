@@ -1374,15 +1374,6 @@ bc_adonis
 ```
 
 
-
-
-
-
-
-
-
-
-
 ```{r}
 merge_less_than_top_ps <- function(ps_object_rare2, top = 15) { transformed <- transform_sample_counts(ps_object_rare2, function(OTU) OTU/sum(OTU)) 
 otu.table <- as.data.frame(otu_table(transformed))
@@ -2486,18 +2477,299 @@ plot(net,
 
 
 ```
+#Differential abunanace analysis
+```{r}
+#Which microbial taxa (at different taxonomic levels like phylum, genus, species) are differentially abundant between two or more groups/conditions?
+#Are the identified differentially abundant features biologically meaningful or relevant to the study hypothesis?
+#How do the results change when analyzing data at different taxonomic levels (e.g., OTUs vs. genera)?
+#Are there any low-abundance taxa that show significant differential abundance?
+#DESeq2 developers recommend against rarefaction:
+#The authors of DESeq2 explicitly advise against using rarefied data for their method.
+#Rarefaction can lead to loss of information and bias in the results of differential abundance analysis.
+# Use both rarefied and non-rarefied data with DESeq2 and compare results as a sensitivity analysis.
+
+
+
+```
+
+
+#DeSeq2
+```{r}
+library(DESeq2)
+
+# Aggregate data to the Genus level.
+ps_genus <- tax_glom(ps_object, taxrank = "Genus", NArm = FALSE)
+
+```
+
+```{r}
+
+#Create the DeSeq2 object with a focus on the Genotype variable.
+dds <- phyloseq_to_deseq2(ps_genus, ~ Genotype)
+
+
+```
+```{r}
+#Perform the diferential abunadance.
+dds <- DESeq(dds, test="Wald", fitType="parametric")
+
+```
+
+```{r}
+
+#Extract the results. and add taxonomic information.
+res <- results(dds)
+res_tax <- cbind(as(res, "data.frame"), as(tax_table(ps_genus)[rownames(res), ], "matrix"))
+
+```
+
+```{r}
+
+#filter the significant results and sort them by adjusted p-value.
+sigtab <- res_tax %>%
+  data.frame() %>%
+  mutate(Genus = ifelse(is.na(Genus), "Unknown", Genus)) %>%
+  filter(padj < 0.05) %>%
+  arrange(padj)
+
+
+```
+
+
+```{r}
+#visualise the results.
+ggplot(sigtab, aes(x = log2FoldChange, y = Genus)) +
+  geom_point(aes(size = -log10(padj))) +
+  theme_bw() +
+  ggtitle("Differentially Abundant Genera")
 
 
 
 
+```
+
+
+
+```{r}
+
+# Assuming your metadata is in a data frame called 'metadata'
+#sigtab <- merge(sigtab, metadata[, c("sample-id", "Genotype")], by.x = "row.names", by.y = "sample-id")
+str(sigtab)
 
 
 
 
+```
+```{r}
+str(metadata)
+
+
+```
+
+```{r}
+
+sigtab$sample_id <- rownames(sigtab) # Create a new column with the sample IDs
+
+
+```
+
+```{r}
+
+# Merge the significant results with the metadata
+sigtab_with_metadata <- merge(sigtab, metadata, by.x = "sample_id", by.y = "sample.id", all.x = TRUE)
+
+
+```
+
+```{r}
+library(ggplot2)
+library(RColorBrewer)
+
+# Get the number of unique genotypes
+n_genotypes <- length(unique(sigtab_with_metadata$Genotype))
+
+# Create a color palette
+if (n_genotypes <= 2) {
+  color_palette <- c("#E41A1C", "#377EB8")[1:n_genotypes]  # Manual selection for 1-2 colors
+} else {
+  color_palette <- brewer.pal(n = min(n_genotypes, 8), name = "Set1")
+}
+
+# Create the plot
+ggplot(sigtab_with_metadata, aes(x = log2FoldChange, y = Genus, color = Genotype)) +
+  geom_point(aes(size = -log10(padj))) +
+  scale_color_manual(values = color_palette) +
+  scale_size_continuous(name = "-log10(padj)") +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    axis.text.y = element_text(face = "italic")
+  ) +
+  labs(
+    title = "Differentially Abundant Genera",
+    x = "log2 Fold Change",
+    y = "Genus",
+    color = "Genotype"
+  )
+
+
+
+```
+
+
+```{r}
+
+# Check the structure and first few rows of the data
+str(sigtab_with_metadata)
+head(sigtab_with_metadata)
+
+# Verify that Genotype column exists and has multiple values
+table(sigtab_with_metadata$Genotype)
+
+
+```
+
+
+```{r}
+# Extract the sample ID from the existing sample_id column
+sigtab$sample_id_short <- sub("^([^_]+)_.*", "\\1", sigtab$sample_id)
+
+
+```
+
+```{r}
+
+sigtab_with_metadata <- merge(sigtab, metadata, by.x="sample_id_short", by.y="sample.id", all.x=TRUE)
+
+
+```
+
+```{r}
+str(sigtab)
+head(sigtab$sample_id)
+
+
+
+```
+
+```{r}
+sample_id_mapping <- data.frame(
+  hashed_id = sigtab$sample_id,
+  original_id = c("MBSF1", "MBSF2", "MBSF3", "MBSF4", "MBSF5", "MBSF6", "MBSF7", "MBSF8", "MBSF9", "MBSF10",
+                  "MBSF11", "MBSF12", "MBSF13", "MBSF14", "MBSF15", "MBSF16", "MBSF17", "MBSF19", "MBSF20", "MBSF22",
+                  "MBSF23", "MBSF24", "MBSF25", "MBSF26", "MBSF28")
+)
+
+
+
+```
+
+
+```{r}
+
+# Merge the sample ID mapping with the significant results
+sigtab_with_original_ids <- merge(sigtab, sample_id_mapping, by.x = "sample_id", by.y = "hashed_id")
+
+
+```
+
+```{r}
+sigtab_with_metadata <- merge(sigtab_with_original_ids, metadata, by.x = "original_id", by.y = "sample.id", all.x = TRUE)
+
+```
+
+
+```{r}
+
+# Check the result
+table(sigtab_with_metadata$Genotype)
+
+
+```
+
+
+```{r}
+library(ggplot2)
+
+ggplot(sigtab_with_metadata, aes(x = log2FoldChange, y = Genus, color = Genotype)) +
+  geom_point(aes(size = -log10(padj))) +
+  scale_color_brewer(palette = "Set1") +
+  scale_size_continuous(name = "-log10(padj)") +
+  theme_bw() +
+  theme(
+    legend.position = "right",
+    axis.text.y = element_text(face = "italic"),
+    plot.title = element_text(hjust = 0.5)
+  ) +
+  labs(
+    title = "Differentially Abundant Genera by Genotype",
+    x = "log2 Fold Change",
+    y = "Genus",
+    color = "Genotype"
+  )
 
 
 
 
+```
+```{r}
+library(ggplot2)
+
+ggplot(sigtab_with_metadata, aes(x = log2FoldChange, y = Genus, fill = Genotype)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    scale_fill_brewer(palette = "Set1") +
+    theme_bw() +
+    theme(
+        legend.position = "right",
+        axis.text.y = element_text(face = "italic"),
+        plot.title = element_text(hjust = 0.5)
+    ) +
+    labs(
+        title = "Differentially Abundant Genera by Genotype",
+        x = "log2 Fold Change",
+        y = "Genus",
+        fill = "Genotype"
+    )
+
+
+```
+```{r}
+# Example: Adding a column for error values
+sigtab_with_metadata$error <- runif(nrow(sigtab_with_metadata), min = 0.1, max = 0.5)  # Replace with actual error values
+
+
+
+```
+
+
+
+```{r}
+
+library(ggplot2)
+
+ggplot(sigtab_with_metadata, aes(x = Genus, y = log2FoldChange, fill = Genotype)) +
+    geom_bar(stat = "identity", position = "dodge") +
+    geom_errorbar(aes(ymin = log2FoldChange - error, ymax = log2FoldChange + error),
+                  width = 0.2, position = position_dodge(0.9)) +
+    geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+    scale_fill_brewer(palette = "Set1") +
+    theme_bw() +
+    theme(
+        legend.position = "right",
+        axis.text.y = element_text(face = "italic"),
+        plot.title = element_text(hjust = 0.5)
+    ) +
+    labs(
+        title = "Differentially Abundant Genera by Genotype",
+        x = "Genus",
+        y = "log2 Fold Change",
+        fill = "Genotype"
+    ) +
+    coord_flip()
+
+
+```
 
 
 ```{r}
