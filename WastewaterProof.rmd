@@ -2712,6 +2712,8 @@ ggplot(sigtab_with_metadata, aes(x = log2FoldChange, y = Genus, color = Genotype
 
 
 ```
+
+
 ```{r}
 library(ggplot2)
 
@@ -2798,35 +2800,75 @@ res_day <- results(dds, name="Day")
 ```
 
 
+
 ```{r}
-library(ANCOMBC)
-library(phyloseq)
+
 library(tidyverse)
+# Assuming you have a phyloseq object named 'ps_genus'
+# If not, you'll need to create it using your OTU table, taxonomy table, and metadata
 
-# Perform ANCOM-BC analysis
-ancombc_result <- ancombc(phyloseq = ps_merged, 
-                          formula = "Genotype + Day", 
-                          p_adj_method = "holm",
-                          zero_cut = 0.90, # prevalence filter
-                          lib_cut = 1000, # library size filter
-                          group = "Genotype", 
-                          struc_zero = TRUE, 
-                          neg_lb = TRUE, 
-                          tol = 1e-5, 
-                          max_iter = 100, 
-                          conserve = TRUE, 
-                          alpha = 0.05, 
-                          global = FALSE)
+# Assuming your phyloseq object is named 'ps_object'
 
-# Extract results
-res <- ancombc_result$res
-
-
-
-
+sample_dat <- as.data.frame(sample_data(ps_object))
 
 
 ```
 
 
 
+```{r}
+
+# Assuming your metadata is in a data frame called 'sample_data'
+sample_counts <- table(sample_dat$Genotype, sample_dat$Day)
+valid_groups <- rownames(sample_counts)[rowSums(sample_counts) >= 2]
+
+# Filter your phyloseq object
+psobject_filtered <- prune_samples(sample_data(ps_object)$Genotype %in% valid_groups, ps_object)
+
+
+```
+
+
+```{r}
+
+ancombc_result_filtered <- ancombc(
+    phyloseq = psobject_filtered,
+    formula = "Genotype * Day",
+    p_adj_method = "holm",
+    group = "Genotype",
+    struc_zero = TRUE,
+    neg_lb = TRUE,
+    tol = 1e-5,
+    max_iter = 100,
+    conserve = TRUE,
+    alpha = 0.05,
+    global = FALSE
+)
+
+
+
+```
+
+```{r}
+
+# Count samples per group
+sample_counts <- sample_dat %>%
+  group_by(Genotype, Day) %>%
+  summarise(count = n(), .groups = 'drop')
+
+# Filter out groups with less than 3 samples
+valid_groups <- sample_counts %>%
+  filter(count >= 2)
+
+# Filter your phyloseq object
+psobject_filtered <- prune_samples(sample_data(ps_object)$Genotype %in% valid_groups$Genotype, ps_object)
+
+
+```
+
+
+```{r}
+
+
+
+```
