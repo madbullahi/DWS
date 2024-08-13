@@ -2858,7 +2858,7 @@ sample_counts <- sample_dat %>%
 
 # Filter out groups with less than 3 samples
 valid_groups <- sample_counts %>%
-  filter(count >= 2)
+  filter(count >= 3)
 
 # Filter your phyloseq object
 psobject_filtered <- prune_samples(sample_data(ps_object)$Genotype %in% valid_groups$Genotype, ps_object)
@@ -2868,6 +2868,253 @@ psobject_filtered <- prune_samples(sample_data(ps_object)$Genotype %in% valid_gr
 
 
 ```{r}
+
+ancombc_result <- ancombc(
+    phyloseq = psobject_filtered,
+    formula = "Genotype * Day",
+    p_adj_method = "holm",
+    group = "Genotype",
+    struc_zero = TRUE,
+    neg_lb = TRUE,
+    tol = 1e-5,
+    max_iter = 100,
+    conserve = TRUE,
+    alpha = 0.05,
+    global = FALSE
+)
+
+
+```
+
+
+```{r}
+
+# Extract results
+res <- ancombc_result$res
+```
+
+```{r}
+
+# create a dataframe with all the results.
+result_df <- data.frame(
+  taxon = rownames(res$beta),
+  beta = res$beta,
+  se = res$se,
+  W = res$W,
+  p_val = res$p_val,
+  q_val = res$q_val,
+  diff_abn = res$diff_abn
+)
+
+
+
+
+```
+
+
+```{r}
+#filter for significant results
+library(dplyr)
+library(dplyr)
+
+sig_results <- result_df %>%
+  filter(if_any(starts_with("diff_abn"), ~ . == TRUE)) %>%
+  select(taxon, 
+         starts_with("diff_abn"), 
+         starts_with("q_val"),
+         starts_with("beta")) %>%
+  arrange(taxon)
+
+```
+
+
+```{r}
+
+sig_results <- sig_results %>%
+  mutate(
+    sig_genotype = if_any(c("diff_abn.GenotypeLRV_0_1", "diff_abn.GenotypeLRV_12_3", "diff_abn.GenotypeLRV_8.5_3"), ~ . == TRUE),
+    sig_day = if_any(c("diff_abn.DayD2", "diff_abn.DayD3"), ~ . == TRUE),
+    sig_interaction = if_any(ends_with(".DayD2") | ends_with(".DayD3"), ~ . == TRUE)
+  )
+
+
+```
+
+```{r}
+# View the top significant results
+head(sig_results)
+
+```
+
+```{r}
+# Extract taxonomy from phyloseq object
+tax_table <- as.data.frame(tax_table(psobject_filtered))
+tax_table$taxon <- rownames(tax_table)
+
+# Merge with sig_results
+sig_results_with_tax <- merge(sig_results, tax_table, by = "taxon", all.x = TRUE)
+
+
+```
+
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Prepare the data
+plot_data <- sig_results_with_tax %>%
+  select(taxon, Genus, starts_with("beta"), starts_with("diff_abn")) %>%
+  pivot_longer(cols = -c(taxon, Genus), 
+               names_to = c(".value", "comparison"),
+               names_pattern = "(.+)\\.(.+)") %>%
+  filter(diff_abn == TRUE)
+
+# Focus on top N most affected genera
+top_genera <- plot_data %>%
+  group_by(Genus) %>%
+  summarize(max_abs_beta = max(abs(beta))) %>%
+  top_n(20, max_abs_beta) %>%
+  pull(Genus)
+
+plot_data_filtered <- plot_data %>% filter(Genus %in% top_genera)
+
+# Create the plot
+ggplot(plot_data_filtered, aes(x = comparison, y = Genus, fill = beta)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
+                       midpoint = 0, limit = c(-max(abs(plot_data_filtered$beta)), max(abs(plot_data_filtered$beta))),
+                       name = "Effect Size") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_text(size = 8)) +
+  labs(title = "Top 20 Differentially Abundant Genera",
+       x = "Comparison",
+       y = "Genus")
+
+
+```
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+
+# Prepare the data
+plot_data <- sig_results_with_tax %>%
+  select(taxon, Genus, starts_with("beta"), starts_with("diff_abn")) %>%
+  pivot_longer(cols = -c(taxon, Genus), 
+               names_to = c(".value", "comparison"),
+               names_pattern = "(.+)\\.(.+)") %>%
+  filter(diff_abn == TRUE)
+
+# Create comparison groups and specific comparisons
+plot_data <- plot_data %>%
+  mutate(
+    comparison_group = case_when(
+      grepl("Genotype", comparison) & !grepl("Day", comparison) ~ "Genotype",
+      grepl("Day", comparison) & !grepl("Genotype", comparison) ~ "Day",
+      grepl("Genotype.*Day", comparison) ~ "Interaction"
+    ),
+    comparison_specific = case_when(
+      grepl("GenotypeLRV_0_1", comparison) & !grepl("Day", comparison) ~ "LRV_0_1",
+      grepl("GenotypeLRV_12_3", comparison) & !grepl("Day", comparison) ~ "LRV_12_3",
+      grepl("GenotypeLRV_8.5_3", comparison) & !grepl("Day", comparison) ~ "LRV_8.5_3",
+      grepl("DayD2", comparison) & !grepl("Genotype", comparison) ~ "Day 2",
+      grepl("DayD3", comparison) & !grepl("Genotype", comparison) ~ "Day 3",
+      grepl("Genotype.*Day", comparison) ~ "Interaction",
+      TRUE ~ "Other"
+    )
+  )
+
+# Focus on top N most affected genera
+top_genera <- plot_data %>%
+  group_by(Genus) %>%
+  summarize(max_abs_beta = max(abs(beta))) %>%
+  top_n(20, max_abs_beta) %>%
+  pull(Genus)
+
+plot_data_filtered <- plot_data %>% filter(Genus %in% top_genera)
+
+
+
+```
+
+
+```{r}
+ggplot(plot_data_filtered, aes(x = beta, y = Genus)) +
+  geom_point(aes(color = comparison_specific), size = 3) +
+  facet_grid(. ~ comparison_group, scales = "free_x", space = "free_x") +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray50") +
+  scale_color_manual(values = c(
+    "LRV_0_1" = "blue",
+    "LRV_12_3" = "darkblue",
+    "LRV_8.5_3" = "lightblue",
+    "Day 2" = "red",
+    "Day 3" = "darkred",
+    "Interaction" = "purple",
+    "Other" = "gray"
+  )) +
+  theme_minimal() +
+  theme(axis.text.y = element_text(size = 8),
+        strip.background = element_rect(fill = "lightgrey"),
+        strip.text = element_text(face = "bold"),
+        legend.position = "right") +
+  labs(title = "Significantly Differentially Abundant Taxa",
+       x = "Effect Size",
+       y = "Genus",
+       color = "Comparison")
+
+
+
+```
+
+
+```{r}
+
+library(ggplot2)
+library(dplyr)
+
+# Ensure beta is numeric
+plot_data_filtered <- plot_data_filtered %>%
+  mutate(beta = as.numeric(beta))
+
+# Create the plot
+ggplot(plot_data_filtered, aes(x = Genus, y = beta, fill = comparison_specific)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.9)) +
+  facet_grid(~ factor(comparison_group, levels = c("Genotype", "Day", "Interaction")), 
+             scales = "free_x", space = "free_x") +
+  scale_fill_manual(values = c(
+    "LRV_0_1" = "red",
+    "LRV_12_3" = "blue",
+    "LRV_8.5_3" = "green",
+    "Day 2" = "orange",
+    "Day 3" = "purple",
+    "LRV_0_1:Day 2" = "pink",
+    "LRV_0_1:Day 3" = "lightblue",
+    "LRV_12_3:Day 2" = "yellow",
+    "LRV_12_3:Day 3" = "lightgreen",
+    "LRV_8.5_3:Day 2" = "brown",
+    "LRV_8.5_3:Day 3" = "gray"
+  )) +
+  coord_flip() +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_text(size = 8),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    strip.background = element_rect(fill = "lightgrey"),
+    strip.text = element_text(face = "bold"),
+    legend.position = "bottom",
+    legend.title = element_blank(),
+    panel.spacing = unit(0.5, "lines")
+  ) +
+  labs(title = "Significantly Differentially Abundant Taxa",
+       x = "Genus",
+       y = "Effect Size") +
+  scale_y_continuous(limits = c(-6, 6), breaks = seq(-6, 6, 2))
 
 
 
