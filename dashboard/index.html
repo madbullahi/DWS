@@ -636,7 +636,8 @@ footer code { font-family: var(--font-mono); }
     const maxCov = Math.max(...hits.map((h) => h.query_coverage_pct));
     const genes = [...new Set(hits.map((h) => h.gene))].join(", ");
     $("#path-arg").innerHTML = `<b>Antibiotic-resistance BLAST: ${pass} of ${hits.length} hits pass</b>
-      <span>${asvs} ASVs matched the SARG database (genes ${esc(genes)}), but every alignment covers at most ${maxCov.toFixed(0)}% of the read, with E-values no better than ${Math.min(...hits.map((h) => h.evalue)).toExponential(0)}. Annotation needs ≥ 80% identity over ≥ 75% of the read and E ≤ 1e-10, so these are chance matches. Detecting resistance genes needs shotgun metagenomics or qPCR, not 16S amplicons.</span>`;
+      <span>${asvs} ASVs matched the SARG database (genes ${esc(genes)}), but every alignment covers at most ${maxCov.toFixed(0)}% of the read, with E-values no better than ${Math.min(...hits.map((h) => h.evalue)).toExponential(0)}. Annotation needs ≥ 80% identity over ≥ 75% of the read and E ≤ 1e-10, so these are chance matches.${
+        hits.some((h) => h.query_has_adapter) ? ` The only 100% matches (${hits.filter((h) => h.query_has_adapter).length} hits) are 28 bp of Illumina adapter left untrimmed in the ASVs, not bacterial DNA.` : ""} Detecting resistance genes needs shotgun metagenomics or qPCR, not 16S amplicons.</span>`;
   })();
   function drawPath() { drawPathTable(); drawPathBars(); }
 

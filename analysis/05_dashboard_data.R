@@ -32,7 +32,7 @@ pathogen_by_day <- read.csv(table_path("pathogen_abundance_by_sample.csv")) %>%
   filter(target %in% pathogen_cmp$target) %>%
   summarise_se(rel_abundance * 100, target, Treatment, Day)
 arg_hits <- read.csv(table_path("arg_blast_hits.csv")) %>%
-  select(query, gene, description, identity_pct, query_coverage_pct, evalue, passes)
+  select(query, gene, description, identity_pct, query_coverage_pct, evalue, passes, query_has_adapter)
 
 out <- list(
   generated = format(Sys.Date()),

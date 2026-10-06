@@ -43,3 +43,21 @@ test_that("compare_to_control reports reduction relative to control", {
   expect_equal(r$mean_control, 4)
   expect_equal(r$reduction_pct, 75)
 })
+
+test_that("find_adapters detects adapters on both strands and reports positions", {
+  seqs <- c(clean   = "ACGTTGCAACGTTGCAACGT",
+            truseq  = "ACGTACGTAGATCGGAAGAGCACACG",
+            rc      = paste0("TTT", reverse_complement("CTGTCTCTTATACACATCT"), "GGG"))
+  hits <- find_adapters(seqs)
+  expect_setequal(hits$id, c("truseq", "rc"))
+  expect_equal(hits$start[hits$id == "truseq"], 9)
+  expect_equal(hits$strand[hits$id == "rc"], "reverse")
+  expect_equal(hits$adapter[hits$id == "rc"], "Nextera")
+  expect_equal(nrow(find_adapters(seqs["clean"])), 0)
+})
+
+test_that("read_fasta joins wrapped sequence lines", {
+  f <- tempfile(fileext = ".fasta")
+  writeLines(c(">a desc", "ACGT", "acgt", ">b", "TTTT"), f)
+  expect_equal(read_fasta(f), c(a = "ACGTACGT", b = "TTTT"))
+})
