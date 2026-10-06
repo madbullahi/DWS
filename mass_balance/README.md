@@ -42,8 +42,9 @@ Rscript mass_balance/mass_balance_plots.R
    (fixed in the script; matches Table S2 raw). Control water values are
    identical on all three days (858.4 / 719.1).
 7. **Tissue units**: the tissue sheet header says "ng/L", but the values are
-   per mass of Daphnia (confirmed). The plots label them "per mass of Daphnia";
-   set `tissue_unit` in the script to the exact unit (e.g. ng/mg dry weight).
+   per wet mass of Daphnia (confirmed). The plots label them "per wet mass of
+   Daphnia"; set `tissue_unit` in the script to the exact unit (e.g. ng/mg wet
+   weight) once known.
 8. **Genotype names differ between files**: `LR2_36_01` / `LRII_36` / `LRII3_16`
    and `LRV_01` / `LRV0_1` / `LRV_0_1`. The correct names are `LRII_36` and
    `LRV0_1`; the script uses these in all outputs.

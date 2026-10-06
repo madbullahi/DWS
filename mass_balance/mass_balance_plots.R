@@ -25,7 +25,7 @@ pair_cols <- c("#2a78d6", "#eb6834")
 
 # Arsenic tissue concentration is per mass of Daphnia (the "ng/L" header in
 # As_massbalance.xlsx is wrong). Set the exact unit here once it is confirmed.
-tissue_unit <- "per mass of Daphnia"
+tissue_unit <- "per wet mass of Daphnia"
 
 theme_mb <- theme_bw(base_size = 12) +
   theme(panel.grid.minor = element_blank(),
