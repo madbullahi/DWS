@@ -35,7 +35,8 @@ Rscript mass_balance/mass_balance_plots.R
    - PFOS DM1960 Day 2 in S3 uses the Day 1 final concentrations
      (43.97 / 60.31 instead of 60.12 / 41.05).
    - All other IC, FC and RE values match.
-5. **Trimethoprim** is not in any of the files.
+5. **Trimethoprim** uptake and removal were never measured, so it is not part
+   of this analysis (resolved; not missing data).
 6. **As_massbalance.xlsx, water sheet**: the Treatment and Day headers are
    swapped, and DM1900 Day 1 and Day 3 have both replicates labelled 1
    (fixed in the script; matches Table S2 raw). Control water values are
