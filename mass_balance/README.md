@@ -43,8 +43,11 @@ Rscript mass_balance/mass_balance_plots.R
    identical on all three days (858.4 / 719.1).
 7. **Tissue units**: the arsenic tissue values are ng/L in the digested
    Daphnia samples (confirmed). Daphnia were not weighed, so they cannot be
-   expressed per mass; converting to ng per sample needs the digest volume,
-   and comparisons assume the same number of Daphnia per sample.
+   expressed per mass. Using a 1 mL digest and 10 Daphnia per sample (recalled,
+   not recorded), `arsenic_water_tissue_matched.csv` adds ng per sample and
+   pg per Daphnia: 0.02-0.08 pg As per Daphnia. That is very low next to the
+   ~450 ug/L removed from the water, so check that the digest values really
+   are ng/L and not ug/L (a factor of 1000).
 8. **Genotype names differ between files**: `LR2_36_01` / `LRII_36` / `LRII3_16`
    and `LRV_01` / `LRV0_1` / `LRV_0_1`. The correct names are `LRII_36` and
    `LRV0_1`; the script uses these in all outputs.

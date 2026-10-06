@@ -26,6 +26,10 @@ pair_cols <- c("#2a78d6", "#eb6834")
 # Arsenic tissue values are concentrations in the digested Daphnia samples
 # (ng/L of digest). Daphnia were not weighed, so no per-mass unit is possible.
 tissue_unit <- "ng/L in digest"
+# Recalled by the experimenter, not recorded in the data files: used only to
+# add per-sample and per-individual columns to the matched arsenic table.
+digest_volume_L    <- 0.001  # 1 mL digest
+daphnia_per_sample <- 10
 
 theme_mb <- theme_bw(base_size = 12) +
   theme(panel.grid.minor = element_blank(),
@@ -240,7 +244,9 @@ as_matched <- as_tissue %>%
               select(Genotype, Day, Replicate, Water_ugL),
             by = c("Genotype", "Day", "Replicate")) %>%
   left_join(as_ic, by = "Day") %>%
-  mutate(Water_RE = (IC - Water_ugL) / IC * 100) %>%
+  mutate(Water_RE = (IC - Water_ugL) / IC * 100,
+         Tissue_ng_per_sample = Tissue * digest_volume_L,
+         Tissue_pg_per_daphnia = Tissue_ng_per_sample / daphnia_per_sample * 1000) %>%
   arrange(Genotype, Day, Replicate)
 
 write.csv(as_matched, file.path(out_dir, "arsenic_water_tissue_matched.csv"), row.names = FALSE)
