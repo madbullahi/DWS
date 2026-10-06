@@ -26,7 +26,11 @@ Rscript mass_balance/mass_balance_plots.R
 1. **PET+PFAS blocks reuse non-PET replicates.** In the PFAS sheet, 27 of the
    54 "+PET" replicate rows are identical (medium and tissue) to a row in the
    matching non-PET block, usually 2 of the 3 replicates per day
-   (`output/check_PET_blocks_duplicating_noPET.csv`).
+   (`output/check_PET_blocks_duplicating_noPET.csv`). **Resolved:** this is
+   by design (incomplete factorial; measurements shared between PFAS-only and
+   PFAS+PET treatments). The data are presented descriptively as proof of
+   principle; SDs of "+PET" bars understate variability, and no formal
+   PFAS-only vs PFAS+PET test should be run.
 2. **Table S2 (uptake_removal.docx) uses only the first replicate.** Its values
    are the first replicate row of each day, rounded, not the mean of 3.
 3. **MP sheet has no replicate-level data.** There is one value per treatment
