@@ -1,0 +1,75 @@
+BLASTN 2.6.0+
+
+Database: test.fasta
+
+Query= asv_no_hit
+
+Length=300
+
+
+***** No hits found *****
+
+
+
+Lambda      K        H
+   0.634    0.408    0.912 
+
+Query= asv_good
+
+Length=100
+
+                                                                      Score     E
+Sequences producing significant alignments:                          (Bits)  Value
+
+  ARID1|tetw|1e-50|gi|1|gb|X.1||tetracycline resistance protein...  170     1e-45
+
+
+> ARID1|tetw|1e-50|gi|1|gb|X.1||tetracycline resistance protein 
+TetW [Some bacterium]
+Length=1920
+
+ Score = 170 bits (184),  Expect = 1e-45
+ Identities = 95/98 (97%), Gaps = 0/98 (0%)
+ Strand=Plus/Plus
+
+Query  1    ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT  60
+            ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+Sbjct  10   ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT  69
+
+Query  61   ACGTACGTACGTACGTACGTACGTACGTACGTACGTAC  98
+            ||||||||||||||||||||||||||||||||||||||
+Sbjct  70   ACGTACGTACGTACGTACGTACGTACGTACGTACGTAC  107
+
+ Score = 40.0 bits (43),  Expect = 0.5
+ Identities = 20/20 (100%), Gaps = 0/20 (0%)
+ Strand=Plus/Plus
+
+Query  200  ACGTACGTACGTACGTACGT  219
+            ||||||||||||||||||||
+Sbjct  500  ACGTACGTACGTACGTACGT  519
+
+
+
+Lambda      K        H
+   0.634    0.408    0.912 
+
+Query= asv_short
+
+Length=310
+
+> ARID2|macb|2e-23|gi|2|gb|Y.1||molybdenum ABC transporter ModD 
+[Helicobacter pylori]
+Length=690
+
+ Score = 46.4 bits (50),  Expect = 0.004
+ Identities = 28/30 (93%), Gaps = 0/30 (0%)
+ Strand=Plus/Minus
+
+Query  180  ACGTACGTACGTACGTACGTACGTACGTAC  209
+            ||||||||||||||||||||||||||||||
+Sbjct  465  ACGTACGTACGTACGTACGTACGTACGTAC  436
+
+
+
+Lambda      K        H
+   0.634    0.408    0.912 

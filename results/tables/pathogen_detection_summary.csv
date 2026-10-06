@@ -1,0 +1,22 @@
+"target","group","species_of_concern","samples_detected","samples_total","max_rel_abundance_pct"
+"Pseudomonas","Opportunistic pathogen","P. aeruginosa",36,37,11.8753970514141
+"Mycobacterium","Opportunistic pathogen","Non-tuberculous mycobacteria (M. avium complex)",34,37,0.419942215951085
+"Acinetobacter","Opportunistic pathogen","A. baumannii",28,37,5.89316344033325
+"Legionella","Opportunistic pathogen","L. pneumophila",28,37,0.116067823980622
+"Clostridium sensu stricto","Faecal indicator","C. perfringens",9,37,0.0369549150036955
+"Aeromonas","Opportunistic pathogen","A. hydrophila; A. caviae",4,37,0.0773375910587766
+"Arcobacter","Emerging pathogen","A. butzleri",2,37,0.0604716790969563
+"Leptospira","Waterborne pathogen","L. interrogans",2,37,0.0470335281865215
+"Bacteroides","Faecal indicator","Human faecal marker",0,37,0
+"Burkholderia","Waterborne pathogen","B. pseudomallei",0,37,0
+"Campylobacter","Waterborne pathogen","C. jejuni; C. coli",0,37,0
+"Enterococcus","Faecal indicator","Intestinal enterococci",0,37,0
+"Escherichia-Shigella","Waterborne pathogen","Pathogenic E. coli (incl. O157); Shigella spp.",0,37,0
+"Francisella","Waterborne pathogen","F. tularensis",0,37,0
+"Helicobacter","Waterborne pathogen","H. pylori",0,37,0
+"Klebsiella","Opportunistic pathogen","K. pneumoniae",0,37,0
+"Salmonella","Waterborne pathogen","S. Typhi; other salmonellae",0,37,0
+"Staphylococcus","Opportunistic pathogen","S. aureus",0,37,0
+"Stenotrophomonas","Opportunistic pathogen","S. maltophilia",0,37,0
+"Vibrio","Waterborne pathogen","V. cholerae O1 and O139",0,37,0
+"Yersinia","Waterborne pathogen","Y. enterocolitica",0,37,0
