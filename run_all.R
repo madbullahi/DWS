@@ -6,7 +6,8 @@
 scripts <- c("01_organic_removal.R",
              "02_inorganic_removal.R",
              "03_microplastics_pfas.R",
-             "04_dashboard_data.R")
+             "04_pathogen_screening.R",
+             "05_dashboard_data.R")
 
 for (s in scripts) {
   message("\n==== Running ", s, " ====")

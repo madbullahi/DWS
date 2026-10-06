@@ -1,0 +1,22 @@
+genus,silva_pattern,group,species_of_concern,source
+Campylobacter,^Campylobacter$,Waterborne pathogen,C. jejuni; C. coli,WHO GDWQ 4th ed. Table 7.1
+Escherichia-Shigella,^Escherichia-Shigella$,Waterborne pathogen,Pathogenic E. coli (incl. O157); Shigella spp.,WHO GDWQ 4th ed. Table 7.1
+Salmonella,^Salmonella$,Waterborne pathogen,S. Typhi; other salmonellae,WHO GDWQ 4th ed. Table 7.1
+Vibrio,^Vibrio$,Waterborne pathogen,V. cholerae O1 and O139,WHO GDWQ 4th ed. Table 7.1
+Yersinia,^Yersinia$,Waterborne pathogen,Y. enterocolitica,WHO GDWQ 4th ed. Table 7.1
+Francisella,^Francisella$,Waterborne pathogen,F. tularensis,WHO GDWQ 4th ed. Table 7.1
+Leptospira,^Leptospira$,Waterborne pathogen,L. interrogans,WHO GDWQ 4th ed. Table 7.1
+Helicobacter,^Helicobacter$,Waterborne pathogen,H. pylori,WHO GDWQ 4th ed. Table 7.1
+Burkholderia,^Burkholderia,Waterborne pathogen,B. pseudomallei,WHO GDWQ 4th ed. Table 7.1
+Legionella,^Legionella$,Opportunistic pathogen,L. pneumophila,WHO GDWQ 4th ed. Table 7.1
+Mycobacterium,^Mycobacterium$,Opportunistic pathogen,Non-tuberculous mycobacteria (M. avium complex),WHO GDWQ 4th ed. Table 7.1
+Acinetobacter,^Acinetobacter$,Opportunistic pathogen,A. baumannii,WHO GDWQ 4th ed. ch. 11; WHO priority pathogens list
+Aeromonas,^Aeromonas$,Opportunistic pathogen,A. hydrophila; A. caviae,WHO GDWQ 4th ed. ch. 11
+Pseudomonas,^Pseudomonas$,Opportunistic pathogen,P. aeruginosa,WHO GDWQ 4th ed. ch. 11; WHO priority pathogens list
+Klebsiella,^Klebsiella$,Opportunistic pathogen,K. pneumoniae,WHO GDWQ 4th ed. ch. 11; WHO priority pathogens list
+Staphylococcus,^Staphylococcus$,Opportunistic pathogen,S. aureus,WHO GDWQ 4th ed. ch. 11
+Stenotrophomonas,^Stenotrophomonas$,Opportunistic pathogen,S. maltophilia,Emerging opportunistic waterborne pathogen
+Arcobacter,^Arcobacter$,Emerging pathogen,A. butzleri,Emerging enteric pathogen in wastewater
+Enterococcus,^Enterococcus$,Faecal indicator,Intestinal enterococci,WHO GDWQ 4th ed. ch. 11 (indicator organism)
+Clostridium sensu stricto,^Clostridium_sensu_stricto,Faecal indicator,C. perfringens,WHO GDWQ 4th ed. ch. 11 (indicator organism)
+Bacteroides,^Bacteroides$,Faecal indicator,Human faecal marker,Microbial source tracking marker
