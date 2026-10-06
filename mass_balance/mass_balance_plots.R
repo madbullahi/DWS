@@ -23,9 +23,9 @@ dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 day_cols  <- c(D1 = "#2a78d6", D2 = "#eb6834", D3 = "#1baf7a")
 pair_cols <- c("#2a78d6", "#eb6834")
 
-# Arsenic tissue concentration is per mass of Daphnia (the "ng/L" header in
-# As_massbalance.xlsx is wrong). Set the exact unit here once it is confirmed.
-tissue_unit <- "per wet mass of Daphnia"
+# Arsenic tissue values are concentrations in the digested Daphnia samples
+# (ng/L of digest). Daphnia were not weighed, so no per-mass unit is possible.
+tissue_unit <- "ng/L in digest"
 
 theme_mb <- theme_bw(base_size = 12) +
   theme(panel.grid.minor = element_blank(),
