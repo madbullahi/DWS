@@ -203,6 +203,62 @@ p_combined_day <- p_combined +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 save_fig(p_combined_day, "Fig_mass_balance_water_tissue_by_day", 15, 8)
 
+# Bar plot versions: mean +/- SD with individual values overlaid.
+# PET by day has a single value, so it has no error bar.
+summarise_recovery <- function(d, ...) {
+  d %>%
+    group_by(Genotype, Compound, Compartment, ...) %>%
+    summarise(n = n(), Mean = mean(Recovery),
+              SD = if (n() > 1) sd(Recovery) else NA_real_, .groups = "drop")
+}
+
+bar_plot <- function(summary_df, points_df, title, subtitle) {
+  dodge <- position_dodge(width = 0.85)
+  ggplot(summary_df, aes(Compound, Mean, fill = Compound, colour = Compound,
+                         linetype = Compartment, alpha = Compartment,
+                         group = interaction(Compound, Compartment))) +
+    geom_col(position = dodge, width = 0.8, linewidth = 0.6) +
+    geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD), position = dodge,
+                  width = 0.25, linewidth = 0.5, linetype = "solid", alpha = 1,
+                  colour = "grey20", na.rm = TRUE) +
+    geom_point(data = points_df,
+               aes(x = Compound, y = Recovery, shape = Compartment,
+                   group = interaction(Compound, Compartment)),
+               inherit.aes = FALSE, colour = "grey25", size = 0.9, alpha = 0.6,
+               position = position_jitterdodge(jitter.width = 0.12, dodge.width = 0.85, seed = 1),
+               show.legend = FALSE) +
+    scale_fill_manual(values = compound_cols, guide = "none") +
+    scale_colour_manual(values = compound_cols, guide = "none") +
+    scale_shape_manual(values = c(16, 16), guide = "none") +
+    scale_alpha_manual(values = c("Water (medium)" = 0.3, "Daphnia tissue" = 0.85), name = NULL) +
+    scale_linetype_manual(values = c("Water (medium)" = "dashed", "Daphnia tissue" = "solid"),
+                          name = NULL) +
+    scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 20), expand = expansion(mult = c(0, 0.05))) +
+    guides(linetype = guide_legend(override.aes = list(colour = "grey20", fill = "grey60",
+                                                       alpha = c(0.3, 0.85))),
+           alpha = "none") +
+    labs(x = NULL, y = "Recovery (% of nominal, mean ± SD)", title = title, subtitle = subtitle) +
+    theme_mb
+}
+
+combined_mean <- summarise_recovery(combined)
+combined_mean_day <- summarise_recovery(combined, Day)
+write.csv(combined_mean, file.path(out_dir, "mass_balance_water_tissue_mean_sd.csv"), row.names = FALSE)
+write.csv(combined_mean_day, file.path(out_dir, "mass_balance_water_tissue_mean_sd_by_day.csv"), row.names = FALSE)
+
+p_bar <- bar_plot(combined_mean, combined,
+                  "Mass balance: water vs Daphnia tissue by compound",
+                  "Mean ± SD; dashed = water, solid = tissue; days pooled. PFAS: n = 9 (3 replicates x 3 days); PET: n = 3 (1 per day)") +
+  facet_wrap(~ Genotype, ncol = 1)
+save_fig(p_bar, "Fig_mass_balance_water_tissue_barplot", 11, 7.5)
+
+p_bar_day <- bar_plot(combined_mean_day, combined,
+                      "Mass balance: water vs Daphnia tissue by compound and day",
+                      "Mean ± SD; dashed = water, solid = tissue. PFAS: n = 3 per day; PET: n = 1 per day (no error bar)") +
+  facet_grid(Genotype ~ Day) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+save_fig(p_bar_day, "Fig_mass_balance_water_tissue_barplot_by_day", 15, 8)
+
 # ---------------------------------------------------------------------------
 # 3. Removal efficiency of individual chemicals (recomputed from Table S2 raw)
 # ---------------------------------------------------------------------------

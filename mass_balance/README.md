@@ -14,6 +14,8 @@ Rscript mass_balance/mass_balance_plots.R
 | `Fig_PFAS_mass_balance_boxplot` | PFOS, PFOA and PFOS+PFOA recovery in medium, Daphnia tissue and total, with and without PET, per genotype (3 replicates x 3 days) |
 | `Fig_mass_balance_water_tissue_combined` | Water (dashed) and Daphnia tissue (solid) recovery in one panel per genotype, one colour per compound (PET, PFOS, PFOA and their combinations) |
 | `Fig_mass_balance_water_tissue_by_day` | Same as the combined plot, split by day (3 replicates per PFAS box; PET is a single value per day) |
+| `Fig_mass_balance_water_tissue_barplot` | Bar plot of the combined figure: mean with SD error bars and individual values, days pooled (PFAS n = 9, PET n = 3) |
+| `Fig_mass_balance_water_tissue_barplot_by_day` | Same bar plot split by day (PFAS n = 3; PET n = 1, no error bar) |
 | `Fig_MP_mass_balance_boxplot` | PET recovery in medium, tissue and total, per genotype (one value per treatment and day) |
 | `Fig_removal_efficiency_boxplot` | Removal from water of PFOS, diclofenac, atrazine and arsenic per genotype, recomputed from Table S2 raw |
 | `Fig_arsenic_water_tissue_boxplot` | Arsenic removal from water next to arsenic in tissue (exposed vs control Daphnia) |
