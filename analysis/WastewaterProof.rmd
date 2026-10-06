@@ -23,9 +23,9 @@ library(phyloseq)
 
 # convert qiime2 artifact to phyloseq object
 ps_ww <- qza_to_phyloseq(
-  features = "filtered_table.qza",
-  tree = "insertion-tree.qza","taxonomy.qza",
-  metadata = "Metadata.tsv"
+  features = here::here("data/raw/microbiome/filtered_table.qza"),
+  tree = here::here("data/raw/microbiome/insertion-tree.qza"),here::here("data/raw/microbiome/taxonomy.qza"),
+  metadata = here::here("data/raw/microbiome/Metadata.tsv")
 )
 
 ```
@@ -142,7 +142,7 @@ tax_rel_abun_pf_gen_top10 <- psmelt(ww_Gen_10) %>%
 tax_rel_abun_pf_gen_top10
 ```
 ```{r}
-write.csv(tax_rel_abun_pf_gen_top10, "tax_rel_abun_pf_gen_top10.csv")
+write.csv(tax_rel_abun_pf_gen_top10, here::here("data/processed/tax_rel_abun_pf_gen_top10.csv"))
 ```
 
 
@@ -401,7 +401,7 @@ grid.draw(vennp)
 ```{r}
 
 library(grDevices)
-pdf(file = "venn.pdf")
+pdf(file = here::here("results/figures/venn.pdf"))
 grid.draw(vennp)
 dev.off()
 ```
@@ -696,7 +696,7 @@ print(outlier_samples)
 
 ```{r}
 #Read in the ASV sequence data.
-asv_seqs <- readLines("dna-sequences-250.fasta")
+asv_seqs <- readLines(here::here("data/raw/microbiome/dna-sequences-250.fasta"))
 
 
 
@@ -705,7 +705,7 @@ asv_seqs <- readLines("dna-sequences-250.fasta")
 
 ```{r}
 #Read in the ASV count table 
-asv_tab <- read.table("feature-table-250.tsv", header=T, row.names=1)
+asv_tab <- read.table(here::here("data/raw/microbiome/feature-table-250.tsv"), header=T, row.names=1)
 
 ```
 
@@ -731,7 +731,7 @@ asv_list <- data.frame(ASV = asv_ids, Sequence = asv_seqs[1:length(asv_ids)])
 
 # Write out the sequence list to a file.
 
-write.table(asv_list, "ASV_sequence_list.txt", sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
+write.table(asv_list, here::here("data/processed/ASV_sequence_list.txt"), sep = "\t", quote = FALSE, row.names = FALSE, col.names = TRUE)
 
 ```
 
@@ -752,8 +752,8 @@ write.table(asv_list, "ASV_sequence_list.txt", sep = "\t", quote = FALSE, row.na
 # Initial Sample QC Check
 ```{r}
 
-metadata <- read.csv("MetadataWastewater.csv")
-stats <-  read_tsv("read-stats.tsv", show_col_types = FALSE)
+metadata <- read.csv(here::here("data/raw/microbiome/MetadataWastewater.csv"))
+stats <-  read_tsv(here::here("data/raw/microbiome/read-stats.tsv"), show_col_types = FALSE)
 
 
 ```
@@ -795,7 +795,7 @@ ww_data
 
 # save the joined data to a file.
 
-write.csv(ww_data, "ww_data.csv")
+write.csv(ww_data, here::here("data/processed/ww_data.csv"))
 
 
 ```
@@ -819,7 +819,7 @@ ww_data_filtered
 
 #save the filtered data to a file.
 
-write.csv(ww_data_filtered, "ww_data_filtered.csv")
+write.csv(ww_data_filtered, here::here("data/processed/ww_data_filtered.csv"))
 
 ```
 
@@ -828,11 +828,11 @@ write.csv(ww_data_filtered, "ww_data_filtered.csv")
 
 #taxonomy file
 
-taxas <- read_tsv("taxonomy.tsv", show_col_types = FALSE)
+taxas <- read_tsv(here::here("data/raw/microbiome/taxonomy.tsv"), show_col_types = FALSE)
 
 #ASV file
 
-asv <- read_tsv("frequency_genus-table.tsv", show_col_types = FALSE)
+asv <- read_tsv(here::here("data/raw/microbiome/frequency_genus-table.tsv"), show_col_types = FALSE)
 
 ```
 
@@ -853,9 +853,9 @@ head(taxas)
 # create a phyloseq object from the qiime2 artifacts.
 
 ps_object <- qza_to_phyloseq(
-  features = "filtered_table.qza",
-  tree = "insertion-tree.qza","taxonomy.qza",
-  metadata = "MetData_Pathogen_removal.tsv"
+  features = here::here("data/raw/microbiome/filtered_table.qza"),
+  tree = here::here("data/raw/microbiome/insertion-tree.qza"),here::here("data/raw/microbiome/taxonomy.qza"),
+  metadata = here::here("data/raw/microbiome/MetData_Pathogen_removal.tsv")
 )  
 
 ```
@@ -1209,7 +1209,7 @@ ggplot(plot_data, aes(x = PC1, y = PC2)) +
   guides(color = guide_legend(override.aes = list(size = 5)),
          shape = guide_legend(override.aes = list(size = 5)))
 
-ggsave("PCoA_Genotype_Day.pdf", width = 10, height = 8, dpi = 300)
+ggsave(here::here("results/figures/PCoA_Genotype_Day.pdf"), width = 10, height = 8, dpi = 300)
 
 ```
 ```{r}
@@ -1260,7 +1260,7 @@ p <- plot_ly(plot_data, x = ~PC1, y = ~PC2, z = ~PC3, color = ~Genotype, symbol 
 p
 
 # Export the plot as an HTML file
-htmlwidgets::saveWidget(p, file = "3D_PCoA_Bray_Curtis.html", selfcontained = TRUE)
+htmlwidgets::saveWidget(p, file = here::here("results/figures/3D_PCoA_Bray_Curtis.html"), selfcontained = TRUE)
 
 
 
@@ -1280,7 +1280,7 @@ library(officer)
 # Assuming you have the 'p' plotly object from your previous code
 
 # Export the plot as a static image file
-png("3D_PCoA_Bray_Curtis.png", width = 800, height = 600, res = 150)
+png(here::here("results/figures/3D_PCoA_Bray_Curtis.png"), width = 800, height = 600, res = 150)
 print(p)
 dev.off()
 
@@ -1291,11 +1291,11 @@ doc <- read_pptx()
 doc <- add_slide(doc, layout = "Blank")
 
 # Add the image to the slide
-doc <- ph_with(doc, value = external_img("3D_PCoA_Bray_Curtis.png"), 
+doc <- ph_with(doc, value = external_img(here::here("results/figures/3D_PCoA_Bray_Curtis.png")), 
                location = ph_location(left = 1, top = 1, width = 8, height = 5.5))
 
 # Save the PowerPoint file
-print(doc, target = "3D_PCoA_Bray_Curtis.pptx")
+print(doc, target = here::here("results/figures/3D_PCoA_Bray_Curtis.pptx"))
 
 ```
 
@@ -1357,7 +1357,7 @@ ggplot(plot_data, aes(x = PC1, y = PC2)) +
   guides(color = guide_legend(override.aes = list(size = 5)),
          shape = guide_legend(override.aes = list(size = 5)))
 
-ggsave("PCoA_Weighted_UniFrac_Genotype_Day.pdf", width = 10, height = 8, dpi = 300)
+ggsave(here::here("results/figures/PCoA_Weighted_UniFrac_Genotype_Day.pdf"), width = 10, height = 8, dpi = 300)
 
 
 
@@ -1419,8 +1419,8 @@ df_family_top15 <- psmelt(pf_family_15) %>%
 
 ```{r}
 #save the data
-write.csv(df_gen_top15, "genus_top15.csv")
-write.csv(df_family_top15, "family_top15.csv")
+write.csv(df_gen_top15, here::here("data/processed/genus_top15.csv"))
+write.csv(df_family_top15, here::here("data/processed/family_top15.csv"))
 
 ```
 
@@ -1463,7 +1463,7 @@ gen_10 <- ggplot(
   guides(fill = guide_legend(ncol = 3))  # Adjust legend layout
 
 # Increase plot size
-ggsave("genus_relative_abundance.png", gen_10, width = 15, height = 10, dpi = 300)
+ggsave(here::here("results/figures/genus_relative_abundance.png"), gen_10, width = 15, height = 10, dpi = 300)
 
 # Display the plot
 print(gen_10)
@@ -1495,7 +1495,7 @@ family_15 <- ggplot(
   guides(fill = guide_legend(ncol = 3))  # Adjust legend layout
 
 # Increase plot size
-ggsave("Family_relative_abundance.png", gen_10, width = 15, height = 10, dpi = 300)
+ggsave(here::here("results/figures/Family_relative_abundance.png"), gen_10, width = 15, height = 10, dpi = 300)
 
 # Display the plot
 print(family_15)
@@ -1608,7 +1608,7 @@ writeData(wb, "Adonis Results", adonis_table)
 
 # Save the workbook to a file.
 
-saveWorkbook(wb, "adonis_results.xlsx", overwrite = TRUE)
+saveWorkbook(wb, here::here("results/tables/adonis_results.xlsx"), overwrite = TRUE)
 
 ```
 
@@ -1689,7 +1689,7 @@ gen <- ggplot(
   guides(fill = guide_legend(ncol = 3))  # Adjust legend layout
 
 # Increase plot size
-ggsave("genus_relative_abundance.png", gen, width = 15, height = 10, dpi = 300)
+ggsave(here::here("results/figures/genus_relative_abundance.png"), gen, width = 15, height = 10, dpi = 300)
 
 # Display the plot
 print(gen)
@@ -1728,7 +1728,7 @@ kable(genus_table,
       caption = "Top 15 Genera by Mean Relative Abundance")
 
 # Save the table to a CSV file
-write.csv(genus_table, "top_15_genera_abundance.csv", row.names = FALSE)
+write.csv(genus_table, here::here("data/processed/top_15_genera_abundance.csv"), row.names = FALSE)
 
 ```
 
@@ -1761,7 +1761,7 @@ kable(genus_table,
       caption = "Top 15 Genera by Mean Relative Abundance across Genotypes and Days")
 
 # Save the table to a CSV file
-write.csv(genus_table, "top_15_genera_abundance_by_genotype_and_day.csv", row.names = FALSE)
+write.csv(genus_table, here::here("data/processed/top_15_genera_abundance_by_genotype_and_day.csv"), row.names = FALSE)
 
 
 ```
@@ -1815,7 +1815,7 @@ ggplot(df_plot, aes(x = interaction(Day, Genotype), y = MeanAbundance, fill = Ge
   scale_x_discrete(labels = function(x) gsub("\\.", "\n", x))
 
 # Save the plot
-ggsave("genus_abundance_with_error_bars.png", width = 15, height = 20, dpi = 300)
+ggsave(here::here("results/figures/genus_abundance_with_error_bars.png"), width = 15, height = 20, dpi = 300)
 
 
 ```
@@ -1877,7 +1877,7 @@ ggplot(plot_data, aes(x = interaction(Day, Genotype), y = MeanAbundance, fill = 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(x = "Day and Genotype", y = "Mean Abundance", title = "Genus Abundance by Genotype and Day")
 
-ggsave("genus_abundance_plot.png", width = 15, height = 20, dpi = 300)
+ggsave(here::here("results/figures/genus_abundance_plot.png"), width = 15, height = 20, dpi = 300)
 
 
 ```
@@ -1894,7 +1894,7 @@ genotype_asvs <- split(df_gen_top15$Genus[df_gen_top15$Abundance > 0], df_gen_to
 venn.diagram(
   x = genotype_asvs,
   category.names = names(genotype_asvs),
-  filename = "ASV_venn_diagram.png",
+  filename = here::here("results/figures/ASV_venn_diagram.png"),
   output = TRUE,
   imagetype = "png",
   height = 3000,
@@ -1947,7 +1947,7 @@ library(VennDiagram)
 venn.diagram(
   x = genotype_asvs,
   category.names = names(genotype_asvs),
-  filename = "ASV_venn_diagram.png",
+  filename = here::here("results/figures/ASV_venn_diagram.png"),
   output = TRUE,
   imagetype = "png",
   height = 3000,
@@ -2194,7 +2194,7 @@ pheatmap(heatmap_matrix,
          legend_labels = c("-2", "-1", "0", "1", "2"),
          treeheight_col = 30,
          border_color = NA,
-         filename = "improved_heatmap.png",
+         filename = here::here("results/figures/improved_heatmap.png"),
          width = 12,
          height = 10,
          res = 300)
@@ -2204,7 +2204,7 @@ labels <- c("CONTROL", "LRV_0_1", "LRV_12_3", "LR2_36_1", "LRV_8.5_3")
 positions <- cumsum(c(0, table(annotation_row$Genotype))) + 
              0.5 * table(annotation_row$Genotype)
 
-png("improved_heatmap_with_labels.png", width = 12, height = 10, units = "in", res = 300)
+png(here::here("results/figures/improved_heatmap_with_labels.png"), width = 12, height = 10, units = "in", res = 300)
 grid.newpage()
 grid.draw(pheatmap(heatmap_matrix,
                    scale = "row",
@@ -2315,7 +2315,7 @@ pheatmap(heatmap_matrix,
          gaps_row = cumsum(table(annotation_row$Genotype)),
          annotation_names_row = FALSE,
          annotation_legend = TRUE,
-         filename = "improved_heatmap.png",
+         filename = here::here("results/figures/improved_heatmap.png"),
          width = 12,
          height = 10,
          res = 300)
@@ -2350,12 +2350,12 @@ heatmap_plot <- pheatmap(heatmap_matrix,
 
 
 # Save as PNG
-png("improved_heatmap.png", width = 12, height = 10, units = "in", res = 300)
+png(here::here("results/figures/improved_heatmap.png"), width = 12, height = 10, units = "in", res = 300)
 print(heatmap_plot)
 dev.off()
 
 # Or save as PDF
-pdf("improved_heatmap.pdf", width = 12, height = 10)
+pdf(here::here("results/figures/improved_heatmap.pdf"), width = 12, height = 10)
 print(heatmap_plot)
 dev.off()
 
@@ -2407,7 +2407,7 @@ pheatmap(heatmap_matrix,
 
 ```{r}
 
-pdf("heatmap_for_powerpoint.pdf", width = 12, height = 10)
+pdf(here::here("results/figures/heatmap_for_powerpoint.pdf"), width = 12, height = 10)
 pheatmap(heatmap_matrix,
          scale = "row",
          annotation_row = annotation_row,
@@ -2432,7 +2432,7 @@ dev.off()
 ```{r}
 
 library(svglite)
-svglite("heatmap_for_powerpoint.svg", width = 12, height = 10)
+svglite(here::here("results/figures/heatmap_for_powerpoint.svg"), width = 12, height = 10)
 pheatmap(heatmap_matrix,
          # ... (same parameters as above)
          )

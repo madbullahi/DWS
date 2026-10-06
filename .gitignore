@@ -3,5 +3,9 @@
 .RData
 .Ruserdata
 
+# Secrets: never commit tokens or API keys
+.Renviron
+.env
 
-raw_data/
+# Auto-generated logs from VennDiagram
+*.log
