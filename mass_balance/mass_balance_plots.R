@@ -65,7 +65,7 @@ pfas <- bind_rows(lapply(seq_len(nrow(pfas_blocks)), function(i) {
     PET      = ifelse(grepl("PET", block), "With PET", "Without PET"),
     Exposure = sub("_.*$", "", gsub("\\+PET", "", block)),
     Exposure = factor(Exposure, levels = c("PFOS", "PFOA", "PFOS+PFOA")),
-    Genotype = ifelse(grepl("LRV", block), "LRV0_1", "LR2_36_01"),
+    Genotype = ifelse(grepl("LRV", block), "LRV0_1", "LRII_36"),
     PET      = factor(PET, levels = c("Without PET", "With PET"))
   ) %>%
   select(Genotype, Exposure, PET, Day, Replicate, Medium, Daphnia, Total, block)
@@ -108,7 +108,7 @@ mp <- bind_rows(lapply(seq_len(nrow(mp_blocks)), function(i) {
   fc <- mp_blocks$first_col[i]
   rows <- tr + 2:4
   tibble(
-    Genotype  = ifelse(tr == 2, "LR2_36_01", "LRV0_1"),
+    Genotype  = ifelse(tr == 2, "LRII_36", "LRV0_1"),
     Treatment = mp_treat[[as.character(fc)]],
     Day       = c("D1", "D2", "D3"),
     Medium    = as.numeric(mp_raw[[fc + 1]][rows]),

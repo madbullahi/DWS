@@ -43,7 +43,8 @@ Rscript mass_balance/mass_balance_plots.R
 7. **Tissue units**: the tissue sheet says "ng/L"; this needs checking
    (probably per mass of Daphnia), so the plots say "as recorded".
 8. **Genotype names differ between files**: `LR2_36_01` / `LRII_36` / `LRII3_16`
-   and `LRV_01` / `LRV0_1` / `LRV_0_1`. The plots use `LR2_36_01` and `LRV0_1`.
+   and `LRV_01` / `LRV0_1` / `LRV_0_1`. The correct names are `LRII_36` and
+   `LRV0_1`; the script uses these in all outputs.
 
 Removal efficiency = (mean no-Daphnia control on that day - final) / control x 100,
 which reproduces the IC and RE columns of Table S3.
