@@ -23,6 +23,10 @@ dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
 day_cols  <- c(D1 = "#2a78d6", D2 = "#eb6834", D3 = "#1baf7a")
 pair_cols <- c("#2a78d6", "#eb6834")
 
+# Arsenic tissue concentration is per mass of Daphnia (the "ng/L" header in
+# As_massbalance.xlsx is wrong). Set the exact unit here once it is confirmed.
+tissue_unit <- "per mass of Daphnia"
+
 theme_mb <- theme_bw(base_size = 12) +
   theme(panel.grid.minor = element_blank(),
         panel.grid.major.x = element_blank(),
@@ -244,13 +248,14 @@ write.csv(as_matched, file.path(out_dir, "arsenic_water_tissue_matched.csv"), ro
 as_long <- bind_rows(
   as_matched %>% transmute(Genotype, Day, Replicate, Panel = "Removal from water (%)", Value = Water_RE),
   as_tissue %>% transmute(Genotype, Day, Replicate,
-                          Panel = "Arsenic in Daphnia tissue",
+                          Panel = paste0("Arsenic in Daphnia tissue (", tissue_unit, ")"),
                           Treatment = ifelse(Treatment == "ARSENIC", "Arsenic-exposed", "Control"),
                           Value = Tissue)
 ) %>%
   mutate(Treatment = factor(coalesce(Treatment, "Arsenic-exposed"),
                             levels = c("Arsenic-exposed", "Control")),
-         Panel = factor(Panel, levels = c("Removal from water (%)", "Arsenic in Daphnia tissue")))
+         Panel = factor(Panel, levels = c("Removal from water (%)",
+                                         paste0("Arsenic in Daphnia tissue (", tissue_unit, ")"))))
 
 p_as <- ggplot(as_long, aes(Genotype, Value, fill = Treatment)) +
   geom_boxplot(outlier.shape = NA, alpha = 0.35, width = 0.7,
@@ -263,7 +268,7 @@ p_as <- ggplot(as_long, aes(Genotype, Value, fill = Treatment)) +
   expand_limits(y = 0) +
   labs(x = NULL, y = NULL,
        title = "Arsenic: removal from water and accumulation in Daphnia tissue",
-       subtitle = "2 replicates x 3 days per genotype; tissue units as recorded in As_massbalance.xlsx") +
+       subtitle = "2 replicates x 3 days per genotype") +
   theme_mb
 save_fig(p_as, "Fig_arsenic_water_tissue_boxplot", 10, 5)
 
@@ -273,7 +278,7 @@ p_as_scatter <- ggplot(as_matched, aes(Tissue, Water_RE)) +
   geom_point(aes(colour = Day, shape = Genotype), size = 2.6) +
   scale_colour_manual(values = day_cols) +
   scale_shape_manual(values = c(16, 17, 15, 18)) +
-  labs(x = "Arsenic in Daphnia tissue (as recorded)", y = "Arsenic removal from water (%)",
+  labs(x = paste0("Arsenic in Daphnia tissue (", tissue_unit, ")"), y = "Arsenic removal from water (%)",
        title = "Arsenic: water removal vs tissue concentration (matched replicates)",
        subtitle = sprintf("Spearman rho = %.2f, p = %.2f, n = %d",
                           rho$estimate, rho$p.value, nrow(as_matched))) +
