@@ -12,6 +12,7 @@ Rscript mass_balance/mass_balance_plots.R
 | File | What it shows |
 |---|---|
 | `Fig_PFAS_mass_balance_boxplot` | PFOS, PFOA and PFOS+PFOA recovery in medium, Daphnia tissue and total, with and without PET, per genotype (3 replicates x 3 days) |
+| `Fig_mass_balance_water_tissue_combined` | Water (dashed) and Daphnia tissue (solid) recovery in one panel per genotype, one colour per compound (PET, PFOS, PFOA and their combinations) |
 | `Fig_MP_mass_balance_boxplot` | PET recovery in medium, tissue and total, per genotype (one value per treatment and day) |
 | `Fig_removal_efficiency_boxplot` | Removal from water of PFOS, diclofenac, atrazine and arsenic per genotype, recomputed from Table S2 raw |
 | `Fig_arsenic_water_tissue_boxplot` | Arsenic removal from water next to arsenic in tissue (exposed vs control Daphnia) |
@@ -50,6 +51,10 @@ Rscript mass_balance/mass_balance_plots.R
 8. **Genotype names differ between files**: `LR2_36_01` / `LRII_36` / `LRII3_16`
    and `LRV_01` / `LRV0_1` / `LRV_0_1`. The correct names are `LRII_36` and
    `LRV0_1`; the script uses these in all outputs.
+
+9. **Figure S2 (current paper version)**: the "PET" panel shows the same bars
+   as the "PFOS" panel (e.g. LRV0_1 Day 1 = 52 + 24 = 76 in both), so PET-only
+   recovery is not actually plotted. The PET data are in the MPs sheet.
 
 Removal efficiency = (mean no-Daphnia control on that day - final) / control x 100,
 which reproduces the IC and RE columns of Table S3.

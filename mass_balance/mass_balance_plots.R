@@ -150,6 +150,52 @@ p_mp <- ggplot(mp_long, aes(Compartment, Recovery)) +
 save_fig(p_mp, "Fig_MP_mass_balance_boxplot", 9, 6)
 
 # ---------------------------------------------------------------------------
+# 2b. Combined mass balance: water (dashed) and tissue (solid) in one panel,
+#     one colour per compound. PFAS treatments are PFAS recovery (3 replicates
+#     x 3 days); PET alone is PET recovery (one value per day).
+# ---------------------------------------------------------------------------
+compound_levels <- c("PET", "PFOS", "PFOA", "PFOS+PET", "PFOA+PET", "PFOS+PFOA", "PFOS+PFOA+PET")
+compound_cols <- setNames(c("#2a78d6", "#eb6834", "#1baf7a", "#eda100",
+                            "#e87ba4", "#008300", "#4a3aa7"), compound_levels)
+
+combined <- bind_rows(
+  pfas %>% transmute(Genotype, Day, Replicate,
+                     Compound = ifelse(PET == "With PET", paste0(Exposure, "+PET"),
+                                       as.character(Exposure)),
+                     Medium, Daphnia),
+  mp %>% filter(Treatment == "PET") %>%
+    transmute(Genotype, Day, Replicate = 1L, Compound = "PET", Medium, Daphnia)
+) %>%
+  pivot_longer(c(Medium, Daphnia), names_to = "Compartment", values_to = "Recovery") %>%
+  mutate(Compound = factor(Compound, levels = compound_levels),
+         Compartment = factor(Compartment, levels = c("Medium", "Daphnia"),
+                              labels = c("Water (medium)", "Daphnia tissue")))
+
+write.csv(combined, file.path(out_dir, "mass_balance_water_tissue_combined.csv"), row.names = FALSE)
+
+p_combined <- ggplot(combined, aes(Compound, Recovery,
+                                   colour = Compound, fill = Compound,
+                                   linetype = Compartment,
+                                   group = interaction(Compound, Compartment))) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.15, linewidth = 0.6, width = 0.75,
+               position = position_dodge(width = 0.85)) +
+  geom_point(aes(shape = Compartment), size = 1.3, alpha = 0.8,
+             position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.85, seed = 1)) +
+  facet_wrap(~ Genotype, ncol = 1) +
+  scale_colour_manual(values = compound_cols, guide = "none") +
+  scale_fill_manual(values = compound_cols, guide = "none") +
+  scale_linetype_manual(values = c("Water (medium)" = "dashed", "Daphnia tissue" = "solid"),
+                        name = NULL) +
+  scale_shape_manual(values = c("Water (medium)" = 1, "Daphnia tissue" = 16), name = NULL) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 20)) +
+  guides(linetype = guide_legend(override.aes = list(colour = "grey20", fill = NA))) +
+  labs(x = NULL, y = "Recovery (% of nominal)",
+       title = "Mass balance: water vs Daphnia tissue by compound",
+       subtitle = "Dashed = water, solid = tissue; days pooled. PFAS treatments: 3 replicates x 3 days; PET: 1 value per day") +
+  theme_mb
+save_fig(p_combined, "Fig_mass_balance_water_tissue_combined", 11, 7.5)
+
+# ---------------------------------------------------------------------------
 # 3. Removal efficiency of individual chemicals (recomputed from Table S2 raw)
 # ---------------------------------------------------------------------------
 chem_raw <- read_excel("Abdullahi_etal_Table S2- individual chemicals raw.xlsx",
