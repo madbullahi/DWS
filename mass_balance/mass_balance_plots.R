@@ -195,6 +195,14 @@ p_combined <- ggplot(combined, aes(Compound, Recovery,
   theme_mb
 save_fig(p_combined, "Fig_mass_balance_water_tissue_combined", 11, 7.5)
 
+# Same plot split by day: 3 replicates per PFAS box, a single value for PET.
+p_combined_day <- p_combined +
+  facet_grid(Genotype ~ Day) +
+  labs(title = "Mass balance: water vs Daphnia tissue by compound and day",
+       subtitle = "Dashed = water, solid = tissue. PFAS treatments: 3 replicates per day; PET: 1 value per day") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+save_fig(p_combined_day, "Fig_mass_balance_water_tissue_by_day", 15, 8)
+
 # ---------------------------------------------------------------------------
 # 3. Removal efficiency of individual chemicals (recomputed from Table S2 raw)
 # ---------------------------------------------------------------------------
