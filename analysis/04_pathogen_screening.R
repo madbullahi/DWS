@@ -9,9 +9,10 @@
 #
 # Inputs : genus-level relative-frequency table (QIIME2, exported to TSV),
 #          sample metadata (sample-id, Treatment, Genotype, Day),
-#          data/reference/pathogen_targets.csv, optional BLAST pairwise output.
+#          data/reference/pathogen_targets.csv, optional BLAST pairwise output,
+#          optional ASV FASTA + ASV count table for the adapter check.
 # Outputs: <out>/tables/pathogen_*.csv, <out>/tables/arg_blast_hits.csv,
-#          <out>/figures/pathogen_abundance.png
+#          <out>/tables/asv_adapter_check.csv, <out>/figures/pathogen_abundance.png
 
 source(here::here("analysis", "00_setup.R"))
 source(here::here("analysis", "pathogen_functions.R"))
@@ -26,6 +27,8 @@ opt <- list(
   metadata    = arg("--metadata",    here("data", "raw", "microbiome", "MetData_Pathogen_removal.tsv")),
   targets     = arg("--targets",     here("data", "reference", "pathogen_targets.csv")),
   blast       = arg("--blast",       here("data", "raw", "blast", "Blast_result.txt")),
+  fasta       = arg("--fasta",       here("data", "raw", "microbiome", "dna-sequences-250.fasta")),
+  asv_table   = arg("--asv-table",   here("data", "raw", "microbiome", "feature-table-250.tsv")),
   treatment   = arg("--treatment",   "Wastewater_Daphnia"),
   control     = arg("--control",     "Wastewater_Control"),
   out         = arg("--out",         here("results"))
@@ -106,11 +109,29 @@ p <- ggplot(plot_data, aes(Day, mean, fill = Treatment)) +
   theme_dws()
 ggsave(out_fig("pathogen_abundance.png"), p, width = 13, height = 9, dpi = 300)
 
-# ---- 4. Antibiotic-resistance-gene BLAST hits ---------------------------------
+# ---- 4. Adapter contamination in ASVs -----------------------------------------
+# Untrimmed Illumina adapters in ASVs produce spurious BLAST matches to any
+# database entry that also carries adapter sequence. Trim with cutadapt before DADA2.
+
+adapter_ids <- character()
+if (!is.na(opt$fasta) && file.exists(opt$fasta)) {
+  adapter_hits <- find_adapters(read_fasta(opt$fasta))
+  adapter_ids <- unique(adapter_hits$id)
+  write.csv(adapter_hits, out_table("asv_adapter_check.csv"), row.names = FALSE)
+  share <- if (!is.na(opt$asv_table) && file.exists(opt$asv_table)) read_share(opt$asv_table, adapter_ids)
+  cat(sprintf("\nAdapter check: %d ASVs contain Illumina adapter sequence%s.\n",
+              length(adapter_ids),
+              if (is.null(share)) "" else sprintf(" (%.3f%% of reads)", share$pct)))
+  if (length(adapter_ids)) warning(length(adapter_ids), " ASVs contain adapter sequence; ",
+                                   "trim adapters with cutadapt before DADA2.", call. = FALSE)
+}
+
+# ---- 5. Antibiotic-resistance-gene BLAST hits ---------------------------------
 
 if (!is.na(opt$blast) && file.exists(opt$blast)) {
   hits <- classify_arg_hits(parse_blast_pairwise(opt$blast))
+  hits$query_has_adapter <- hits$query %in% adapter_ids
   write.csv(select(hits, -subject), out_table("arg_blast_hits.csv"), row.names = FALSE)
-  cat(sprintf("\nARG BLAST: %d query-subject hits from %d ASVs; %d pass identity/coverage/E-value thresholds.\n",
-              nrow(hits), length(unique(hits$query)), sum(hits$passes)))
+  cat(sprintf("\nARG BLAST: %d query-subject hits from %d ASVs; %d pass identity/coverage/E-value thresholds; %d come from adapter-containing ASVs.\n",
+              nrow(hits), length(unique(hits$query)), sum(hits$passes), sum(hits$query_has_adapter)))
 }

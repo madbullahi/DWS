@@ -68,14 +68,21 @@ correction. It also parses the BLAST output against the SARG resistance-gene
 database and flags which hits meet annotation thresholds (≥ 80 % identity over
 ≥ 75 % of the read, E ≤ 1e-10).
 
-Outputs: `results/tables/pathogen_*.csv`, `results/tables/arg_blast_hits.csv` and
-`results/figures/pathogen_abundance.png`.
+It also checks the ASV sequences for leftover Illumina adapter (TruSeq and Nextera,
+both strands), which can cause false BLAST matches. Trim adapters with `cutadapt`
+before DADA2 if any are reported.
+
+Outputs: `results/tables/pathogen_*.csv`, `results/tables/arg_blast_hits.csv`,
+`results/tables/asv_adapter_check.csv` and `results/figures/pathogen_abundance.png`.
+Draft methods and results text for the paper: `docs/methods_pathogens_and_ARGs.md`.
 
 To screen a new sequencing batch:
 
 ```sh
 Rscript analysis/04_pathogen_screening.R --genus-table new/genus.tsv \
-  --metadata new/metadata.tsv --blast new/blast.txt --out results/new_batch
+  --metadata new/metadata.tsv --blast new/blast.txt \
+  --fasta new/dna-sequences.fasta --asv-table new/feature-table.tsv \
+  --out results/new_batch
 ```
 
 16S amplicons resolve genus, not species. A match such as *Pseudomonas* or

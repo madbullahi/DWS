@@ -135,3 +135,50 @@ classify_arg_hits <- function(hits, min_identity = 80, min_coverage = 75, max_ev
   hits$passes <- hits$fail_reason == ""
   hits
 }
+
+# ---- Adapter contamination check ------------------------------------------------
+
+# Common Illumina adapter cores. TruSeq's 13-nt core is shared by Read 1 and Read 2
+# adapters; Nextera covers Nextera/XT library preps.
+illumina_adapters <- c(TruSeq = "AGATCGGAAGAGC", Nextera = "CTGTCTCTTATACACATCT")
+
+reverse_complement <- function(seq) {
+  chartr("ACGTacgt", "TGCAtgca", vapply(strsplit(seq, ""), function(x) paste(rev(x), collapse = ""), ""))
+}
+
+# Read a FASTA file into a named character vector (names = sequence IDs).
+read_fasta <- function(path) {
+  lines <- readLines(path, warn = FALSE)
+  is_head <- startsWith(lines, ">")
+  ids <- sub("^>(\\S+).*", "\\1", lines[is_head])
+  seqs <- vapply(split(lines[!is_head], cumsum(is_head)[!is_head]), paste, "", collapse = "")
+  setNames(toupper(seqs), ids)
+}
+
+# Find sequences containing an adapter (either strand). Returns one row per
+# sequence-adapter match with the 1-based start position in the sequence.
+find_adapters <- function(seqs, adapters = illumina_adapters) {
+  rows <- list()
+  for (a in names(adapters)) {
+    for (strand in c("forward", "reverse")) {
+      motif <- if (strand == "forward") adapters[[a]] else reverse_complement(adapters[[a]])
+      pos <- regexpr(motif, seqs, fixed = TRUE)
+      hit <- which(pos > 0)
+      if (length(hit)) rows[[length(rows) + 1]] <- data.frame(
+        id = names(seqs)[hit], adapter = a, strand = strand,
+        start = as.integer(pos[hit]), seq_length = nchar(seqs[hit]),
+        stringsAsFactors = FALSE)
+    }
+  }
+  if (!length(rows)) return(data.frame(id = character(), adapter = character(), strand = character(),
+                                       start = integer(), seq_length = integer()))
+  do.call(rbind, rows)
+}
+
+# Share of all reads in a QIIME2 feature table (biom TSV export) that belong to `ids`.
+read_share <- function(feature_table_path, ids) {
+  tab <- read.delim(feature_table_path, skip = 1, check.names = FALSE, comment.char = "", row.names = 1)
+  totals <- rowSums(tab)
+  list(n_reads = sum(totals[names(totals) %in% ids]), total_reads = sum(totals),
+       pct = 100 * sum(totals[names(totals) %in% ids]) / sum(totals))
+}
