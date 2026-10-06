@@ -237,7 +237,7 @@ bar_plot <- function(summary_df, points_df, title, subtitle) {
     guides(linetype = guide_legend(override.aes = list(colour = "grey20", fill = "grey60",
                                                        alpha = c(0.3, 0.85))),
            alpha = "none") +
-    labs(x = NULL, y = "Recovery (% of nominal, mean ± SD)", title = title, subtitle = subtitle) +
+    labs(x = NULL, y = "Recovery (% of nominal; bars = mean, error bars = SD)", title = title, subtitle = subtitle) +
     theme_mb
 }
 
@@ -248,13 +248,13 @@ write.csv(combined_mean_day, file.path(out_dir, "mass_balance_water_tissue_mean_
 
 p_bar <- bar_plot(combined_mean, combined,
                   "Mass balance: water vs Daphnia tissue by compound",
-                  "Mean ± SD; dashed = water, solid = tissue; days pooled. PFAS: n = 9 (3 replicates x 3 days); PET: n = 3 (1 per day)") +
+                  "Bars = mean, error bars = SD; dashed = water, solid = tissue; days pooled. PFAS: n = 9 (3 replicates x 3 days); PET: n = 3 (1 per day)") +
   facet_wrap(~ Genotype, ncol = 1)
 save_fig(p_bar, "Fig_mass_balance_water_tissue_barplot", 11, 7.5)
 
 p_bar_day <- bar_plot(combined_mean_day, combined,
                       "Mass balance: water vs Daphnia tissue by compound and day",
-                      "Mean ± SD; dashed = water, solid = tissue. PFAS: n = 3 per day; PET: n = 1 per day (no error bar)") +
+                      "Bars = mean, error bars = SD; dashed = water, solid = tissue. PFAS: n = 3 per day; PET: n = 1 per day (no error bar)") +
   facet_grid(Genotype ~ Day) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 save_fig(p_bar_day, "Fig_mass_balance_water_tissue_barplot_by_day", 15, 8)
