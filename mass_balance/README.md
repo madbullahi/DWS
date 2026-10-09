@@ -20,6 +20,8 @@ Rscript mass_balance/mass_balance_plots.R
 | `Fig_removal_efficiency_boxplot` | Removal from water of PFOS, diclofenac, atrazine and arsenic per genotype, recomputed from Table S2 raw |
 | `Fig_removal_efficiency_barplot` | Removal of PFOS, diclofenac, atrazine and arsenic per genotype: mean with SD, one panel per chemical, days pooled (n = 6) |
 | `Fig_removal_efficiency_barplot_by_day` | Same, split by day (n = 2 per day) |
+| `Fig_arsenic_mass_balance_barplot` | Arsenic as % of the amount added (IC x 50 mL): water remaining (solid) with tissue stacked on top (dashed; ~0.001 %, printed above each bar), days pooled |
+| `Fig_arsenic_mass_balance_barplot_by_day` | Same, split by day |
 | `Fig_arsenic_water_tissue_boxplot` | Arsenic removal from water next to arsenic in tissue (exposed vs control Daphnia) |
 | `Fig_arsenic_water_vs_tissue_scatter` | Water removal vs tissue concentration for matched genotype/day/replicate |
 
@@ -78,6 +80,13 @@ Rscript mass_balance/mass_balance_plots.R
     every value is PFOS-alone replicate 1 multiplied by a fixed factor per day
     (0.906, 0.896, 0.863 for Days 1-3), and its SD column is copied from
     PFOS+PFOA. It is not used in the plots.
+
+12. **Arsenic mass balance does not close.** With a 50 mL exposure, about
+    39.4 ug As is added per beaker. On average 40 % (24-55 %) remains in the
+    water and ~0.001 % is in the 10-Daphnia tissue sample, so ~60 % is
+    unaccounted for (e.g. adsorption to vessel walls, Daphnia not sampled,
+    moults/faeces, or volatilisation/speciation losses). Values in
+    `output/arsenic_mass_balance.csv`.
 
 Removal efficiency = (mean no-Daphnia control on that day - final) / control x 100,
 which reproduces the IC and RE columns of Table S3.

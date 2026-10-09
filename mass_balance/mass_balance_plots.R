@@ -31,6 +31,7 @@ tissue_unit <- "\u00b5g/L in digest"
 # add per-sample and per-individual columns to the matched arsenic table.
 digest_volume_L    <- 0.001  # 1 mL digest
 daphnia_per_sample <- 10
+exposure_volume_L  <- 0.05   # 50 mL arsenic exposure per beaker
 
 theme_mb <- theme_bw(base_size = 12) +
   theme(panel.grid.minor = element_blank(),
@@ -458,6 +459,53 @@ p_as_scatter <- ggplot(as_matched, aes(Tissue, Water_RE)) +
   theme_mb + theme(panel.grid.major.x = element_line(colour = "grey92"),
                    legend.position = "right")
 save_fig(p_as_scatter, "Fig_arsenic_water_vs_tissue_scatter", 7, 5.5)
+
+# Arsenic mass balance as % of arsenic added (IC x 50 mL): water remaining
+# (solid) with tissue stacked on top (dashed). Tissue is ~0.001 %, too small
+# to see, so its value is printed above each bar.
+as_mb <- as_matched %>%
+  mutate(Added_ng = IC * exposure_volume_L * 1000,
+         Water = Water_ugL / IC * 100,
+         Tissue = Tissue_ng_per_sample / Added_ng * 100)
+write.csv(as_mb, file.path(out_dir, "arsenic_mass_balance.csv"), row.names = FALSE)
+
+as_mb_plot <- function(d, ...) {
+  s <- d %>% group_by(Genotype, ...) %>%
+    summarise(n = n(), Water_mean = mean(Water), Water_sd = sd(Water),
+              Tissue_mean = mean(Tissue), .groups = "drop")
+  bars <- s %>%
+    pivot_longer(c(Water_mean, Tissue_mean), names_to = "Compartment", values_to = "Mean") %>%
+    mutate(Compartment = factor(Compartment, levels = c("Water_mean", "Tissue_mean"),
+                                labels = c("Water (medium)", "Daphnia tissue")))
+  ggplot(bars, aes(Genotype, Mean, alpha = Compartment, linetype = Compartment)) +
+    geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
+    geom_col(position = position_stack(reverse = TRUE), width = 0.7, linewidth = 0.7,
+             fill = chem_cols[["Arsenic"]], colour = chem_cols[["Arsenic"]]) +
+    geom_errorbar(data = s, aes(x = Genotype, ymin = Water_mean - Water_sd, ymax = Water_mean + Water_sd),
+                  inherit.aes = FALSE, width = 0.2, linewidth = 0.5, colour = "grey20") +
+    geom_text(data = s, aes(x = Genotype, y = Water_mean + Water_sd + 4,
+                            label = sprintf("tissue\n%.4f%%", Tissue_mean)),
+              inherit.aes = FALSE, size = 3, colour = "grey20", lineheight = 0.9) +
+    scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
+    scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"), name = NULL) +
+    scale_y_continuous(limits = c(0, 105), breaks = seq(0, 100, 20), expand = expansion(mult = c(0, 0.02))) +
+    guides(linetype = guide_legend(override.aes = list(colour = "grey20", fill = "grey50",
+                                                       alpha = c(0.9, 0.3))),
+           alpha = "none") +
+    labs(x = NULL, y = "Arsenic (% of amount added)") +
+    theme_mb
+}
+
+p_as_mb <- as_mb_plot(as_mb) +
+  labs(title = "Arsenic mass balance: water and Daphnia tissue",
+       subtitle = "% of arsenic added (50 mL); tissue = 10 Daphnia per sample.\nBars = mean; error bars = SD of water; n = 6 (2 replicates x 3 days)")
+save_fig(p_as_mb, "Fig_arsenic_mass_balance_barplot", 8, 5.5)
+
+p_as_mb_day <- as_mb_plot(as_mb, Day) + facet_wrap(~ Day, nrow = 1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Arsenic mass balance by day",
+       subtitle = "% of arsenic added (50 mL exposure); tissue = 10 Daphnia per sample. Mean, error bars = SD of water; n = 2")
+save_fig(p_as_mb_day, "Fig_arsenic_mass_balance_barplot_by_day", 11, 5.5)
 
 # ---------------------------------------------------------------------------
 # 5. Data checks
