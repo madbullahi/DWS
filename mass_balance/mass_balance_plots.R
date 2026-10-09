@@ -203,61 +203,85 @@ p_combined_day <- p_combined +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 save_fig(p_combined_day, "Fig_mass_balance_water_tissue_by_day", 15, 8)
 
-# Bar plot versions: mean +/- SD with individual values overlaid.
-# PET by day has a single value, so it has no error bar.
-summarise_recovery <- function(d, ...) {
+# Stacked bar plots: water (solid outline) and Daphnia tissue (dashed outline,
+# lighter fill) in the same bar; bar height = total recovery. Panels split
+# single chemicals from mixtures, one row per genotype.
+# Error bars: SD of water (at the top of the water segment) and SD of the
+# per-replicate total (at the top of the bar). PET by day has n = 1, no SD.
+compound_group <- c(PET = "Single chemicals", PFOS = "Single chemicals",
+                    PFOA = "Single chemicals", `PFOS+PET` = "Mixtures",
+                    `PFOA+PET` = "Mixtures", `PFOS+PFOA` = "Mixtures",
+                    `PFOS+PFOA+PET` = "Mixtures")
+genotype_levels <- c("LRV0_1", "LRII_36")
+
+replicate_totals <- bind_rows(
+  pfas %>% transmute(Genotype, Day, Replicate,
+                     Compound = ifelse(PET == "With PET", paste0(Exposure, "+PET"),
+                                       as.character(Exposure)),
+                     Water = Medium, Tissue = Daphnia),
+  mp %>% filter(Treatment == "PET") %>%
+    transmute(Genotype, Day, Replicate = 1L, Compound = "PET", Water = Medium, Tissue = Daphnia)
+) %>%
+  mutate(Total = Water + Tissue)
+
+sd_or_na <- function(x) if (length(x) > 1) sd(x) else NA_real_
+
+summarise_stacked <- function(d, ...) {
   d %>%
-    group_by(Genotype, Compound, Compartment, ...) %>%
-    summarise(n = n(), Mean = mean(Recovery),
-              SD = if (n() > 1) sd(Recovery) else NA_real_, .groups = "drop")
+    group_by(Genotype, Compound, ...) %>%
+    summarise(n = n(),
+              Water_mean = mean(Water), Water_sd = sd_or_na(Water),
+              Tissue_mean = mean(Tissue), Tissue_sd = sd_or_na(Tissue),
+              Total_mean = mean(Total), Total_sd = sd_or_na(Total), .groups = "drop") %>%
+    mutate(Group = factor(compound_group[as.character(Compound)],
+                          levels = c("Single chemicals", "Mixtures")),
+           Compound = factor(Compound, levels = compound_levels),
+           Genotype = factor(Genotype, levels = genotype_levels))
 }
 
-bar_plot <- function(summary_df, points_df, title, subtitle) {
-  dodge <- position_dodge(width = 0.85)
-  ggplot(summary_df, aes(Compound, Mean, fill = Compound, colour = Compound,
-                         linetype = Compartment, alpha = Compartment,
-                         group = interaction(Compound, Compartment))) +
-    geom_col(position = dodge, width = 0.8, linewidth = 0.6) +
-    geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD), position = dodge,
-                  width = 0.25, linewidth = 0.5, linetype = "solid", alpha = 1,
-                  colour = "grey20", na.rm = TRUE) +
-    geom_point(data = points_df,
-               aes(x = Compound, y = Recovery, shape = Compartment,
-                   group = interaction(Compound, Compartment)),
-               inherit.aes = FALSE, colour = "grey25", size = 0.9, alpha = 0.6,
-               position = position_jitterdodge(jitter.width = 0.12, dodge.width = 0.85, seed = 1),
-               show.legend = FALSE) +
+stacked_plot <- function(s, title, subtitle) {
+  bars <- s %>%
+    select(-ends_with("_sd")) %>%
+    pivot_longer(c(Water_mean, Tissue_mean), names_to = "Compartment", values_to = "Mean") %>%
+    mutate(Compartment = factor(Compartment, levels = c("Water_mean", "Tissue_mean"),
+                                labels = c("Water (medium)", "Daphnia tissue")))
+  ggplot(bars, aes(Compound, Mean, fill = Compound, colour = Compound,
+                   alpha = Compartment, linetype = Compartment)) +
+    geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
+    geom_col(position = position_stack(reverse = TRUE), width = 0.7, linewidth = 0.7) +
+    geom_errorbar(data = s, aes(x = Compound, ymin = Water_mean - Water_sd, ymax = Water_mean + Water_sd),
+                  inherit.aes = FALSE, width = 0.2, linewidth = 0.4, colour = "grey20", na.rm = TRUE) +
+    geom_errorbar(data = s, aes(x = Compound, ymin = Total_mean - Total_sd, ymax = Total_mean + Total_sd),
+                  inherit.aes = FALSE, width = 0.3, linewidth = 0.5, colour = "grey20", na.rm = TRUE) +
     scale_fill_manual(values = compound_cols, guide = "none") +
     scale_colour_manual(values = compound_cols, guide = "none") +
-    scale_shape_manual(values = c(16, 16), guide = "none") +
-    scale_alpha_manual(values = c("Water (medium)" = 0.3, "Daphnia tissue" = 0.85), name = NULL) +
-    scale_linetype_manual(values = c("Water (medium)" = "dashed", "Daphnia tissue" = "solid"),
+    scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
+    scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"),
                           name = NULL) +
-    scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 20), expand = expansion(mult = c(0, 0.05))) +
-    guides(linetype = guide_legend(override.aes = list(colour = "grey20", fill = "grey60",
-                                                       alpha = c(0.3, 0.85))),
+    scale_y_continuous(limits = c(0, NA), breaks = seq(0, 125, 25), expand = expansion(mult = c(0, 0.05))) +
+    guides(linetype = guide_legend(override.aes = list(colour = "grey20", fill = "grey50",
+                                                       alpha = c(0.9, 0.3))),
            alpha = "none") +
-    labs(x = NULL, y = "Recovery (% of nominal; bars = mean, error bars = SD)", title = title, subtitle = subtitle) +
-    theme_mb
+    labs(x = NULL, y = "Recovery (% of nominal)", title = title, subtitle = subtitle) +
+    theme_mb + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
 
-combined_mean <- summarise_recovery(combined)
-combined_mean_day <- summarise_recovery(combined, Day)
-write.csv(combined_mean, file.path(out_dir, "mass_balance_water_tissue_mean_sd.csv"), row.names = FALSE)
-write.csv(combined_mean_day, file.path(out_dir, "mass_balance_water_tissue_mean_sd_by_day.csv"), row.names = FALSE)
+stacked <- summarise_stacked(replicate_totals)
+stacked_day <- summarise_stacked(replicate_totals, Day)
+write.csv(stacked, file.path(out_dir, "mass_balance_stacked_mean_sd.csv"), row.names = FALSE)
+write.csv(stacked_day, file.path(out_dir, "mass_balance_stacked_mean_sd_by_day.csv"), row.names = FALSE)
 
-p_bar <- bar_plot(combined_mean, combined,
-                  "Mass balance: water vs Daphnia tissue by compound",
-                  "Bars = mean, error bars = SD; dashed = water, solid = tissue; days pooled. PFAS: n = 9 (3 replicates x 3 days); PET: n = 3 (1 per day)") +
-  facet_wrap(~ Genotype, ncol = 1)
-save_fig(p_bar, "Fig_mass_balance_water_tissue_barplot", 11, 7.5)
+p_stacked <- stacked_plot(stacked,
+  "Mass balance: water and Daphnia tissue",
+  "Bars = mean; error bars = SD of water and of total. Days pooled: PFAS n = 9, PET n = 3") +
+  facet_grid(Genotype ~ Group, scales = "free_x", space = "free_x")
+save_fig(p_stacked, "Fig_mass_balance_stacked_barplot", 9, 7.5)
 
-p_bar_day <- bar_plot(combined_mean_day, combined,
-                      "Mass balance: water vs Daphnia tissue by compound and day",
-                      "Bars = mean, error bars = SD; dashed = water, solid = tissue. PFAS: n = 3 per day; PET: n = 1 per day (no error bar)") +
-  facet_grid(Genotype ~ Day) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-save_fig(p_bar_day, "Fig_mass_balance_water_tissue_barplot_by_day", 15, 8)
+p_stacked_day <- stacked_plot(stacked_day,
+  "Mass balance: water and Daphnia tissue by day",
+  "Bars = mean; error bars = SD of water and of total. PFAS n = 3 per day; PET n = 1 per day (no error bar)") +
+  facet_grid(Genotype ~ Group + Day, scales = "free_x", space = "free_x")
+save_fig(p_stacked_day, "Fig_mass_balance_stacked_barplot_by_day", 16, 7.5)
 
 # ---------------------------------------------------------------------------
 # 3. Removal efficiency of individual chemicals (recomputed from Table S2 raw)
@@ -323,6 +347,38 @@ p_re <- ggplot(removal, aes(Genotype, RE)) +
        subtitle = "RE = (control - exposed) / control x 100; 2 replicates x 3 days per genotype") +
   theme_mb + theme(axis.text.x = element_text(angle = 45, hjust = 1))
 save_fig(p_re, "Fig_removal_efficiency_boxplot", 11, 5)
+
+# Bar plot versions (mean +/- SD, individual values overlaid), one panel per
+# chemical, days pooled (n = 6: 2 replicates x 3 days) and by day (n = 2).
+chem_cols <- c(PFOS = "#eb6834", Diclofenac = "#2a78d6", Atrazine = "#1baf7a", Arsenic = "#4a3aa7")
+
+re_bar <- function(d, ...) {
+  s <- d %>% group_by(Chemical, Genotype, ...) %>%
+    summarise(n = n(), Mean = mean(RE), SD = sd(RE), .groups = "drop")
+  ggplot(s, aes(Genotype, Mean, fill = Chemical, colour = Chemical)) +
+    geom_col(width = 0.7, alpha = 0.85, linewidth = 0.6) +
+    geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD), width = 0.25,
+                  linewidth = 0.5, colour = "grey20") +
+    geom_point(data = d, aes(Genotype, RE), inherit.aes = FALSE, colour = "grey25",
+               size = 1, alpha = 0.6, position = position_jitter(width = 0.12, seed = 1)) +
+    scale_fill_manual(values = chem_cols, guide = "none") +
+    scale_colour_manual(values = chem_cols, guide = "none") +
+    scale_y_continuous(limits = c(0, 105), breaks = seq(0, 100, 20), expand = expansion(mult = c(0, 0.02))) +
+    labs(x = NULL, y = "Removal efficiency (%)") +
+    theme_mb + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+p_re_bar <- re_bar(removal) +
+  facet_wrap(~ Chemical, nrow = 1) +
+  labs(title = "Removal of individual chemicals from water by Daphnia genotype",
+       subtitle = "Bars = mean, error bars = SD; days pooled (n = 6: 2 replicates x 3 days)")
+save_fig(p_re_bar, "Fig_removal_efficiency_barplot", 11, 5)
+
+p_re_bar_day <- re_bar(removal, Day) +
+  facet_grid(Chemical ~ Day) +
+  labs(title = "Removal of individual chemicals from water by genotype and day",
+       subtitle = "Bars = mean, error bars = SD; n = 2 replicates per day")
+save_fig(p_re_bar_day, "Fig_removal_efficiency_barplot_by_day", 9, 10)
 
 # ---------------------------------------------------------------------------
 # 4. Arsenic: match water and tissue by genotype, day and replicate
