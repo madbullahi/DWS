@@ -1,0 +1,546 @@
+# Mass balance and removal efficiency: tidy the raw data, cross-check the
+# condensed supplementary tables, and draw box plots.
+#
+# Inputs (repo root):
+#   Mass Balance individual data points_PFAS_final.xlsx   PFAS + MP recovery (% of nominal)
+#   As_massbalance.xlsx                                    Arsenic in water and Daphnia tissue
+#   Abdullahi_etal_Table S2- individual chemicals raw.xlsx Final water concentrations
+#   Abdullahi_etal_Table S3- individual chemicals removal efficiency.xlsx
+#
+# Outputs: mass_balance/output/*.csv and mass_balance/output/figures/*.{pdf,png}
+#
+# Run from the repo root:  Rscript mass_balance/mass_balance_plots.R
+
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+out_dir <- file.path("mass_balance", "output")
+fig_dir <- file.path(out_dir, "figures")
+dir.create(fig_dir, recursive = TRUE, showWarnings = FALSE)
+
+day_cols  <- c(D1 = "#2a78d6", D2 = "#eb6834", D3 = "#1baf7a")
+pair_cols <- c("#2a78d6", "#eb6834")
+
+# Arsenic tissue values are concentrations in the digested Daphnia samples
+# (ug/L of digest; the "ng/L" header in As_massbalance.xlsx is wrong).
+# Daphnia were not weighed, so no per-mass unit is possible.
+tissue_unit <- "\u00b5g/L in digest"
+# Recalled by the experimenter, not recorded in the data files: used only to
+# add per-sample and per-individual columns to the matched arsenic table.
+digest_volume_L    <- 0.001  # 1 mL digest
+daphnia_per_sample <- 10
+exposure_volume_L  <- 0.05   # 50 mL arsenic exposure per beaker
+
+theme_mb <- theme_bw(base_size = 12) +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major.x = element_blank(),
+        strip.background = element_rect(fill = "grey95", colour = "grey70"),
+        strip.text = element_text(face = "bold"),
+        axis.text = element_text(colour = "black"),
+        legend.position = "top")
+
+save_fig <- function(p, name, w, h) {
+  ggsave(file.path(fig_dir, paste0(name, ".pdf")), p, width = w, height = h)
+  ggsave(file.path(fig_dir, paste0(name, ".png")), p, width = w, height = h, dpi = 300)
+}
+
+# ---------------------------------------------------------------------------
+# 1. PFAS mass balance (individual replicates)
+# ---------------------------------------------------------------------------
+# Each block is a header row followed by 3 days x 3 replicates.
+# Column groups: A-D (PFOS), G-J (PFOA), M-P (PFOS+PFOA); label, Medium, Tissue, Sum.
+pfas_raw <- read_excel("Mass Balance individual data points_PFAS_final.xlsx",
+                       sheet = "PFAS", col_names = FALSE, range = "A1:P43",
+                       .name_repair = "minimal")
+
+pfas_blocks <- expand.grid(header_row = c(2, 13, 24, 34), first_col = c(1, 7, 13))
+
+pfas <- bind_rows(lapply(seq_len(nrow(pfas_blocks)), function(i) {
+  hr <- pfas_blocks$header_row[i]
+  fc <- pfas_blocks$first_col[i]
+  label <- as.character(pfas_raw[[fc]][hr])
+  rows <- hr + 1:9
+  tibble(
+    block     = label,
+    Day       = rep(c("D1", "D2", "D3"), each = 3),
+    Replicate = rep(1:3, times = 3),
+    Medium    = as.numeric(pfas_raw[[fc + 1]][rows]),
+    Daphnia   = as.numeric(pfas_raw[[fc + 2]][rows])
+  )
+})) %>%
+  mutate(
+    Total    = Medium + Daphnia,
+    PET      = ifelse(grepl("PET", block), "With PET", "Without PET"),
+    Exposure = sub("_.*$", "", gsub("\\+PET", "", block)),
+    Exposure = factor(Exposure, levels = c("PFOS", "PFOA", "PFOS+PFOA")),
+    Genotype = ifelse(grepl("LRV", block), "LRV0_1", "LRII_36"),
+    PET      = factor(PET, levels = c("Without PET", "With PET"))
+  ) %>%
+  select(Genotype, Exposure, PET, Day, Replicate, Medium, Daphnia, Total, block)
+
+write.csv(pfas, file.path(out_dir, "pfas_mass_balance_tidy.csv"), row.names = FALSE)
+
+pfas_long <- pfas %>%
+  pivot_longer(c(Medium, Daphnia, Total), names_to = "Compartment", values_to = "Recovery") %>%
+  mutate(Compartment = factor(Compartment, levels = c("Medium", "Daphnia", "Total"),
+                              labels = c("Medium", "Daphnia tissue", "Total")))
+
+p_pfas <- ggplot(pfas_long, aes(Compartment, Recovery, fill = PET)) +
+  geom_hline(yintercept = 100, linetype = "dashed", colour = "grey50") +
+  geom_boxplot(outlier.shape = NA, alpha = 0.35, width = 0.7,
+               position = position_dodge(width = 0.8)) +
+  geom_point(aes(colour = PET), size = 1.6, alpha = 0.8,
+             position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.8, seed = 1)) +
+  facet_grid(Genotype ~ Exposure) +
+  scale_fill_manual(values = pair_cols, name = NULL) +
+  scale_colour_manual(values = pair_cols, name = NULL) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 125, 25)) +
+  labs(x = NULL, y = "Recovery (% of nominal)",
+       title = "PFAS mass balance: medium vs Daphnia tissue",
+       subtitle = "Each point is one replicate (3 replicates x 3 days); dashed line = 100% recovery") +
+  theme_mb
+save_fig(p_pfas, "Fig_PFAS_mass_balance_boxplot", 10, 7)
+
+# ---------------------------------------------------------------------------
+# 2. Microplastic (PET) mass balance: only one value per day per treatment
+# ---------------------------------------------------------------------------
+mp_raw <- read_excel("Mass Balance individual data points_PFAS_final.xlsx",
+                     sheet = "MPs", col_names = FALSE, range = "A1:X20",
+                     .name_repair = "minimal")
+
+mp_blocks <- expand.grid(title_row = c(2, 8), first_col = c(2, 8, 14, 20))
+mp_treat  <- c(`2` = "PET", `8` = "PET+PFOS", `14` = "PET+PFOA", `20` = "PET+PFOS+PFOA")
+
+mp <- bind_rows(lapply(seq_len(nrow(mp_blocks)), function(i) {
+  tr <- mp_blocks$title_row[i]
+  fc <- mp_blocks$first_col[i]
+  rows <- tr + 2:4
+  tibble(
+    Genotype  = ifelse(tr == 2, "LRII_36", "LRV0_1"),
+    Treatment = mp_treat[[as.character(fc)]],
+    Day       = c("D1", "D2", "D3"),
+    Medium    = as.numeric(mp_raw[[fc + 1]][rows]),
+    Daphnia   = as.numeric(mp_raw[[fc + 2]][rows])
+  )
+})) %>%
+  mutate(Total = Medium + Daphnia,
+         Treatment = factor(Treatment, levels = mp_treat))
+
+write.csv(mp, file.path(out_dir, "mp_mass_balance_tidy.csv"), row.names = FALSE)
+
+mp_long <- mp %>%
+  pivot_longer(c(Medium, Daphnia, Total), names_to = "Compartment", values_to = "Recovery") %>%
+  mutate(Compartment = factor(Compartment, levels = c("Medium", "Daphnia", "Total"),
+                              labels = c("Medium", "Daphnia tissue", "Total")))
+
+p_mp <- ggplot(mp_long, aes(Compartment, Recovery)) +
+  geom_hline(yintercept = 100, linetype = "dashed", colour = "grey50") +
+  geom_boxplot(outlier.shape = NA, fill = "grey90", width = 0.6) +
+  geom_point(aes(colour = Day, shape = Treatment), size = 2.2,
+             position = position_jitter(width = 0.15, seed = 1)) +
+  facet_wrap(~ Genotype) +
+  scale_colour_manual(values = day_cols) +
+  scale_shape_manual(values = c(16, 17, 15, 18)) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 125, 25)) +
+  labs(x = NULL, y = "Recovery (% of nominal)",
+       title = "PET microplastic mass balance: medium vs Daphnia tissue",
+       subtitle = "One value per treatment and day (no replicate-level data in the source file)") +
+  theme_mb + theme(legend.box = "vertical")
+save_fig(p_mp, "Fig_MP_mass_balance_boxplot", 9, 6)
+
+# ---------------------------------------------------------------------------
+# 2b. Combined mass balance: water (dashed) and tissue (solid) in one panel,
+#     one colour per compound. PFAS treatments are PFAS recovery (3 replicates
+#     x 3 days); PET alone is PET recovery (one value per day).
+# ---------------------------------------------------------------------------
+compound_levels <- c("PET", "PFOS", "PFOA", "PFOS+PET", "PFOA+PET", "PFOS+PFOA", "PFOS+PFOA+PET")
+compound_cols <- setNames(c("#2a78d6", "#eb6834", "#1baf7a", "#eda100",
+                            "#e87ba4", "#008300", "#4a3aa7"), compound_levels)
+
+combined <- bind_rows(
+  pfas %>% transmute(Genotype, Day, Replicate,
+                     Compound = ifelse(PET == "With PET", paste0(Exposure, "+PET"),
+                                       as.character(Exposure)),
+                     Medium, Daphnia),
+  mp %>% filter(Treatment == "PET") %>%
+    transmute(Genotype, Day, Replicate = 1L, Compound = "PET", Medium, Daphnia)
+) %>%
+  pivot_longer(c(Medium, Daphnia), names_to = "Compartment", values_to = "Recovery") %>%
+  mutate(Compound = factor(Compound, levels = compound_levels),
+         Compartment = factor(Compartment, levels = c("Medium", "Daphnia"),
+                              labels = c("Water (medium)", "Daphnia tissue")))
+
+write.csv(combined, file.path(out_dir, "mass_balance_water_tissue_combined.csv"), row.names = FALSE)
+
+p_combined <- ggplot(combined, aes(Compound, Recovery,
+                                   colour = Compound, fill = Compound,
+                                   linetype = Compartment,
+                                   group = interaction(Compound, Compartment))) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.15, linewidth = 0.6, width = 0.75,
+               position = position_dodge(width = 0.85)) +
+  geom_point(aes(shape = Compartment), size = 1.3, alpha = 0.8,
+             position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.85, seed = 1)) +
+  facet_wrap(~ Genotype, ncol = 1) +
+  scale_colour_manual(values = compound_cols, guide = "none") +
+  scale_fill_manual(values = compound_cols, guide = "none") +
+  scale_linetype_manual(values = c("Water (medium)" = "dashed", "Daphnia tissue" = "solid"),
+                        name = NULL) +
+  scale_shape_manual(values = c("Water (medium)" = 1, "Daphnia tissue" = 16), name = NULL) +
+  scale_y_continuous(limits = c(0, NA), breaks = seq(0, 100, 20)) +
+  guides(linetype = guide_legend(override.aes = list(colour = "grey20", fill = NA))) +
+  labs(x = NULL, y = "Recovery (% of nominal)",
+       title = "Mass balance: water vs Daphnia tissue by compound",
+       subtitle = "Dashed = water, solid = tissue; days pooled. PFAS treatments: 3 replicates x 3 days; PET: 1 value per day") +
+  theme_mb
+save_fig(p_combined, "Fig_mass_balance_water_tissue_combined", 11, 7.5)
+
+# Same plot split by day: 3 replicates per PFAS box, a single value for PET.
+p_combined_day <- p_combined +
+  facet_grid(Genotype ~ Day) +
+  labs(title = "Mass balance: water vs Daphnia tissue by compound and day",
+       subtitle = "Dashed = water, solid = tissue. PFAS treatments: 3 replicates per day; PET: 1 value per day") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+save_fig(p_combined_day, "Fig_mass_balance_water_tissue_by_day", 15, 8)
+
+# Stacked bar plots: water (solid outline) and Daphnia tissue (dashed outline,
+# lighter fill) in the same bar; bar height = total recovery. Panels split
+# single chemicals from mixtures, one row per genotype.
+# Error bars: SD of water (at the top of the water segment) and SD of the
+# per-replicate total (at the top of the bar). PET by day has n = 1, no SD.
+compound_group <- c(PET = "Single chemicals", PFOS = "Single chemicals",
+                    PFOA = "Single chemicals", `PFOS+PET` = "Mixtures",
+                    `PFOA+PET` = "Mixtures", `PFOS+PFOA` = "Mixtures",
+                    `PFOS+PFOA+PET` = "Mixtures")
+genotype_levels <- c("LRV0_1", "LRII_36")
+
+replicate_totals <- bind_rows(
+  pfas %>% transmute(Genotype, Day, Replicate,
+                     Compound = ifelse(PET == "With PET", paste0(Exposure, "+PET"),
+                                       as.character(Exposure)),
+                     Water = Medium, Tissue = Daphnia),
+  mp %>% filter(Treatment == "PET") %>%
+    transmute(Genotype, Day, Replicate = 1L, Compound = "PET", Water = Medium, Tissue = Daphnia)
+) %>%
+  mutate(Total = Water + Tissue)
+
+sd_or_na <- function(x) if (length(x) > 1) sd(x) else NA_real_
+
+summarise_stacked <- function(d, ...) {
+  d %>%
+    group_by(Genotype, Compound, ...) %>%
+    summarise(n = n(),
+              Water_mean = mean(Water), Water_sd = sd_or_na(Water),
+              Tissue_mean = mean(Tissue), Tissue_sd = sd_or_na(Tissue),
+              Total_mean = mean(Total), Total_sd = sd_or_na(Total), .groups = "drop") %>%
+    mutate(Group = factor(compound_group[as.character(Compound)],
+                          levels = c("Single chemicals", "Mixtures")),
+           Compound = factor(Compound, levels = compound_levels),
+           Genotype = factor(Genotype, levels = genotype_levels))
+}
+
+stacked_plot <- function(s, title, subtitle) {
+  bars <- s %>%
+    select(-ends_with("_sd")) %>%
+    pivot_longer(c(Water_mean, Tissue_mean), names_to = "Compartment", values_to = "Mean") %>%
+    mutate(Compartment = factor(Compartment, levels = c("Water_mean", "Tissue_mean"),
+                                labels = c("Water (medium)", "Daphnia tissue")))
+  ggplot(bars, aes(Compound, Mean, fill = Compound, colour = Compound,
+                   alpha = Compartment, linetype = Compartment)) +
+    geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
+    geom_col(position = position_stack(reverse = TRUE), width = 0.7, linewidth = 0.7) +
+    geom_errorbar(data = s, aes(x = Compound, ymin = Water_mean - Water_sd, ymax = Water_mean + Water_sd),
+                  inherit.aes = FALSE, width = 0.2, linewidth = 0.4, colour = "grey20", na.rm = TRUE) +
+    geom_errorbar(data = s, aes(x = Compound, ymin = Total_mean - Total_sd, ymax = Total_mean + Total_sd),
+                  inherit.aes = FALSE, width = 0.3, linewidth = 0.5, colour = "grey20", na.rm = TRUE) +
+    scale_fill_manual(values = compound_cols, guide = "none") +
+    scale_colour_manual(values = compound_cols, guide = "none") +
+    scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
+    scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"),
+                          name = NULL) +
+    scale_y_continuous(limits = c(0, NA), breaks = seq(0, 125, 25), expand = expansion(mult = c(0, 0.05))) +
+    guides(linetype = guide_legend(override.aes = list(colour = "grey20", fill = "grey50",
+                                                       alpha = c(0.9, 0.3))),
+           alpha = "none") +
+    labs(x = NULL, y = "Recovery (% of nominal)", title = title, subtitle = subtitle) +
+    theme_mb + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+stacked <- summarise_stacked(replicate_totals)
+stacked_day <- summarise_stacked(replicate_totals, Day)
+write.csv(stacked, file.path(out_dir, "mass_balance_stacked_mean_sd.csv"), row.names = FALSE)
+write.csv(stacked_day, file.path(out_dir, "mass_balance_stacked_mean_sd_by_day.csv"), row.names = FALSE)
+
+p_stacked <- stacked_plot(stacked,
+  "Mass balance: water and Daphnia tissue",
+  "Bars = mean; error bars = SD of water and of total. Days pooled: PFAS n = 9, PET n = 3") +
+  facet_grid(Genotype ~ Group, scales = "free_x", space = "free_x")
+save_fig(p_stacked, "Fig_mass_balance_stacked_barplot", 9, 7.5)
+
+p_stacked_day <- stacked_plot(stacked_day,
+  "Mass balance: water and Daphnia tissue by day",
+  "Bars = mean; error bars = SD of water and of total. PFAS n = 3 per day; PET n = 1 per day (no error bar)") +
+  facet_grid(Genotype ~ Group + Day, scales = "free_x", space = "free_x")
+save_fig(p_stacked_day, "Fig_mass_balance_stacked_barplot_by_day", 16, 7.5)
+
+# ---------------------------------------------------------------------------
+# 3. Removal efficiency of individual chemicals (recomputed from Table S2 raw)
+# ---------------------------------------------------------------------------
+chem_raw <- read_excel("Abdullahi_etal_Table S2- individual chemicals raw.xlsx",
+                       sheet = "individual chemicals")
+names(chem_raw) <- c("Genotype", "Replicate", "Day", "PFOS", "Diclofenac", "Atrazine", "Arsenic")
+
+chem_long <- chem_raw %>%
+  pivot_longer(PFOS:Arsenic, names_to = "Chemical", values_to = "Conc")
+
+# Initial concentration = mean of the no-Daphnia controls on the same day
+# (this reproduces the IC column of Table S3).
+ic <- chem_long %>%
+  filter(Genotype == "Control") %>%
+  group_by(Chemical, Day) %>%
+  summarise(IC = mean(Conc), .groups = "drop")
+
+removal <- chem_long %>%
+  filter(Genotype != "Control") %>%
+  left_join(ic, by = c("Chemical", "Day")) %>%
+  mutate(RE = (IC - Conc) / IC * 100,
+         Chemical = factor(Chemical, levels = c("PFOS", "Diclofenac", "Atrazine", "Arsenic")))
+
+write.csv(removal, file.path(out_dir, "removal_efficiency_recomputed.csv"), row.names = FALSE)
+
+# Compare with the published Table S3
+s3_raw <- read_excel("Abdullahi_etal_Table S3- individual chemicals removal efficiency.xlsx",
+                     col_names = FALSE, skip = 3, .name_repair = "minimal")
+s3 <- s3_raw[, 1:15]
+names(s3) <- c("Genotype", "Replicate", "Day",
+               paste(rep(c("PFOS", "Diclofenac", "Atrazine", "Arsenic"), each = 3),
+                     c("IC", "FC", "RE"), sep = "_"))
+s3_long <- s3 %>%
+  filter(!is.na(Genotype)) %>%
+  mutate(across(-c(Genotype, Day), as.numeric)) %>%
+  pivot_longer(-c(Genotype, Replicate, Day),
+               names_to = c("Chemical", ".value"), names_sep = "_")
+
+s3_check <- removal %>%
+  mutate(Chemical = as.character(Chemical)) %>%
+  full_join(s3_long, by = c("Genotype", "Replicate", "Day", "Chemical"),
+            suffix = c("_raw", "_S3")) %>%
+  mutate(status = case_when(
+    is.na(FC)                          ~ "missing from Table S3",
+    is.na(Conc)                        ~ "missing from raw Table S2",
+    abs(Conc - FC) > 0.005             ~ "final concentration differs",
+    abs(RE_raw - RE_S3) > 0.5          ~ "RE differs",
+    TRUE                               ~ "ok")) %>%
+  arrange(status != "ok", Chemical, Genotype, Day, Replicate)
+
+write.csv(s3_check, file.path(out_dir, "check_TableS3_vs_raw.csv"), row.names = FALSE)
+
+p_re <- ggplot(removal, aes(Genotype, RE)) +
+  geom_hline(yintercept = 0, colour = "grey60") +
+  geom_boxplot(outlier.shape = NA, fill = "grey90", width = 0.6) +
+  geom_point(aes(colour = Day), size = 2, position = position_jitter(width = 0.15, seed = 1)) +
+  facet_wrap(~ Chemical, nrow = 1) +
+  scale_colour_manual(values = day_cols) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, 20)) +
+  labs(x = NULL, y = "Removal efficiency (%)",
+       title = "Removal of individual chemicals from water by Daphnia genotype",
+       subtitle = "RE = (control - exposed) / control x 100; 2 replicates x 3 days per genotype") +
+  theme_mb + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+save_fig(p_re, "Fig_removal_efficiency_boxplot", 11, 5)
+
+# Bar plot versions (mean +/- SD, individual values overlaid), one panel per
+# chemical, days pooled (n = 6: 2 replicates x 3 days) and by day (n = 2).
+chem_cols <- c(PFOS = "#eb6834", Diclofenac = "#2a78d6", Atrazine = "#1baf7a", Arsenic = "#4a3aa7")
+
+re_bar <- function(d, ...) {
+  s <- d %>% group_by(Chemical, Genotype, ...) %>%
+    summarise(n = n(), Mean = mean(RE), SD = sd(RE), .groups = "drop")
+  ggplot(s, aes(Genotype, Mean, fill = Chemical, colour = Chemical)) +
+    geom_col(width = 0.7, alpha = 0.85, linewidth = 0.6) +
+    geom_errorbar(aes(ymin = Mean - SD, ymax = Mean + SD), width = 0.25,
+                  linewidth = 0.5, colour = "grey20") +
+    geom_point(data = d, aes(Genotype, RE), inherit.aes = FALSE, colour = "grey25",
+               size = 1, alpha = 0.6, position = position_jitter(width = 0.12, seed = 1)) +
+    scale_fill_manual(values = chem_cols, guide = "none") +
+    scale_colour_manual(values = chem_cols, guide = "none") +
+    scale_y_continuous(limits = c(0, 105), breaks = seq(0, 100, 20), expand = expansion(mult = c(0, 0.02))) +
+    labs(x = NULL, y = "Removal efficiency (%)") +
+    theme_mb + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+p_re_bar <- re_bar(removal) +
+  facet_wrap(~ Chemical, nrow = 1) +
+  labs(title = "Removal of individual chemicals from water by Daphnia genotype",
+       subtitle = "Bars = mean, error bars = SD; days pooled (n = 6: 2 replicates x 3 days)")
+save_fig(p_re_bar, "Fig_removal_efficiency_barplot", 11, 5)
+
+p_re_bar_day <- re_bar(removal, Day) +
+  facet_grid(Chemical ~ Day) +
+  labs(title = "Removal of individual chemicals from water by genotype and day",
+       subtitle = "Bars = mean, error bars = SD; n = 2 replicates per day")
+save_fig(p_re_bar_day, "Fig_removal_efficiency_barplot_by_day", 9, 10)
+
+# ---------------------------------------------------------------------------
+# 4. Arsenic: match water and tissue by genotype, day and replicate
+# ---------------------------------------------------------------------------
+as_water <- read_excel("As_massbalance.xlsx", sheet = "water")
+# The Treatment and Day headers are swapped in the source sheet.
+names(as_water) <- c("Replicate", "Genotype", "Day", "Treatment", "Water_ugL")
+# DM1900 D1 and D3 have both rows labelled replicate 1; the second row is
+# replicate 2 (confirmed against Table S2 raw).
+as_water <- as_water %>%
+  group_by(Genotype, Day, Treatment) %>%
+  mutate(Replicate = row_number()) %>%
+  ungroup()
+
+as_tissue <- read_excel("As_massbalance.xlsx", sheet = "tissue")
+names(as_tissue) <- c("Replicate", "Genotype", "Day", "Treatment", "Tissue")
+
+as_ic <- as_water %>%
+  filter(Genotype == "CONTROL") %>%
+  group_by(Day) %>%
+  summarise(IC = mean(Water_ugL), .groups = "drop")
+
+as_matched <- as_tissue %>%
+  filter(Treatment == "ARSENIC") %>%
+  select(Genotype, Day, Replicate, Tissue) %>%
+  left_join(as_tissue %>% filter(Treatment == "CONTROL") %>%
+              select(Genotype, Day, Replicate, Tissue_control = Tissue),
+            by = c("Genotype", "Day", "Replicate")) %>%
+  left_join(as_water %>% filter(Genotype != "CONTROL") %>%
+              select(Genotype, Day, Replicate, Water_ugL),
+            by = c("Genotype", "Day", "Replicate")) %>%
+  left_join(as_ic, by = "Day") %>%
+  mutate(Water_RE = (IC - Water_ugL) / IC * 100,
+         Tissue_ng_per_sample = Tissue * digest_volume_L * 1000,
+         Tissue_pg_per_daphnia = Tissue_ng_per_sample / daphnia_per_sample * 1000) %>%
+  arrange(Genotype, Day, Replicate)
+
+write.csv(as_matched, file.path(out_dir, "arsenic_water_tissue_matched.csv"), row.names = FALSE)
+
+as_long <- bind_rows(
+  as_matched %>% transmute(Genotype, Day, Replicate, Panel = "Removal from water (%)", Value = Water_RE),
+  as_tissue %>% transmute(Genotype, Day, Replicate,
+                          Panel = paste0("Arsenic in Daphnia tissue (", tissue_unit, ")"),
+                          Treatment = ifelse(Treatment == "ARSENIC", "Arsenic-exposed", "Control"),
+                          Value = Tissue)
+) %>%
+  mutate(Treatment = factor(coalesce(Treatment, "Arsenic-exposed"),
+                            levels = c("Arsenic-exposed", "Control")),
+         Panel = factor(Panel, levels = c("Removal from water (%)",
+                                         paste0("Arsenic in Daphnia tissue (", tissue_unit, ")"))))
+
+p_as <- ggplot(as_long, aes(Genotype, Value, fill = Treatment)) +
+  geom_boxplot(outlier.shape = NA, alpha = 0.35, width = 0.7,
+               position = position_dodge(width = 0.8)) +
+  geom_point(aes(colour = Treatment), size = 1.8,
+             position = position_jitterdodge(jitter.width = 0.15, dodge.width = 0.8, seed = 1)) +
+  facet_wrap(~ Panel, scales = "free_y") +
+  scale_fill_manual(values = pair_cols, name = NULL) +
+  scale_colour_manual(values = pair_cols, name = NULL) +
+  expand_limits(y = 0) +
+  labs(x = NULL, y = NULL,
+       title = "Arsenic: removal from water and accumulation in Daphnia tissue",
+       subtitle = "2 replicates x 3 days per genotype") +
+  theme_mb
+save_fig(p_as, "Fig_arsenic_water_tissue_boxplot", 10, 5)
+
+rho <- cor.test(as_matched$Water_RE, as_matched$Tissue, method = "spearman", exact = FALSE)
+
+p_as_scatter <- ggplot(as_matched, aes(Tissue, Water_RE)) +
+  geom_point(aes(colour = Day, shape = Genotype), size = 2.6) +
+  scale_colour_manual(values = day_cols) +
+  scale_shape_manual(values = c(16, 17, 15, 18)) +
+  labs(x = paste0("Arsenic in Daphnia tissue (", tissue_unit, ")"), y = "Arsenic removal from water (%)",
+       title = "Arsenic: water removal vs tissue concentration (matched replicates)",
+       subtitle = sprintf("Spearman rho = %.2f, p = %.2f, n = %d",
+                          rho$estimate, rho$p.value, nrow(as_matched))) +
+  theme_mb + theme(panel.grid.major.x = element_line(colour = "grey92"),
+                   legend.position = "right")
+save_fig(p_as_scatter, "Fig_arsenic_water_vs_tissue_scatter", 7, 5.5)
+
+# Arsenic mass balance as % of arsenic added (IC x 50 mL): water remaining
+# (solid) with tissue stacked on top (dashed). Tissue is ~0.001 %, too small
+# to see, so its value is printed above each bar.
+as_mb <- as_matched %>%
+  mutate(Added_ng = IC * exposure_volume_L * 1000,
+         Water = Water_ugL / IC * 100,
+         Tissue = Tissue_ng_per_sample / Added_ng * 100)
+write.csv(as_mb, file.path(out_dir, "arsenic_mass_balance.csv"), row.names = FALSE)
+
+as_mb_plot <- function(d, ...) {
+  s <- d %>% group_by(Genotype, ...) %>%
+    summarise(n = n(), Water_mean = mean(Water), Water_sd = sd(Water),
+              Tissue_mean = mean(Tissue), .groups = "drop")
+  bars <- s %>%
+    pivot_longer(c(Water_mean, Tissue_mean), names_to = "Compartment", values_to = "Mean") %>%
+    mutate(Compartment = factor(Compartment, levels = c("Water_mean", "Tissue_mean"),
+                                labels = c("Water (medium)", "Daphnia tissue")))
+  ggplot(bars, aes(Genotype, Mean, alpha = Compartment, linetype = Compartment)) +
+    geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
+    geom_col(position = position_stack(reverse = TRUE), width = 0.7, linewidth = 0.7,
+             fill = chem_cols[["Arsenic"]], colour = chem_cols[["Arsenic"]]) +
+    geom_errorbar(data = s, aes(x = Genotype, ymin = Water_mean - Water_sd, ymax = Water_mean + Water_sd),
+                  inherit.aes = FALSE, width = 0.2, linewidth = 0.5, colour = "grey20") +
+    geom_text(data = s, aes(x = Genotype, y = Water_mean + Water_sd + 4,
+                            label = sprintf("tissue\n%.4f%%", Tissue_mean)),
+              inherit.aes = FALSE, size = 3, colour = "grey20", lineheight = 0.9) +
+    scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
+    scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"), name = NULL) +
+    scale_y_continuous(limits = c(0, 105), breaks = seq(0, 100, 20), expand = expansion(mult = c(0, 0.02))) +
+    guides(linetype = guide_legend(override.aes = list(colour = "grey20", fill = "grey50",
+                                                       alpha = c(0.9, 0.3))),
+           alpha = "none") +
+    labs(x = NULL, y = "Arsenic (% of amount added)") +
+    theme_mb
+}
+
+p_as_mb <- as_mb_plot(as_mb) +
+  labs(title = "Arsenic mass balance: water and Daphnia tissue",
+       subtitle = "% of arsenic added (50 mL); tissue = 10 Daphnia per sample.\nBars = mean; error bars = SD of water; n = 6 (2 replicates x 3 days)")
+save_fig(p_as_mb, "Fig_arsenic_mass_balance_barplot", 8, 5.5)
+
+p_as_mb_day <- as_mb_plot(as_mb, Day) + facet_wrap(~ Day, nrow = 1) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Arsenic mass balance by day",
+       subtitle = "% of arsenic added (50 mL exposure); tissue = 10 Daphnia per sample. Mean, error bars = SD of water; n = 2")
+save_fig(p_as_mb_day, "Fig_arsenic_mass_balance_barplot_by_day", 11, 5.5)
+
+# ---------------------------------------------------------------------------
+# 5. Data checks
+# ---------------------------------------------------------------------------
+# PET blocks that reuse replicates from the matching non-PET block
+dup_check <- pfas %>%
+  filter(PET == "With PET") %>%
+  inner_join(pfas %>% filter(PET == "Without PET"),
+             by = c("Genotype", "Exposure", "Day", "Medium", "Daphnia"),
+             suffix = c("_PET", "_noPET")) %>%
+  select(Genotype, Exposure, Day, Replicate_PET, Replicate_noPET, Medium, Daphnia)
+write.csv(dup_check, file.path(out_dir, "check_PET_blocks_duplicating_noPET.csv"), row.names = FALSE)
+
+cat("\nTable S3 vs raw Table S2:\n"); print(table(s3_check$status))
+cat("\nPET replicates identical to a non-PET replicate:", nrow(dup_check), "of",
+    sum(pfas$PET == "With PET"), "\n")
+cat("\nArsenic water vs tissue: Spearman rho =", round(rho$estimate, 2),
+    "p =", signif(rho$p.value, 2), "\n")
+
+# Tia's agreed dataset (mass_balance_TS.xlsx) must match the raw replicates;
+# it is rounded, so allow a difference of up to 0.5 percentage points.
+ts_file <- "mass_balance_TS.xlsx"
+ts <- bind_rows(lapply(excel_sheets(ts_file), function(sh) {
+  read_excel(ts_file, sheet = sh) %>% mutate(Compound = sh)
+})) %>%
+  transmute(Compound,
+            Genotype = ifelse(grepl("LRV", Genotype), "LRV0_1", "LRII_36"),
+            Day = sub("Day\\s*", "D", Day), Replicate = as.integer(Replicate),
+            Medium_TS = Medium, Daphnia_TS = Tissue)
+
+ts_check <- pfas %>%
+  transmute(Compound = ifelse(PET == "With PET", paste0(Exposure, "+PET"), as.character(Exposure)),
+            Genotype, Day, Replicate, Medium, Daphnia) %>%
+  full_join(ts, by = c("Compound", "Genotype", "Day", "Replicate")) %>%
+  mutate(match = abs(Medium - Medium_TS) <= 0.5 & abs(Daphnia - Daphnia_TS) <= 0.5)
+write.csv(ts_check, file.path(out_dir, "check_TS_workbook_vs_raw.csv"), row.names = FALSE)
+cat("\nTia's workbook vs raw replicates:", sum(ts_check$match, na.rm = TRUE), "of",
+    nrow(ts_check), "rows match\n")
