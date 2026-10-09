@@ -63,5 +63,16 @@ Rscript mass_balance/mass_balance_plots.R
    as the "PFOS" panel (e.g. LRV0_1 Day 1 = 52 + 24 = 76 in both), so PET-only
    recovery is not actually plotted. The PET data are in the MPs sheet.
 
+10. **Tia's agreed dataset** (`mass_balance_TS.xlsx`, the version Luisa and
+    Mohamed agreed): all 108 PFAS replicate values match the raw data used
+    here, apart from rounding (`output/check_TS_workbook_vs_raw.csv`). It has
+    no PET-alone sheet; PET recovery still comes from the MPs sheet.
+11. **`Mass_Balance_metadata.xlsx`**: one row per genotype and day. Medium and
+    tissue are replicate 1 only (not the mean); SD is the SD of the 3
+    replicate totals. The extra **PFOS_in_PS_PA** sheet is not measured data:
+    every value is PFOS-alone replicate 1 multiplied by a fixed factor per day
+    (0.906, 0.896, 0.863 for Days 1-3), and its SD column is copied from
+    PFOS+PFOA. It is not used in the plots.
+
 Removal efficiency = (mean no-Daphnia control on that day - final) / control x 100,
 which reproduces the IC and RE columns of Table S3.

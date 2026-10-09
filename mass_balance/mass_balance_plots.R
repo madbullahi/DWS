@@ -420,3 +420,23 @@ cat("\nPET replicates identical to a non-PET replicate:", nrow(dup_check), "of",
     sum(pfas$PET == "With PET"), "\n")
 cat("\nArsenic water vs tissue: Spearman rho =", round(rho$estimate, 2),
     "p =", signif(rho$p.value, 2), "\n")
+
+# Tia's agreed dataset (mass_balance_TS.xlsx) must match the raw replicates;
+# it is rounded, so allow a difference of up to 0.5 percentage points.
+ts_file <- "mass_balance_TS.xlsx"
+ts <- bind_rows(lapply(excel_sheets(ts_file), function(sh) {
+  read_excel(ts_file, sheet = sh) %>% mutate(Compound = sh)
+})) %>%
+  transmute(Compound,
+            Genotype = ifelse(grepl("LRV", Genotype), "LRV0_1", "LRII_36"),
+            Day = sub("Day\\s*", "D", Day), Replicate = as.integer(Replicate),
+            Medium_TS = Medium, Daphnia_TS = Tissue)
+
+ts_check <- pfas %>%
+  transmute(Compound = ifelse(PET == "With PET", paste0(Exposure, "+PET"), as.character(Exposure)),
+            Genotype, Day, Replicate, Medium, Daphnia) %>%
+  full_join(ts, by = c("Compound", "Genotype", "Day", "Replicate")) %>%
+  mutate(match = abs(Medium - Medium_TS) <= 0.5 & abs(Daphnia - Daphnia_TS) <= 0.5)
+write.csv(ts_check, file.path(out_dir, "check_TS_workbook_vs_raw.csv"), row.names = FALSE)
+cat("\nTia's workbook vs raw replicates:", sum(ts_check$match, na.rm = TRUE), "of",
+    nrow(ts_check), "rows match\n")
