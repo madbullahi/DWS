@@ -43,7 +43,7 @@ theme_mb <- theme_bw(base_size = 12) +
 
 save_fig <- function(p, name, w, h) {
   ggsave(file.path(fig_dir, paste0(name, ".pdf")), p, width = w, height = h)
-  ggsave(file.path(fig_dir, paste0(name, ".png")), p, width = w, height = h, dpi = 300)
+  ggsave(file.path(fig_dir, paste0(name, ".png")), p, width = w, height = h, dpi = 600)
 }
 
 # ---------------------------------------------------------------------------
