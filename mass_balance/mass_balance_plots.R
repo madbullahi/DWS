@@ -207,8 +207,8 @@ save_fig(p_combined_day, "Fig_mass_balance_water_tissue_by_day", 15, 8)
 # Stacked bar plots: water (solid outline) and Daphnia tissue (dashed outline,
 # lighter fill) in the same bar; bar height = total recovery. Panels split
 # single chemicals from mixtures, one row per genotype.
-# Error bars: SD of water (at the top of the water segment) and SD of the
-# per-replicate total (at the top of the bar). PET by day has n = 1, no SD.
+# Error bars: SD of the per-replicate total (water + tissue), at the top of
+# the bar. PET by day has n = 1, no SD.
 compound_group <- c(PET = "Single chemicals", PFOS = "Single chemicals",
                     PFOA = "Single chemicals", `PFOS+PET` = "Mixtures",
                     `PFOA+PET` = "Mixtures", `PFOS+PFOA` = "Mixtures",
@@ -250,8 +250,6 @@ stacked_plot <- function(s, title, subtitle) {
                    alpha = Compartment, linetype = Compartment)) +
     geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
     geom_col(position = position_stack(reverse = TRUE), width = 0.7, linewidth = 0.7) +
-    geom_errorbar(data = s, aes(x = Compound, ymin = Water_mean - Water_sd, ymax = Water_mean + Water_sd),
-                  inherit.aes = FALSE, width = 0.2, linewidth = 0.4, colour = "grey20", na.rm = TRUE) +
     geom_errorbar(data = s, aes(x = Compound, ymin = Total_mean - Total_sd, ymax = Total_mean + Total_sd),
                   inherit.aes = FALSE, width = 0.3, linewidth = 0.5, colour = "grey20", na.rm = TRUE) +
     scale_fill_manual(values = compound_cols, guide = "none") +
@@ -274,13 +272,13 @@ write.csv(stacked_day, file.path(out_dir, "mass_balance_stacked_mean_sd_by_day.c
 
 p_stacked <- stacked_plot(stacked,
   "Mass balance: water and Daphnia tissue",
-  "Bars = mean; error bars = SD of water and of total. Days pooled: PFAS n = 9, PET n = 3") +
+  "Bars = mean; error bars = SD of total (water + tissue). Days pooled: PFAS n = 9, PET n = 3") +
   facet_grid(Genotype ~ Group, scales = "free_x", space = "free_x")
 save_fig(p_stacked, "Fig_mass_balance_stacked_barplot", 9, 7.5)
 
 p_stacked_day <- stacked_plot(stacked_day,
   "Mass balance: water and Daphnia tissue by day",
-  "Bars = mean; error bars = SD of water and of total. PFAS n = 3 per day; PET n = 1 per day (no error bar)") +
+  "Bars = mean; error bars = SD of total (water + tissue). PFAS n = 3 per day; PET n = 1 per day (no error bar)") +
   facet_grid(Genotype ~ Group + Day, scales = "free_x", space = "free_x")
 save_fig(p_stacked_day, "Fig_mass_balance_stacked_barplot_by_day", 16, 7.5)
 
@@ -466,13 +464,15 @@ save_fig(p_as_scatter, "Fig_arsenic_water_vs_tissue_scatter", 7, 5.5)
 as_mb <- as_matched %>%
   mutate(Added_ng = IC * exposure_volume_L * 1000,
          Water = Water_ugL / IC * 100,
-         Tissue = Tissue_ng_per_sample / Added_ng * 100)
+         Tissue = Tissue_ng_per_sample / Added_ng * 100,
+         Total = Water + Tissue)
 write.csv(as_mb, file.path(out_dir, "arsenic_mass_balance.csv"), row.names = FALSE)
 
 as_mb_plot <- function(d, ...) {
   s <- d %>% group_by(Genotype, ...) %>%
     summarise(n = n(), Water_mean = mean(Water), Water_sd = sd(Water),
-              Tissue_mean = mean(Tissue), .groups = "drop")
+              Tissue_mean = mean(Tissue), Total_mean = mean(Total), Total_sd = sd(Total),
+              .groups = "drop")
   bars <- s %>%
     pivot_longer(c(Water_mean, Tissue_mean), names_to = "Compartment", values_to = "Mean") %>%
     mutate(Compartment = factor(Compartment, levels = c("Water_mean", "Tissue_mean"),
@@ -481,9 +481,9 @@ as_mb_plot <- function(d, ...) {
     geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
     geom_col(position = position_stack(reverse = TRUE), width = 0.7, linewidth = 0.7,
              fill = chem_cols[["Arsenic"]], colour = chem_cols[["Arsenic"]]) +
-    geom_errorbar(data = s, aes(x = Genotype, ymin = Water_mean - Water_sd, ymax = Water_mean + Water_sd),
+    geom_errorbar(data = s, aes(x = Genotype, ymin = Total_mean - Total_sd, ymax = Total_mean + Total_sd),
                   inherit.aes = FALSE, width = 0.2, linewidth = 0.5, colour = "grey20") +
-    geom_text(data = s, aes(x = Genotype, y = Water_mean + Water_sd + 4,
+    geom_text(data = s, aes(x = Genotype, y = Total_mean + Total_sd + 4,
                             label = sprintf("tissue\n%.4f%%", Tissue_mean)),
               inherit.aes = FALSE, size = 3, colour = "grey20", lineheight = 0.9) +
     scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
@@ -498,13 +498,13 @@ as_mb_plot <- function(d, ...) {
 
 p_as_mb <- as_mb_plot(as_mb) +
   labs(title = "Arsenic mass balance: water and Daphnia tissue",
-       subtitle = "% of arsenic added (50 mL); tissue = 10 Daphnia per sample.\nBars = mean; error bars = SD of water; n = 6 (2 replicates x 3 days)")
+       subtitle = "% of arsenic added (50 mL); tissue = 10 Daphnia per sample.\nBars = mean; error bars = SD of total (water + tissue); n = 6 (2 replicates x 3 days)")
 save_fig(p_as_mb, "Fig_arsenic_mass_balance_barplot", 8, 5.5)
 
 p_as_mb_day <- as_mb_plot(as_mb, Day) + facet_wrap(~ Day, nrow = 1) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   labs(title = "Arsenic mass balance by day",
-       subtitle = "% of arsenic added (50 mL exposure); tissue = 10 Daphnia per sample. Mean, error bars = SD of water; n = 2")
+       subtitle = "% of arsenic added (50 mL exposure); tissue = 10 Daphnia per sample. Mean, error bars = SD of total; n = 2")
 save_fig(p_as_mb_day, "Fig_arsenic_mass_balance_barplot_by_day", 11, 5.5)
 
 # ---------------------------------------------------------------------------
