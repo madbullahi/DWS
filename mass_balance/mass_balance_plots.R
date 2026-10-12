@@ -282,6 +282,47 @@ p_stacked_day <- stacked_plot(stacked_day,
   facet_grid(Genotype ~ Group + Day, scales = "free_x", space = "free_x")
 save_fig(p_stacked_day, "Fig_mass_balance_stacked_barplot_by_day", 16, 7.5)
 
+# Compact version (layout of the UPSTREAM Figure S2): one row of panels, one
+# per treatment; days on the x-axis with the two genotypes side by side; each
+# bar = water (solid) + tissue (dashed, lighter) stacked; error bar = SD of
+# the total. PET has one value per day, so no error bar.
+geno_cols <- c(LRV0_1 = "#2a78d6", LRII_36 = "#eb6834")
+compact <- stacked_day %>%
+  mutate(x = as.integer(factor(Day)) + ifelse(Genotype == "LRV0_1", -0.2, 0.2))
+compact_rects <- bind_rows(
+  compact %>% transmute(Compound, Genotype, x, Compartment = "Water (medium)",
+                        ymin = 0, ymax = Water_mean),
+  compact %>% transmute(Compound, Genotype, x, Compartment = "Daphnia tissue",
+                        ymin = Water_mean, ymax = Water_mean + Tissue_mean)
+) %>%
+  mutate(Compartment = factor(Compartment, levels = c("Water (medium)", "Daphnia tissue")))
+
+p_compact <- ggplot(compact_rects) +
+  geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
+  geom_rect(aes(xmin = x - 0.18, xmax = x + 0.18, ymin = ymin, ymax = ymax,
+                fill = Genotype, colour = Genotype, alpha = Compartment, linetype = Compartment),
+            linewidth = 0.5) +
+  geom_errorbar(data = compact, aes(x = x, ymin = Total_mean - Total_sd, ymax = Total_mean + Total_sd),
+                width = 0.15, linewidth = 0.4, colour = "grey20", na.rm = TRUE) +
+  facet_wrap(~ Compound, nrow = 1) +
+  scale_x_continuous(breaks = 1:3, labels = c("D1", "D2", "D3"), expand = expansion(add = 0.45)) +
+  scale_y_continuous(limits = c(0, 135), breaks = seq(0, 125, 25), expand = expansion(mult = c(0, 0.02))) +
+  scale_fill_manual(values = geno_cols, name = NULL) +
+  scale_colour_manual(values = geno_cols, name = NULL) +
+  scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
+  scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"), name = NULL) +
+  guides(fill = guide_legend(order = 1, override.aes = list(alpha = 0.9, linetype = "solid")),
+         colour = "none",
+         linetype = guide_legend(order = 2, override.aes = list(fill = "grey50", colour = "grey20",
+                                                                alpha = c(0.9, 0.3))),
+         alpha = "none") +
+  labs(x = NULL, y = "Recovery (% of nominal)") +
+  theme_mb +
+  theme(legend.position = "top", legend.box = "horizontal", legend.margin = margin(0, 0, -6, 0),
+        panel.spacing.x = unit(3, "pt"),
+        strip.text = element_text(face = "bold", size = 9))
+save_fig(p_compact, "Fig_mass_balance_compact", 12, 3.8)
+
 # ---------------------------------------------------------------------------
 # 3. Removal efficiency of individual chemicals (recomputed from Table S2 raw)
 # ---------------------------------------------------------------------------
