@@ -82,8 +82,9 @@ Rscript mass_balance/mass_balance_plots.R
     (0.906, 0.896, 0.863 for Days 1-3), and its SD column is copied from
     PFOS+PFOA. It is not used in the plots.
 
-12. **Arsenic mass balance does not close.** With a 50 mL exposure, about
-    39.4 ug As is added per beaker. On average 40 % (24-55 %) remains in the
+12. **Arsenic mass balance does not close.** Nominal dose 1 mg/L (1000 ug in a
+    1 L stock, dispensed as 50 mL per beaker = 50 ug); the no-Daphnia controls
+    measured 788.7 ug/L, i.e. 39.4 ug per beaker, which is the base used here. On average 40 % (24-55 %) remains in the
     water and ~0.001 % is in the 10-Daphnia tissue sample, so ~60 % is
     unaccounted for (e.g. adsorption to vessel walls, Daphnia not sampled,
     moults/faeces, or volatilisation/speciation losses). Values in

@@ -525,10 +525,11 @@ as_amount_sum <- as_amount %>%
 as_added_ng <- mean(as_mb$Added_ng)
 
 p_as_amount <- ggplot(as_amount_sum, aes(Genotype, Mean, colour = Compartment)) +
-  geom_hline(yintercept = as_added_ng, linetype = "dashed", colour = "grey40") +
+  geom_hline(yintercept = 50000, linetype = "dashed", colour = "grey40") +
+  geom_hline(yintercept = as_added_ng, linetype = "dotted", colour = "grey40") +
   geom_errorbar(aes(ymin = pmax(Mean - SD, Mean / 10), ymax = Mean + SD), width = 0.15, linewidth = 0.6) +
   geom_point(size = 2.4) +
-  annotate("text", x = 0.6, y = as_added_ng * 1.6, label = "As added (39.4 \u00b5g)",
+  annotate("text", x = 0.6, y = 50000 * 1.7, label = "Nominal dose 50 \u00b5g (1 mg/L x 50 mL); dotted = measured control 39.4 \u00b5g",
            hjust = 0, size = 3, colour = "grey30") +
   facet_wrap(~ Day, nrow = 1) +
   scale_colour_manual(values = c("Water" = "#2a78d6", "Daphnia tissue (10 individuals)" = "#eb6834"), name = NULL) +
