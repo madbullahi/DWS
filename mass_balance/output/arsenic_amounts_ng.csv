@@ -1,0 +1,49 @@
+"Genotype","Day","Replicate","Compartment","ng"
+"DM1900","D1",1,"Water",17945.5
+"DM1900","D1",2,"Water",15822.5
+"DM1900","D2",1,"Water",17109
+"DM1900","D2",2,"Water",13712.5
+"DM1900","D3",1,"Water",19066.5
+"DM1900","D3",2,"Water",20072
+"DM1960","D1",1,"Water",10434.5
+"DM1960","D1",2,"Water",16830
+"DM1960","D2",1,"Water",17627.5
+"DM1960","D2",2,"Water",17685.5
+"DM1960","D3",1,"Water",21845.5
+"DM1960","D3",2,"Water",15274.5
+"DM1980","D1",1,"Water",9449.5
+"DM1980","D1",2,"Water",17033.5
+"DM1980","D2",1,"Water",21834
+"DM1980","D2",2,"Water",19074.5
+"DM1980","D3",1,"Water",9746.5
+"DM1980","D3",2,"Water",13692
+"DM2015","D1",1,"Water",10587.5
+"DM2015","D1",2,"Water",20894.5
+"DM2015","D2",1,"Water",13545.5
+"DM2015","D2",2,"Water",12462.5
+"DM2015","D3",1,"Water",17130.5
+"DM2015","D3",2,"Water",11513.5
+"DM1900","D1",1,"Daphnia tissue (10 individuals)",0.316056
+"DM1900","D1",2,"Daphnia tissue (10 individuals)",0.252557
+"DM1900","D2",1,"Daphnia tissue (10 individuals)",0.3366
+"DM1900","D2",2,"Daphnia tissue (10 individuals)",0.5717
+"DM1900","D3",1,"Daphnia tissue (10 individuals)",0.751
+"DM1900","D3",2,"Daphnia tissue (10 individuals)",0.2716
+"DM1960","D1",1,"Daphnia tissue (10 individuals)",0.4679
+"DM1960","D1",2,"Daphnia tissue (10 individuals)",0.2319
+"DM1960","D2",1,"Daphnia tissue (10 individuals)",0.30868
+"DM1960","D2",2,"Daphnia tissue (10 individuals)",0.5208
+"DM1960","D3",1,"Daphnia tissue (10 individuals)",0.28149
+"DM1960","D3",2,"Daphnia tissue (10 individuals)",0.8269
+"DM1980","D1",1,"Daphnia tissue (10 individuals)",0.24679
+"DM1980","D1",2,"Daphnia tissue (10 individuals)",0.35987
+"DM1980","D2",1,"Daphnia tissue (10 individuals)",0.2993
+"DM1980","D2",2,"Daphnia tissue (10 individuals)",0.3238
+"DM1980","D3",1,"Daphnia tissue (10 individuals)",0.74617
+"DM1980","D3",2,"Daphnia tissue (10 individuals)",0.5345
+"DM2015","D1",1,"Daphnia tissue (10 individuals)",0.83106
+"DM2015","D1",2,"Daphnia tissue (10 individuals)",0.50711
+"DM2015","D2",1,"Daphnia tissue (10 individuals)",0.4129
+"DM2015","D2",2,"Daphnia tissue (10 individuals)",0.4005
+"DM2015","D3",1,"Daphnia tissue (10 individuals)",0.8219
+"DM2015","D3",2,"Daphnia tissue (10 individuals)",0.50839

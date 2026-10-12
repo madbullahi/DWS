@@ -507,6 +507,40 @@ p_as_mb_day <- as_mb_plot(as_mb, Day) + facet_wrap(~ Day, nrow = 1) +
        subtitle = "% of arsenic added (50 mL exposure); tissue = 10 Daphnia per sample. Mean, error bars = SD of total; n = 2")
 save_fig(p_as_mb_day, "Fig_arsenic_mass_balance_barplot_by_day", 11, 5.5)
 
+# Corrected version of the manuscript's arsenic figure: water and tissue as
+# amounts (ng As) on a log axis. Water = final concentration x 50 mL;
+# tissue = digest reading (ug/L) x 1 mL digest (10 Daphnia). The manuscript
+# version plotted water in ug/L and tissue as log10(1000 / reading).
+as_amount <- bind_rows(
+  as_mb %>% transmute(Genotype, Day, Replicate, Compartment = "Water", ng = Water_ugL * exposure_volume_L * 1000),
+  as_mb %>% transmute(Genotype, Day, Replicate, Compartment = "Daphnia tissue (10 individuals)",
+                      ng = Tissue_ng_per_sample)
+) %>%
+  mutate(Compartment = factor(Compartment, levels = c("Water", "Daphnia tissue (10 individuals)")))
+write.csv(as_amount, file.path(out_dir, "arsenic_amounts_ng.csv"), row.names = FALSE)
+
+as_amount_sum <- as_amount %>%
+  group_by(Genotype, Day, Compartment) %>%
+  summarise(Mean = mean(ng), SD = sd(ng), .groups = "drop")
+as_added_ng <- mean(as_mb$Added_ng)
+
+p_as_amount <- ggplot(as_amount_sum, aes(Genotype, Mean, colour = Compartment)) +
+  geom_hline(yintercept = as_added_ng, linetype = "dashed", colour = "grey40") +
+  geom_errorbar(aes(ymin = pmax(Mean - SD, Mean / 10), ymax = Mean + SD), width = 0.15, linewidth = 0.6) +
+  geom_point(size = 2.4) +
+  annotate("text", x = 0.6, y = as_added_ng * 1.6, label = "As added (39.4 \u00b5g)",
+           hjust = 0, size = 3, colour = "grey30") +
+  facet_wrap(~ Day, nrow = 1) +
+  scale_colour_manual(values = c("Water" = "#2a78d6", "Daphnia tissue (10 individuals)" = "#eb6834"), name = NULL) +
+  scale_y_log10(breaks = 10^(-1:5), labels = c("0.1", "1", "10", "100", "1,000", "10,000", "100,000"),
+                limits = c(0.1, 1e5)) +
+  labs(x = "Genotype", y = "Arsenic (ng, log scale)",
+       title = "Arsenic in water and Daphnia tissue",
+       subtitle = "Mean \u00b1 SD (n = 2). Water: 50 mL exposure; tissue: 10 Daphnia per sample (1 mL digest)") +
+  theme_mb + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+                   panel.grid.major.y = element_line(colour = "grey92"))
+save_fig(p_as_amount, "Fig_arsenic_water_tissue_amounts_log", 9, 5.5)
+
 # ---------------------------------------------------------------------------
 # 5. Data checks
 # ---------------------------------------------------------------------------

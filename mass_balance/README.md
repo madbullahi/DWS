@@ -22,6 +22,7 @@ Rscript mass_balance/mass_balance_plots.R
 | `Fig_removal_efficiency_barplot_by_day` | Same, split by day (n = 2 per day) |
 | `Fig_arsenic_mass_balance_barplot` | Arsenic as % of the amount added (IC x 50 mL): water remaining (solid) with tissue stacked on top (dashed; ~0.001 %, printed above each bar), days pooled |
 | `Fig_arsenic_mass_balance_barplot_by_day` | Same, split by day |
+| `Fig_arsenic_water_tissue_amounts_log` | Corrected version of the manuscript arsenic figure: water and tissue as ng As (log axis) by genotype and day, with the amount added as a reference line |
 | `Fig_arsenic_water_tissue_boxplot` | Arsenic removal from water next to arsenic in tissue (exposed vs control Daphnia) |
 | `Fig_arsenic_water_vs_tissue_scatter` | Water removal vs tissue concentration for matched genotype/day/replicate |
 
@@ -87,6 +88,15 @@ Rscript mass_balance/mass_balance_plots.R
     unaccounted for (e.g. adsorption to vessel walls, Daphnia not sampled,
     moults/faeces, or volatilisation/speciation losses). Values in
     `output/arsenic_mass_balance.csv`.
+
+13. **Manuscript arsenic figure (Log10 ug arsenic, water vs tissue) is
+    miscalculated.** Water points are log10 of the water concentration in
+    ug/L (not ug). Tissue points equal log10(1000 / digest reading), i.e. the
+    measured tissue values are inverted, so samples with the most arsenic plot
+    lowest and tissue appears ~10x above water. With amounts in the same unit,
+    water is ~10,000-22,000 ng per beaker and tissue ~0.2-0.8 ng per 10-Daphnia
+    sample. Use `Fig_arsenic_water_tissue_amounts_log` instead
+    (`output/arsenic_amounts_ng.csv`).
 
 Removal efficiency = (mean no-Daphnia control on that day - final) / control x 100,
 which reproduces the IC and RE columns of Table S3.
