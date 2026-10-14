@@ -323,6 +323,39 @@ p_compact <- ggplot(compact_rects) +
         strip.text = element_text(face = "bold", size = 9))
 save_fig(p_compact, "Fig_mass_balance_compact", 12, 3.8)
 
+# Minimal proof-of-concept version: one genotype (LRV0_1), single chemicals
+# and the PFOS+PFOA mixture only (no +PET mixtures, which share measurements
+# with the PFAS-only treatments). Bars = mean of 3 replicates per day.
+mini_levels <- c("PET", "PFOS", "PFOA", "PFOS+PFOA")
+mini <- stacked_day %>%
+  filter(Genotype == "LRV0_1", Compound %in% mini_levels) %>%
+  mutate(Compound = factor(Compound, levels = mini_levels))
+mini_bars <- mini %>%
+  select(Compound, Day, Water_mean, Tissue_mean) %>%
+  pivot_longer(c(Water_mean, Tissue_mean), names_to = "Compartment", values_to = "Mean") %>%
+  mutate(Compartment = factor(Compartment, levels = c("Water_mean", "Tissue_mean"),
+                              labels = c("Water (medium)", "Daphnia tissue")))
+write.csv(mini, file.path(out_dir, "mass_balance_LRV0_1_minimal.csv"), row.names = FALSE)
+
+p_mini <- ggplot(mini_bars, aes(Day, Mean, alpha = Compartment, linetype = Compartment)) +
+  geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
+  geom_col(position = position_stack(reverse = TRUE), width = 0.65, linewidth = 0.5,
+           fill = "#2a78d6", colour = "#2a78d6") +
+  geom_errorbar(data = mini, aes(x = Day, ymin = Total_mean - Total_sd, ymax = Total_mean + Total_sd),
+                inherit.aes = FALSE, width = 0.18, linewidth = 0.4, colour = "grey20", na.rm = TRUE) +
+  facet_wrap(~ Compound, nrow = 1) +
+  scale_y_continuous(limits = c(0, 125), breaks = seq(0, 125, 25), expand = expansion(mult = c(0, 0.02))) +
+  scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
+  scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"), name = NULL) +
+  guides(linetype = guide_legend(override.aes = list(fill = "#2a78d6", colour = "#2a78d6",
+                                                     alpha = c(0.9, 0.3))),
+         alpha = "none") +
+  labs(x = NULL, y = "Recovery (% of nominal)") +
+  theme_mb +
+  theme(legend.position = "top", legend.margin = margin(0, 0, -6, 0),
+        panel.spacing.x = unit(3, "pt"), strip.text = element_text(face = "bold", size = 9))
+save_fig(p_mini, "Fig_mass_balance_LRV0_1_minimal", 7, 3.4)
+
 # ---------------------------------------------------------------------------
 # 3. Removal efficiency of individual chemicals (recomputed from Table S2 raw)
 # ---------------------------------------------------------------------------
