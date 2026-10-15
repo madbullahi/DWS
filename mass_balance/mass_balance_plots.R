@@ -667,11 +667,12 @@ cat("\nTia's workbook vs raw replicates:", sum(ts_check$match, na.rm = TRUE), "o
 # ---------------------------------------------------------------------------
 # 6. Single chemicals for Marvasti et al.: PET, PFOS, PFOA (LRV0_1, water +
 #    tissue stacked) plus atrazine and diclofenac as water-only bars from the
-#    STOTEN experiment (DM genotypes pooled; no tissue data there).
+#    STOTEN experiment (DM2015 = LRV0_1; no tissue data there).
 #    Water = final concentration as % of the no-Daphnia control on that day.
 # ---------------------------------------------------------------------------
+# DM2015 is the same strain as LRV0_1.
 water_only <- removal %>%
-  filter(Chemical %in% c("Atrazine", "Diclofenac")) %>%
+  filter(Chemical %in% c("Atrazine", "Diclofenac"), Genotype == "DM2015") %>%
   mutate(Water_pct = Conc / IC * 100) %>%
   group_by(Compound = as.character(Chemical), Day) %>%
   summarise(Water_mean = mean(Water_pct), Tissue_mean = 0,
@@ -710,8 +711,8 @@ p_patch <- ggplot(patch_bars, aes(Day, Mean, alpha = Compartment, linetype = Com
                                                      alpha = c(0.9, 0.3))),
          alpha = "none") +
   labs(x = NULL, y = "Recovery (% of initial)",
-       caption = paste0("PET, PFOS, PFOA: genotype LRV0_1, % of nominal; water + tissue, mean of 3 replicates, error bars = SD of total.\n",
-                        "Atrazine, diclofenac: water only (% of no-Daphnia control), STOTEN experiment (DM genotypes, n = 8 per day); no tissue data from this experiment.")) +
+       caption = paste0("All panels genotype LRV0_1. PET, PFOS, PFOA: % of nominal; water + tissue, mean of 3 replicates, error bars = SD of total.\n",
+                        "Atrazine, diclofenac: water only (% of no-Daphnia control), STOTEN experiment (DM2015 = LRV0_1, n = 2 per day); no tissue data from this experiment.")) +
   theme_mb +
   theme(legend.position = "top", legend.margin = margin(0, 0, -6, 0),
         panel.spacing.x = unit(3, "pt"), strip.text = element_text(face = "bold", size = 9),
