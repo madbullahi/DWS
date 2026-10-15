@@ -700,8 +700,6 @@ p_patch <- ggplot(patch_bars, aes(Day, Mean, alpha = Compartment, linetype = Com
            fill = "#2a78d6", colour = "#2a78d6") +
   geom_errorbar(data = patch, aes(x = Day, ymin = Total_mean - Total_sd, ymax = Total_mean + Total_sd),
                 inherit.aes = FALSE, width = 0.18, linewidth = 0.4, colour = "grey20", na.rm = TRUE) +
-  geom_text(data = no_tissue, aes(Day, y, label = label), inherit.aes = FALSE,
-            size = 2.8, colour = "grey35", fontface = "italic") +
   facet_wrap(~ Compound, nrow = 1) +
   scale_y_continuous(breaks = seq(0, 125, 25), expand = expansion(mult = c(0, 0.02))) +
   coord_cartesian(ylim = c(0, 125)) +
