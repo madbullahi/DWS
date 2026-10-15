@@ -19,6 +19,7 @@ Rscript mass_balance/mass_balance_plots.R
 | `Fig_mass_balance_compact` | Compact one-row version (layout of the UPSTREAM Figure S2): one panel per treatment, days on x, LRV0_1 and LRII_36 side by side, water (solid) + tissue (dashed) stacked, SD of total |
 | `Fig_mass_balance_LRV0_1_minimal` | Minimal proof-of-concept version for Marvasti et al.: LRV0_1 only; PET, PFOS, PFOA, PFOS+PFOA; water (solid) + tissue (dashed) stacked by day; SD of total |
 | `Fig_mass_balance_LRV0_1_single_chemicals` | LRV0_1, single chemicals only (PET, PFOS, PFOA): water (solid) + tissue (dashed) stacked by day; SD of total |
+| `Fig_mass_balance_single_chemicals_with_water_only` | For Marvasti et al.: PET, PFOS, PFOA (LRV0_1, water + tissue stacked) plus atrazine and diclofenac water-only bars (% of no-Daphnia control; STOTEN experiment, DM genotypes) |
 | `Fig_MP_mass_balance_boxplot` | PET recovery in medium, tissue and total, per genotype (one value per treatment and day) |
 | `Fig_removal_efficiency_boxplot` | Removal from water of PFOS, diclofenac, atrazine and arsenic per genotype, recomputed from Table S2 raw |
 | `Fig_removal_efficiency_barplot` | Removal of PFOS, diclofenac, atrazine and arsenic per genotype: mean with SD, one panel per chemical, days pooled (n = 6) |

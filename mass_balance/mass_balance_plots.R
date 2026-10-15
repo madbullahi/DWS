@@ -663,3 +663,57 @@ ts_check <- pfas %>%
 write.csv(ts_check, file.path(out_dir, "check_TS_workbook_vs_raw.csv"), row.names = FALSE)
 cat("\nTia's workbook vs raw replicates:", sum(ts_check$match, na.rm = TRUE), "of",
     nrow(ts_check), "rows match\n")
+
+# ---------------------------------------------------------------------------
+# 6. Single chemicals for Marvasti et al.: PET, PFOS, PFOA (LRV0_1, water +
+#    tissue stacked) plus atrazine and diclofenac as water-only bars from the
+#    STOTEN experiment (DM genotypes pooled; no tissue data there).
+#    Water = final concentration as % of the no-Daphnia control on that day.
+# ---------------------------------------------------------------------------
+water_only <- removal %>%
+  filter(Chemical %in% c("Atrazine", "Diclofenac")) %>%
+  mutate(Water_pct = Conc / IC * 100) %>%
+  group_by(Compound = as.character(Chemical), Day) %>%
+  summarise(Water_mean = mean(Water_pct), Tissue_mean = 0,
+            Total_mean = mean(Water_pct), Total_sd = sd(Water_pct), .groups = "drop")
+
+patch_levels <- c("PET", "PFOS", "PFOA", "Atrazine", "Diclofenac")
+patch <- bind_rows(
+  mini %>% filter(Compound %in% c("PET", "PFOS", "PFOA")) %>%
+    transmute(Compound = as.character(Compound), Day, Water_mean, Tissue_mean, Total_mean, Total_sd),
+  water_only
+) %>% mutate(Compound = factor(Compound, levels = patch_levels))
+write.csv(patch, file.path(out_dir, "mass_balance_single_chemicals_patch.csv"), row.names = FALSE)
+
+patch_bars <- patch %>%
+  select(Compound, Day, Water_mean, Tissue_mean) %>%
+  pivot_longer(c(Water_mean, Tissue_mean), names_to = "Compartment", values_to = "Mean") %>%
+  mutate(Compartment = factor(Compartment, levels = c("Water_mean", "Tissue_mean"),
+                              labels = c("Water (medium)", "Daphnia tissue")))
+no_tissue <- tibble(Compound = factor(c("Atrazine", "Diclofenac"), levels = patch_levels),
+                    Day = "D2", y = 118, label = "water only (STOTEN)")
+
+p_patch <- ggplot(patch_bars, aes(Day, Mean, alpha = Compartment, linetype = Compartment)) +
+  geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
+  geom_col(position = position_stack(reverse = TRUE), width = 0.65, linewidth = 0.5,
+           fill = "#2a78d6", colour = "#2a78d6") +
+  geom_errorbar(data = patch, aes(x = Day, ymin = Total_mean - Total_sd, ymax = Total_mean + Total_sd),
+                inherit.aes = FALSE, width = 0.18, linewidth = 0.4, colour = "grey20", na.rm = TRUE) +
+  geom_text(data = no_tissue, aes(Day, y, label = label), inherit.aes = FALSE,
+            size = 2.8, colour = "grey35", fontface = "italic") +
+  facet_wrap(~ Compound, nrow = 1) +
+  scale_y_continuous(breaks = seq(0, 125, 25), expand = expansion(mult = c(0, 0.02))) +
+  coord_cartesian(ylim = c(0, 125)) +
+  scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
+  scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"), name = NULL) +
+  guides(linetype = guide_legend(override.aes = list(fill = "#2a78d6", colour = "#2a78d6",
+                                                     alpha = c(0.9, 0.3))),
+         alpha = "none") +
+  labs(x = NULL, y = "Recovery (% of initial)",
+       caption = paste0("PET, PFOS, PFOA: genotype LRV0_1, % of nominal; water + tissue, mean of 3 replicates, error bars = SD of total.\n",
+                        "Atrazine, diclofenac: water only (% of no-Daphnia control), STOTEN experiment (DM genotypes, n = 8 per day); no tissue data from this experiment.")) +
+  theme_mb +
+  theme(legend.position = "top", legend.margin = margin(0, 0, -6, 0),
+        panel.spacing.x = unit(3, "pt"), strip.text = element_text(face = "bold", size = 9),
+        plot.caption = element_text(hjust = 0, size = 7, colour = "grey30"))
+save_fig(p_patch, "Fig_mass_balance_single_chemicals_with_water_only", 8.5, 3.8)
