@@ -356,6 +356,16 @@ p_mini <- ggplot(mini_bars, aes(Day, Mean, alpha = Compartment, linetype = Compa
         panel.spacing.x = unit(3, "pt"), strip.text = element_text(face = "bold", size = 9))
 save_fig(p_mini, "Fig_mass_balance_LRV0_1_minimal", 7, 3.4)
 
+# Single chemicals only, one strain (LRV0_1): microplastic (PET) and PFAS
+# (PFOS, PFOA) -- the single chemicals with water and tissue measured in the
+# same beakers.
+single_levels <- c("PET", "PFOS", "PFOA")
+p_single <- p_mini %+% (mini_bars %>% filter(Compound %in% single_levels) %>%
+                          mutate(Compound = factor(Compound, levels = single_levels)))
+p_single$layers[[3]]$data <- mini %>% filter(Compound %in% single_levels) %>%
+  mutate(Compound = factor(Compound, levels = single_levels))
+save_fig(p_single, "Fig_mass_balance_LRV0_1_single_chemicals", 5.5, 3.4)
+
 # ---------------------------------------------------------------------------
 # 3. Removal efficiency of individual chemicals (recomputed from Table S2 raw)
 # ---------------------------------------------------------------------------
