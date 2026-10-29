@@ -716,3 +716,54 @@ p_patch <- ggplot(patch_bars, aes(Day, Mean, alpha = Compartment, linetype = Com
         panel.spacing.x = unit(3, "pt"), strip.text = element_text(face = "bold", size = 9),
         plot.caption = element_text(hjust = 0, size = 7, colour = "grey30"))
 save_fig(p_patch, "Fig_mass_balance_single_chemicals_with_water_only", 8.5, 3.8)
+
+# ---------------------------------------------------------------------------
+# 7. Persistent contaminants only (Marvasti et al. Fig. 2): PET, PFOS and PFOA,
+#    both genotypes, water (solid) + Daphnia tissue (dashed) stacked, by day.
+#    Atrazine and diclofenac are not included: their water and tissue data come
+#    from different experiments and cannot be combined into a mass balance.
+# ---------------------------------------------------------------------------
+persist_levels <- c("PET", "PFOS", "PFOA")
+persist <- stacked_day %>%
+  filter(Compound %in% persist_levels) %>%
+  mutate(Compound = factor(as.character(Compound), levels = persist_levels),
+         x = as.integer(factor(Day)) + ifelse(Genotype == "LRV0_1", -0.2, 0.2))
+write.csv(persist %>% select(Genotype, Compound, Day, n, Water_mean, Water_sd,
+                             Tissue_mean, Tissue_sd, Total_mean, Total_sd),
+          file.path(out_dir, "mass_balance_persistent_contaminants.csv"), row.names = FALSE)
+
+persist_rects <- bind_rows(
+  persist %>% transmute(Compound, Genotype, x, Compartment = "Water (medium)",
+                        ymin = 0, ymax = Water_mean),
+  persist %>% transmute(Compound, Genotype, x, Compartment = "Daphnia tissue",
+                        ymin = Water_mean, ymax = Water_mean + Tissue_mean)
+) %>%
+  mutate(Compartment = factor(Compartment, levels = c("Water (medium)", "Daphnia tissue")))
+
+p_persist <- ggplot(persist_rects) +
+  geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
+  geom_rect(aes(xmin = x - 0.18, xmax = x + 0.18, ymin = ymin, ymax = ymax,
+                fill = Genotype, colour = Genotype, alpha = Compartment, linetype = Compartment),
+            linewidth = 0.5) +
+  geom_errorbar(data = persist, aes(x = x, ymin = Total_mean - Total_sd, ymax = Total_mean + Total_sd),
+                width = 0.15, linewidth = 0.4, colour = "grey20", na.rm = TRUE) +
+  facet_wrap(~ Compound, nrow = 1) +
+  scale_x_continuous(breaks = 1:3, labels = c("D1", "D2", "D3"), expand = expansion(add = 0.45)) +
+  scale_y_continuous(limits = c(0, 135), breaks = seq(0, 125, 25), expand = expansion(mult = c(0, 0.02))) +
+  scale_fill_manual(values = geno_cols, name = NULL) +
+  scale_colour_manual(values = geno_cols, name = NULL) +
+  scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
+  scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"), name = NULL) +
+  guides(fill = guide_legend(order = 1, override.aes = list(alpha = 0.9, linetype = "solid")),
+         colour = "none",
+         linetype = guide_legend(order = 2, override.aes = list(fill = "grey50", colour = "grey20",
+                                                                alpha = c(0.9, 0.3))),
+         alpha = "none") +
+  labs(x = NULL, y = "Recovery (% of nominal)",
+       caption = paste0("Water (solid) and Daphnia tissue (dashed) as % of the nominal amount added, stacked; error bars = SD of the total.\n",
+                        "PFOS and PFOA: mean of 3 replicates per genotype and day. PET: one value per treatment and day, so no error bar.")) +
+  theme_mb +
+  theme(legend.position = "top", legend.box = "horizontal", legend.margin = margin(0, 0, -6, 0),
+        panel.spacing.x = unit(3, "pt"), strip.text = element_text(face = "bold", size = 9),
+        plot.caption = element_text(hjust = 0, size = 7, colour = "grey30"))
+save_fig(p_persist, "Fig_mass_balance_persistent_contaminants", 9, 4)
