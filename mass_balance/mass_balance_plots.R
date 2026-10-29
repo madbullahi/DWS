@@ -732,6 +732,7 @@ write.csv(persist %>% select(Genotype, Compound, Day, n, Water_mean, Water_sd,
                              Tissue_mean, Tissue_sd, Total_mean, Total_sd),
           file.path(out_dir, "mass_balance_persistent_contaminants.csv"), row.names = FALSE)
 
+persist_cols <- c(LRV0_1 = "#d62728", LRII_36 = "#1a1a1a")   # Marvasti et al. Fig. 2: red / black
 persist_rects <- bind_rows(
   persist %>% transmute(Compound, Genotype, x, Compartment = "Water (medium)",
                         ymin = 0, ymax = Water_mean),
@@ -750,8 +751,8 @@ p_persist <- ggplot(persist_rects) +
   facet_wrap(~ Compound, nrow = 1) +
   scale_x_continuous(breaks = 1:3, labels = c("D1", "D2", "D3"), expand = expansion(add = 0.45)) +
   scale_y_continuous(limits = c(0, 135), breaks = seq(0, 125, 25), expand = expansion(mult = c(0, 0.02))) +
-  scale_fill_manual(values = geno_cols, name = NULL) +
-  scale_colour_manual(values = geno_cols, name = NULL) +
+  scale_fill_manual(values = persist_cols, name = NULL) +
+  scale_colour_manual(values = persist_cols, name = NULL) +
   scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
   scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"), name = NULL) +
   guides(fill = guide_legend(order = 1, override.aes = list(alpha = 0.9, linetype = "solid")),
