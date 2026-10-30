@@ -768,3 +768,42 @@ p_persist <- ggplot(persist_rects) +
         panel.spacing.x = unit(3, "pt"), strip.text = element_text(face = "bold", size = 9),
         plot.caption = element_text(hjust = 0, size = 7, colour = "grey30"))
 save_fig(p_persist, "Fig_mass_balance_persistent_contaminants", 9, 4)
+
+# ---------------------------------------------------------------------------
+# 7b. Same as section 7 but a single genotype (LRV0_1 = DM2015), as requested
+#     for Marvasti et al. Fig. 2.
+# ---------------------------------------------------------------------------
+persist_one <- persist %>% filter(Genotype == "LRV0_1") %>%
+  mutate(xd = as.integer(factor(Day, levels = c("D1", "D2", "D3"))))
+persist_one_rects <- bind_rows(
+  persist_one %>% transmute(Compound, xd, Compartment = "Water (medium)",
+                            ymin = 0, ymax = Water_mean),
+  persist_one %>% transmute(Compound, xd, Compartment = "Daphnia tissue",
+                            ymin = Water_mean, ymax = Water_mean + Tissue_mean)
+) %>%
+  mutate(Compartment = factor(Compartment, levels = c("Water (medium)", "Daphnia tissue")))
+
+p_persist_one <- ggplot(persist_one_rects) +
+  geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
+  geom_rect(aes(xmin = xd - 0.3, xmax = xd + 0.3, ymin = ymin, ymax = ymax,
+                alpha = Compartment, linetype = Compartment),
+            fill = "#d62728", colour = "#d62728", linewidth = 0.5) +
+  geom_errorbar(data = persist_one, aes(x = xd, ymin = Total_mean - Total_sd,
+                                        ymax = Total_mean + Total_sd),
+                inherit.aes = FALSE, width = 0.15, linewidth = 0.4, colour = "grey20", na.rm = TRUE) +
+  facet_wrap(~ Compound, nrow = 1) +
+  scale_x_continuous(breaks = 1:3, labels = c("D1", "D2", "D3"), expand = expansion(add = 0.5)) +
+  scale_y_continuous(limits = c(0, 135), breaks = seq(0, 125, 25), expand = expansion(mult = c(0, 0.02))) +
+  scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
+  scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"), name = NULL) +
+  guides(linetype = guide_legend(override.aes = list(fill = "#d62728", colour = "#d62728",
+                                                     alpha = c(0.9, 0.3))),
+         alpha = "none") +
+  labs(x = NULL, y = "Recovery (% of nominal)",
+       caption = paste0("Genotype LRV0_1. Water (solid) and Daphnia tissue (dashed) as % of the nominal amount added, stacked;\n",
+                        "error bars = SD of the total. PFOS and PFOA: mean of 3 replicates per day. PET: one value per day, so no error bar.")) +
+  theme_mb +
+  theme(legend.position = "top", legend.margin = margin(0, 0, -6, 0),
+        panel.spacing.x = unit(3, "pt"), strip.text = element_text(face = "bold", size = 9),
+        plot.caption = element_text(hjust = 0, size = 7, colour = "grey30"))
+save_fig(p_persist_one, "Fig_mass_balance_persistent_LRV0_1", 7.5, 3.8)
