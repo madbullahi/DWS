@@ -809,3 +809,9 @@ p_persist_one <- ggplot(persist_one_rects) +
         axis.title.y = element_text(size = 9),
         plot.caption = element_text(hjust = 0, size = 6, colour = "grey30"))
 save_fig(p_persist_one, "Fig_mass_balance_persistent_LRV0_1", 5.6, 3.2)
+
+# Two sizing options for Marvasti et al. Fig. 2, for the co-authors to choose between.
+# A: same width as the original, shorter.
+save_fig(p_persist_one, "Fig_mass_balance_persistent_LRV0_1_A_shorter", 7.5, 2.8)
+# B: journal double-column width (180 mm), the usual size for a one-row three-panel figure.
+save_fig(p_persist_one, "Fig_mass_balance_persistent_LRV0_1_B_columnwidth", 7.09, 2.6)

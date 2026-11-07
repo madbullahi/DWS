@@ -22,6 +22,8 @@ Rscript mass_balance/mass_balance_plots.R
 | `Fig_mass_balance_single_chemicals_with_water_only` | For Marvasti et al.: PET, PFOS, PFOA (LRV0_1, water + tissue stacked) plus atrazine and diclofenac water-only bars (% of no-Daphnia control; STOTEN experiment, DM2015 = LRV0_1) |
 | `Fig_mass_balance_persistent_contaminants` | For Marvasti et al. Fig. 2: PET, PFOS, PFOA only (the persistent contaminants), both genotypes, water (solid) + tissue (dashed) stacked by day, SD of total. Atrazine and diclofenac excluded: their water and tissue come from different experiments |
 | `Fig_mass_balance_persistent_LRV0_1` | Same as above but LRV0_1 only (single genotype version for Marvasti et al. Fig. 2) |
+| `Fig_mass_balance_persistent_LRV0_1_A_shorter` | Same figure, same width as the original but shorter (7.5 x 2.8 in) |
+| `Fig_mass_balance_persistent_LRV0_1_B_columnwidth` | Same figure at journal double-column width, 180 mm (7.09 x 2.6 in) |
 | `Fig_MP_mass_balance_boxplot` | PET recovery in medium, tissue and total, per genotype (one value per treatment and day) |
 | `Fig_removal_efficiency_boxplot` | Removal from water of PFOS, diclofenac, atrazine and arsenic per genotype, recomputed from Table S2 raw |
 | `Fig_removal_efficiency_barplot` | Removal of PFOS, diclofenac, atrazine and arsenic per genotype: mean with SD, one panel per chemical, days pooled (n = 6) |
