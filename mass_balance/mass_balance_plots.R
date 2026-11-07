@@ -785,25 +785,27 @@ persist_one_rects <- bind_rows(
 
 p_persist_one <- ggplot(persist_one_rects) +
   geom_hline(yintercept = 100, linetype = "dotted", colour = "grey50") +
-  geom_rect(aes(xmin = xd - 0.3, xmax = xd + 0.3, ymin = ymin, ymax = ymax,
+  geom_rect(aes(xmin = xd - 0.32, xmax = xd + 0.32, ymin = ymin, ymax = ymax,
                 alpha = Compartment, linetype = Compartment),
-            fill = "#d62728", colour = "#d62728", linewidth = 0.5) +
+            fill = "black", colour = "black", linewidth = 0.5) +
   geom_errorbar(data = persist_one, aes(x = xd, ymin = Total_mean - Total_sd,
                                         ymax = Total_mean + Total_sd),
                 inherit.aes = FALSE, width = 0.15, linewidth = 0.4, colour = "grey20", na.rm = TRUE) +
   facet_wrap(~ Compound, nrow = 1) +
-  scale_x_continuous(breaks = 1:3, labels = c("D1", "D2", "D3"), expand = expansion(add = 0.5)) +
+  scale_x_continuous(breaks = 1:3, labels = c("D1", "D2", "D3"), expand = expansion(add = 0.42)) +
   scale_y_continuous(limits = c(0, 135), breaks = seq(0, 125, 25), expand = expansion(mult = c(0, 0.02))) +
-  scale_alpha_manual(values = c("Water (medium)" = 0.9, "Daphnia tissue" = 0.3), name = NULL) +
+  scale_alpha_manual(values = c("Water (medium)" = 0.95, "Daphnia tissue" = 0.35), name = NULL) +
   scale_linetype_manual(values = c("Water (medium)" = "solid", "Daphnia tissue" = "dashed"), name = NULL) +
-  guides(linetype = guide_legend(override.aes = list(fill = "#d62728", colour = "#d62728",
-                                                     alpha = c(0.9, 0.3))),
+  guides(linetype = guide_legend(override.aes = list(fill = "black", colour = "black",
+                                                     alpha = c(0.95, 0.35))),
          alpha = "none") +
   labs(x = NULL, y = "Recovery (% of nominal)",
        caption = paste0("Genotype LRV0_1. Water (solid) and Daphnia tissue (dashed) as % of the nominal amount added, stacked;\n",
                         "error bars = SD of the total. PFOS and PFOA: mean of 3 replicates per day. PET: one value per day, so no error bar.")) +
   theme_mb +
-  theme(legend.position = "top", legend.margin = margin(0, 0, -6, 0),
-        panel.spacing.x = unit(3, "pt"), strip.text = element_text(face = "bold", size = 9),
-        plot.caption = element_text(hjust = 0, size = 7, colour = "grey30"))
-save_fig(p_persist_one, "Fig_mass_balance_persistent_LRV0_1", 7.5, 3.8)
+  theme(legend.position = "top", legend.margin = margin(0, 0, -7, 0),
+        legend.key.size = unit(9, "pt"), legend.text = element_text(size = 8),
+        panel.spacing.x = unit(2, "pt"), strip.text = element_text(face = "bold", size = 8.5),
+        axis.title.y = element_text(size = 9),
+        plot.caption = element_text(hjust = 0, size = 6, colour = "grey30"))
+save_fig(p_persist_one, "Fig_mass_balance_persistent_LRV0_1", 5.6, 3.2)
